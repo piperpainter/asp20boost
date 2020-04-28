@@ -209,3 +209,16 @@ gradient_descent <- function(model,
   message("Finishing after ", i, " iterations")
   invisible(model)
 }
+
+
+
+
+
+# boost-function first try -----------------------------------------------------------
+boost_levin <- function(model,
+                        weight_learn = 0.1,
+                        m_stop = 1000,
+                        verbose = FALSE) {
+  print("Boost-Function called. Nothing implemented yet. Sorry, Dude.")
+  invisible(model)
+}

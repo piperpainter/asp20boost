@@ -2,6 +2,7 @@
 
 export(LocationScaleRegression)
 export(gradient_descent)
+export(boost_levin)
 importFrom(R6,R6Class)
 importFrom(stats,dnorm)
 importFrom(stats,model.matrix)
