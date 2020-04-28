@@ -1,4 +1,4 @@
 library(testthat)
-library(asp20model)
+library(asp20boost)
 
-test_check("asp20model")
+test_check("asp20boost")
