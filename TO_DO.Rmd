@@ -1,0 +1,36 @@
+---
+title: 'Goals and Tasks'
+author: "ASP Boost Team"
+date: "30 4 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+I propose this file for technical discussion and goal setting and tracking. 
+Goal setting could look like this (This is merely a sketch): 
+
+## Tasks to achieve till next Q&A session 20.05.04 
+### (as set in the last meeting)
+
+* ~~README~~ L. 
+* ~~Rmd file for communication~~ S (this file)
+* Push a boost function JLS. 
+
+Initials could indicate whom belongs which task. 
+
+Discussion could look like this (The html file is intended to visualize LaTeX):
+
+## Estimator:
+
+Residuals: $u = y = x\hat{\beta}$
+Estimator *coming from the residuals*: $\hat{b} = (X'X)^{-1} X'u$
+
+After inserting $u$ in $\hat{b}$ the base formula results:
+$\hat{\beta}^{t}= \hat{\beta}^{t-1} + v(\hat{\beta} - \hat{\beta}^{t-1})$
+
+I am unsure, if the first term inside parenthesis is just $\hat{\beta}$ or rather $\hat{\beta}^{something}$. Please check. 
+
+
