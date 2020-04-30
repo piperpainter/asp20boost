@@ -148,20 +148,6 @@ Your task is to do better than me and implement a more efficient inference algor
 
 ## Student projects
 
-### `asp20boot`
-
-- Supervisor: Benjamin Säfken
-- Students: Alisa, Jasmin, Katharina
-- Tasks: Parameter estimation using Fisher scoring, bootstrap confidence intervals for the parameter estimates
-- Readings: https://en.wikipedia.org/wiki/Bootstrapping_(statistics), the `boot` R package
-
-### `asp20cv`
-
-- Supervisor: René-Marcel Kruse
-- Students: Jan, Malte, Mattias
-- Tasks: Parameter estimation using Fisher scoring, model selection using leave-p-out and k-fold cross validation
-- Readings: https://en.wikipedia.org/wiki/Cross-validation_(statistics), the cross validation functions in the `gamlss` R package
-
 ### `asp20lasso`
 
 - Supervisor: Maike Hohberg
@@ -176,47 +162,6 @@ Your task is to do better than me and implement a more efficient inference algor
 - Tasks: Parameter estimation and variable selection using the boosting ensemble learning algorithm
 - Readings: Section 4.3 in [1]
 
-### `asp20regPrior`
-
-- Supervisor: Paul Wiemann
-- Students: Jinyi, Markus, Sören
-- Tasks: Interface for the specification of regularization priors, statistical inference using random walk/Langevin MCMC
-- Readings: Section 4.4.2 in [1], https://en.wikipedia.org/wiki/Metropolis-adjusted_Langevin_algorithm
-
-### `asp20ssPrior`
-
-- Supervisor: Manuel Carlan
-- Students: Not assigned
-- Tasks: Interface for the specification of spike and slab priors, statistical inference using random walk/Langevin MCMC
-- Readings: Section 4.4.4 in [1], https://en.wikipedia.org/wiki/Metropolis-adjusted_Langevin_algorithm
-
-### `asp20hMCMC`
-
-- Supervisor: Manuel Carlan
-- Students: Carsten, Joanna, Tim
-- Tasks: Statistical inference using Hamiltonian MCMC with flat priors
-- Readings: "A conceptual introduction to Hamiltonian Monte Carlo" by Michael Betancourt, "MCMC using Hamiltonian dynamics" by Radford Neal
-
-### `asp20iwlsMCMC`
-
-- Supervisor: Isa Marques
-- Students: Henrike, Kim, Nils
-- Tasks: Statistical inference using iterative weighted least squares (IWLS) MCMC with flat priors
-- Readings: Section 5.6.2 in [1], "Sampling from the posterior distribution in generalized linear mixed models" by Dani Gamerman, "BAMLSS: Bayesian additive models for location, scale, and shape (and beyond)" by Nikolaus Umlauf, Nadja Klein, and Achim Zeileis
-
-### `asp20plot`
-
-- Supervisor: Hannes Riebl
-- Students: Björn, Friederike, Manuel
-- Tasks: Parameter estimation based on weighted/generalized least squares (WLS/GLS), plot functions for model predictions and diagnostics
-- Readings: Section 3.4.4 in [1], the plot functions in the `car` and `gamlss` R packages
-
-### `asp20user`
-
-- Supervisor: Hannes Riebl
-- Students: Not assigned
-- Tasks: Parameter estimation based on weighted/generalized least squares (WLS/GLS), evaluation of the user-friendliness of the `asp20*` packages, implementation of convenience functions, application to the `datasets::airquality` dataset
-- Readings: Section 4.1 in [1], Section 16.3 in [3]
 
 <!--
 more datasets:
