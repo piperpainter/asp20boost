@@ -1,6 +1,6 @@
 library(asp20model)
 library(tidyverse)
-
+library(R6)
 
 LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                         inherit = LocationScaleRegression,
