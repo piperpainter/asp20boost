@@ -19,10 +19,11 @@ set.seed(1337)
 
 * Supervisor: Thomas Kneib
 * Students: Johannes, Levin, Sebastián
-* Tasks: Parameter estimation and variable selection using the boosting ensemble learning algorithm
+* Topic: Parameter estimation and variable selection using the boosting ensemble learning algorithm
 
 
-## Tasks
+## Tasks 
+ignore this subheader
 
 ### until ~ 11 May
 
