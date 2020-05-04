@@ -15,69 +15,13 @@ knitr::opts_chunk$set(
 set.seed(1337)
 ```
 
-# Advanced statistical programming with R
+# asp20boost
 
-Are you taking the course "Advanced statistical programming with R" in the summer term 2020? Then this page is for you. It explains what you need to do to get the credits for this module. `r emo::ji("wink")`
+* Supervisor: Thomas Kneib
+* Students: Johannes, Levin, Sebastián
+* Tasks: Parameter estimation and variable selection using the boosting ensemble learning algorithm
 
-In this course, you are going work on a programming project in a group of three students. Each group needs to develop an R package, in which they implement a statistical method for the so-called location-scale regression model class, and a small simulation study to evaluate their method and implementation. In September, you need to submit a term paper about your project.
-
-This git repository contains the `asp20model` package for R, which implements the location-scale regression model class and will be the basis for your package.
-
-**Please note:** If you are planning to take this course, **you need to preregister on Stud.IP before March 31.** Follow this link to sign up: https://studip.uni-goettingen.de/dispatch.php/course/details?sem_id=5b8822a839a628e8166648a57f4f1eac.
-
-**Update on the Corona crisis:** Unsurprisingly, the Corona crisis makes some changes to this course necessary. All previously announced dates remain valid, but I am going to offer the introductory session and the Q&A session as YouTube livestreams. See below for the links. The intermediate and final presentations might be replaced with short written reports, depending on the further developments. I am going to make a final decision on the presentations before the Q&A session on May 4.
-
-## Important dates
-
-- Tuesday, April 7, 10:00--15:00, ~~Blauer Turm / MZG 8.163~~: Introductory session, project assignment \
-  YouTube livestream: https://youtu.be/-a02j6YTxKw \
-  Rocket.Chat channel for questions and comments: https://chat.gwdg.de/channel/asp20
-- Monday, May 4, 14:00--16:00, ~~Blauer Turm / MZG 8.163~~: Q&A session, feel free to ask technical, statistical, and organizational questions \
-  YouTube livestream: https://youtu.be/vi2BqiDUCFI \
-  Rocket.Chat channel for questions and comments: https://chat.gwdg.de/channel/asp20
-- Friday, June 5, 8:30--15:00, Blauer Turm / MZG 8.163: Intermediate presentations
-- Friday, July 10, 8:30--15:00, Blauer Turm / MZG 8.163: Final presentations
-- Tuesday, September 15: Submission deadline for the term papers
-
-## Technical & statistical prerequisites
-
-### The R6 OOP system
-
-The `asp20model` package uses R6 classes, so make sure to get familiar with mutable objects, inheritance, etc. See the chapter on R6 classes in [3], available online: https://adv-r.hadley.nz/r6.html.
-
-### Version control using git & GitLab
-
-The `asp20model` package is hosted on https://gitlab.gwdg.de (the GitLab instance of the computing center of the university), where you are going to develop your R package as well. I created a GitLab group for this course and a GitLab project for each group of students.
-
-**Please note:** To start working on your project, log in to GitLab with your student account once and send me an email. After that, I can add you to the group and the project.
-
-GitLab is an online platform where you can host git repositories, very similar to GitHub, and git is a popular version control system for software development. Systematic, version-controlled software development is an essential component of this course, so if you are not yet familiar with git, please take a look at the git chapter in [4], available online: http://r-pkgs.had.co.nz/git.html.
-
-**Please note:** Your code will only be visible to me, the project supervisors, and your fellow students. Feel free to make mistakes and ask questions!
-
-### Location-scale regression
-
-As mentioned above, we are going to work with the location-scale regression model class in this course. So, what **is** location-scale regression? Let's take a step back and look at the standard linear model first. It is defined as
-
-``` math
-y_i = \boldsymbol{x}_i' \boldsymbol{\beta} + \varepsilon_i, \text{ where } \varepsilon_i \overset{i.i.d.}{\sim} \mathcal{N}(0, \sigma^2).
-```
-
-From the definition, it follows that
-
-``` math
-y_i \overset{ind.}{\sim} \mathcal{N}(\boldsymbol{x}_i' \boldsymbol{\beta}, \sigma^2),
-```
-
-and from this representation, the model can easily be extended with a second linear predictor for the standard deviation. For this purpose, we introduce a covariate vector \$`\boldsymbol{z}_i`\$ and a parameter vector \$`\boldsymbol{\gamma}`\$:
-
-``` math
-y_i \overset{ind.}{\sim} \mathcal{N}(\boldsymbol{x}_i' \boldsymbol{\beta}, (\exp(\boldsymbol{z}_i' \boldsymbol{\gamma}))^2).
-```
-
-What is the \$`\exp`\$ function doing in this formula? Well, one thing that is a little bit tricky about predicting the standard deviation is that the standard deviation needs to be positive, while the linear predictor \$`\boldsymbol{z}_i' \boldsymbol{\gamma}`\$ can become negative for some choices of the parameter vector \$`\boldsymbol{\gamma}`\$. Hence, to ensure that our predictions for the standard deviation are valid, we introduce the \$`\exp`\$ function as a so-called response function for the standard deviation and define \$`\sigma_i = \exp(\boldsymbol{z}_i' \boldsymbol{\gamma})`\$.
-
-Why should we care about location-scale regression? It is not uncommon to observe heteroscedastic data like in the figure below. The standard way to deal with heteroscedastic residuals in a linear model is FGLS estimation, but FGLS does not provide an interpretable description of the variance structure of the data. A location-scale regression model can fill this gap, if we have access to explanatory variables for the variance or the standard deviation of the response variable.
+## The Model
 
 ```{r data, fig.width = 11}
 n <- 500
@@ -89,78 +33,18 @@ curve(x + 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 ```
 
-### Working with the `asp20model` package
+## Tasks
 
-First, you need to install the `asp20model` package from GitLab and load it:
+### until ~ 11 May
 
-```{r installation, eval = 3}
-install.packages("devtools")
-devtools::install_gitlab("asp20/asp20model", host = "gitlab.gwdg.de")
-library(asp20model)
-```
+* simple boost function for scale (estimate var(yi))
+* read Wickham "R-Packages"
+* try implementing function-testing
+* get used to roxygen2
 
-Using the data from the plot above, we can set up a location-scale regression model. Note that the first command only sets up the design matrices and the parameter vectors but does not do any kind of inference. All parameters are initialized with a value of 0. We can use the `loglik()` method to obtain the log-likelihood of the model in the initial state (i.e. with all parameters set to 0):
 
-```{r loglik1}
-model <- LocationScaleRegression$new(y ~ x, ~ x)
-model$beta
-model$gamma
-model$loglik()
-```
-
-Now, let's update the parameter values manually and see how the log-likelihood changes:
-
-```{r loglik2}
-model$beta <- c(0.1, 0.1)
-model$loglik()
-```
-
-For most inference algorithms, we also need the gradient of the log-likelihood with respect to the parameters, which we can obtain with the `grad()` method:
-
-```{r grad}
-model$grad_beta()
-model$grad_gamma()
-```
-
-Finally, the `asp20model` package also comes with a simple [gradient descent algorithm](https://en.wikipedia.org/wiki/Gradient_descent) for maximum likelihood inference. Let's apply it to our model:
-
-```{r graddesc1}
-gradient_descent(model)
-model$beta
-model$gamma
-model$grad_beta()
-model$grad_gamma()
-```
-
-Whoops, that didn't work very well! The algorithm didn't converge, the estimated parameters are far away from the true values we used to simulate the data (\$`\hat{\boldsymbol{\beta}}`\$ should be close to (0, 1), \$`\hat{\boldsymbol{\gamma}}`\$ should be close to (-3, 2)), and the gradient is not close to 0. Let's try again with a smaller step size and more iterations:
-
-```{r graddesc2}
-gradient_descent(model, stepsize = 1e-06, maxit = 500000)
-model$beta
-model$gamma
-model$grad_beta()
-model$grad_gamma()
-```
-
-These results do look better, but they also show how inefficient the gradient descent algorithm is. The algorithm took more than a quarter **million** iterations to converge!
-
-Your task is to do better than me and implement a more efficient inference algorithm for the location-scale regression model class. Use my code for the `gradient_descent()` function as an example. Build on the `LocationScaleRegression` R6 class and its methods and extend them if necessary. Think about inheritance and whether your extensions could be useful for other groups. If yes, feel free to share your code on GitLab and open a pull request in the `asp20model` repository.
-
-## Student projects
-
-### `asp20lasso`
-
-- Supervisor: Maike Hohberg
-- Students: Marah, Niklas, Sophie
-- Tasks: Parameter estimation, variable selection, and regularization using the least absolute shrinkage and selection operator (LASSO)
-- Readings: Section 4.2.3 in [1]
-
-### `asp20boost`
-
-- Supervisor: Thomas Kneib
-- Students: Johannes, Levin, Sebastián
-- Tasks: Parameter estimation and variable selection using the boosting ensemble learning algorithm
-- Readings: Section 4.3 in [1]
+## Literature
+* Section **4.3** in "Regression: Models, methods, and applications" by Ludwig Fahrmeir, Thomas Kneib, Stefan Lang, and Brian Marx, especially Section 2.9.1 on "Regression models for location, scale, and shape"
 
 
 <!--
@@ -169,22 +53,3 @@ more datasets:
 - MASS::Boston
 - https://archive.ics.uci.edu/ml/datasets.php
 -->
-
-## Requirements to pass the course
-
-To get the credits for this module, you need to...
-
-- ... develop an R package that builds on the `asp20model` package and adds the functionality described above. Your code needs to be comprehensible, well documented, and covered by automated tests.
-- ... develop and carry out a small simulation study to show that your method works reliably. Please discuss the scope and design of the simulation study with your supervisor.
-- Your development process should be continuous, collaborative, and transparent. The commit history on GitLab should reflect your progress at any time.
-- ... give two 20-minute presentations on June 9 and July 14.
-- ... submit a term paper by September 15.
-
-You may earn "bonus points" for active exchange with other groups, preferably on GitLab via issues and pull requests. For example, the four groups working on Bayesian inference could develop a common API for the specification of priors. If you need additional features in the `asp20model` package, feel free to open issues and pull requests in this repository.
-
-## Readings
-
-- [1] "Regression: Models, methods, and applications" by Ludwig Fahrmeir, Thomas Kneib, Stefan Lang, and Brian Marx, especially Section 2.9.1 on "Regression models for location, scale, and shape"
-- [2] The tidyverse style guide, available online: https://style.tidyverse.org
-- [3] "Advanced R" by Hadley Wickham, available online: https://adv-r.hadley.nz
-- [4] "R packages" by Hadley Wickham, available online: http://r-pkgs.had.co.nz
