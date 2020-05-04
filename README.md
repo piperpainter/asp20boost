@@ -5,10 +5,34 @@
 
   - Supervisor: Thomas Kneib
   - Students: Johannes, Levin, Sebastián
-  - Tasks: Parameter estimation and variable selection using the
+  - Topic: Parameter estimation and variable selection using the
     boosting ensemble learning algorithm
 
-## The Model
+## Tasks
+
+### until \~ 11 May
+
+  - simple boost function for scale (estimate var(yi))
+  - read Wickham “R-Packages”
+  - try implementing function-testing
+  - get used to roxygen2
+
+## Literature
+
+  - Section **4.3** on “Boosting Linear Regression Models” in
+    “Regression: Models, methods, and applications” by Ludwig
+    Fahrmeir, Thomas Kneib, Stefan Lang, and Brian Marx
+  - Section **2.9.1** on “Regression models for location, scale, and
+    shape” in ibd.
+
+<!--
+more datasets:
+- gamlss.data::TODO
+- MASS::Boston
+- https://archive.ics.uci.edu/ml/datasets.php
+-->
+
+## Location Scale Regression Model
 
 ``` r
 n <- 500
@@ -21,17 +45,3 @@ curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 ```
 
 <img src="man/figures/README-data-1.png" width="100%" />
-
-## Literature
-
-  - Section **4.3** in “Regression: Models, methods, and applications”
-    by Ludwig Fahrmeir, Thomas Kneib, Stefan Lang, and Brian Marx,
-    especially Section 2.9.1 on “Regression models for location, scale,
-    and shape”
-
-<!--
-more datasets:
-- gamlss.data::TODO
-- MASS::Boston
-- https://archive.ics.uci.edu/ml/datasets.php
--->

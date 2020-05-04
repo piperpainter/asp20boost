@@ -23,7 +23,6 @@ set.seed(1337)
 
 
 ## Tasks 
-ignore this subheader
 
 ### until ~ 11 May
 
@@ -31,20 +30,6 @@ ignore this subheader
 * read Wickham "R-Packages"
 * try implementing function-testing
 * get used to roxygen2
-
-
-
-## The Model
-
-```{r data, fig.width = 11}
-n <- 500
-x <- runif(n)
-y <- x + rnorm(n, sd = exp(-3 + 2 * x))
-plot(x, y)
-abline(0, 1, lwd = 2)
-curve(x + 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
-curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
-```
 
 
 
@@ -59,3 +44,16 @@ more datasets:
 - MASS::Boston
 - https://archive.ics.uci.edu/ml/datasets.php
 -->
+
+## Location Scale Regression Model
+
+```{r data, fig.width = 11}
+n <- 500
+x <- runif(n)
+y <- x + rnorm(n, sd = exp(-3 + 2 * x))
+plot(x, y)
+abline(0, 1, lwd = 2)
+curve(x + 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
+curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
+```
+
