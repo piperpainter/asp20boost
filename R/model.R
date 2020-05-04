@@ -222,3 +222,14 @@ boost_levin <- function(model,
   print("Boost-Function called. Nothing implemented yet. Sorry, Dude.")
   invisible(model)
 }
+
+# Boost Sebastian:
+
+boost_sebastian <- function(model,
+                        weight_learn = 0.001,
+                        m_stop = 500,
+                        verbose = FALSE) {
+  print("nothing yet")
+  invisible(model)
+}
+
