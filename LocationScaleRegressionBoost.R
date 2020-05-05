@@ -1,42 +1,37 @@
+#devtools::install_gitlab("asp20/asp20model", host = "gitlab.gwdg.de", force=TRUE)
 library(asp20model)
 library(tidyverse)
 library(R6)
 
 LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                         inherit = LocationScaleRegression,
-                                        
                                         private = list(
-                                          residScale = numeric(),
-                                          update_gamma = function(value) {
-                                            private$.gamma <- value
-                                            private$fitted$scale <- exp(drop(private$Z %*% self$gamma))
-                                            private$residScale <- private$y - private$fitted$scale
-                                            invisible(self)
-                                          }
+                                          update_beta = function(value) {
+                                          private$.beta <- value
+                                          self$fitted_location <- drop(private$X %*% self$beta)
+                                          private$.resid <- private$y - self$fitted_location
+                                          #message("update beta \n")
+                                          #message( self$beta)
+                                          invisible(self)
+                                        }
                                         ),
-                                        
-                                        
-                                        active = list(
+                                   active = list(
                                           lstSqrResid = function()
                                           {
                                             
                                             X_tr_X_inv <- solve(t(private$X) %*% private$X)    
                                             Proj_M <- X_tr_X_inv %*% t(private$X)
-                                            Proj_M %*% private$resid
+                                            Proj_M %*% self$resid()
                                           },
-                                          
-                                          lstSqrResidScale = function()
+                                          lstSqrResidZ = function()
                                           {
-                                            #
-                                            # How to calculate the factor to change for gamma?
-                                            #
-                                            X_tr_X_inv2 <- solve(t(private$X) %*% private$X)    
-                                            Proj_M2 <- X_tr_X_inv2 %*% t(private$X)
-                                            #Proj_M2 %*% private$residScale
-                                            #(resid / scale)^2 - 1
+                                            
+                                            X_tr_X_inv <- solve(t(private$X) %*% private$X)    
+                                            Proj_M <- X_tr_X_inv %*% t(private$X)
+                                            
+                                            Proj_M %*% (self$resid("deviance"))
                                           }
-                                          
-                                        )
+                                          )
                                         
                                         
 )
@@ -46,22 +41,50 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
 
 boostJohannes = function(model,
                          stepsize = 0.001,
-                         maxit = 10000,
-                         abstol = 0.1,
-                         verbose = FALSE) {
+                         maxit = 1000,
+                         abstol = 0.001,
+                         verbose = TRUE) {
   grad_beta <- model$grad_beta()
   grad_gamma <- model$grad_gamma()
   
   message("boost js")
-  v <- 0.1
+  v <- 0.01
   
+  
+  #check if location scale model
   for (i in seq_len(maxit)) {
     model$beta <- model$beta + v*model$lstSqrResid
-    #message(model$beta)
     grad_beta <- model$grad_beta()
-    ##todo gamma
-    model$gamma <- model$gamma + v*model$lstSqrResid
-    #message(model$loglik())
+    
+    model$gamma <- model$gamma + v*model$lstSqrResidZ
+   
+    grad_gamma <- model$grad_gamma()
+    
+    
+    
+    if (verbose) {
+      par_msg <- c(model$beta, model$gamma)
+      par_msg <- format(par_msg, trim = TRUE, digits = 3)
+      par_msg <- paste(par_msg, collapse = " ")
+      
+      grad_msg <- c(grad_beta, grad_gamma)
+      grad_msg <- format(grad_msg, trim = TRUE, digits = 3)
+      grad_msg <- paste(grad_msg, collapse = " ")
+      
+      loglik_msg <- format(model$loglik(), digits = 3)
+      
+      message(
+        "Iteration:      ", i, "\n",
+        "Parameters:     ", par_msg, "\n",
+        "Gradient:       ", grad_msg, "\n",
+        "Log-likelihood: ", loglik_msg, "\n",
+        "==============="
+      )
+    }
+    
+    
+    
+    if (all(abs(c(grad_beta, grad_gamma)) <= abstol)) break 
     
   }
   
@@ -71,6 +94,8 @@ boostJohannes = function(model,
 ##
 ##Test
 ##
+##
+set.seed(1337)
 n <- 500
 x <- runif(n)
 y <- x + rnorm(n, sd = exp(-3 + 2 * x))
@@ -78,20 +103,36 @@ model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
 model$gamma<-c(0,0)
 model$beta<-c(0,0)
 model$loglik()
-boostJohannes(model)
-model$beta
-model$gamma
-model$grad_beta()
-
-model$lstSqrResidScale
-model$lstSqrResid
+boostJohannes(model, 
+              stepsize = 0.0001, maxit = 40000,
+              abstol = 0.001,
+              verbose = TRUE)
 
 
-plot(x = x , y = y, type = 'p')
+#
+####
+#
 
-abline(model$beta)
-abline(model$gamma)
 
 
-model$grad_beta()
-model$grad_gamma()
+
+
+df = data.frame(x,y,
+                "resid"=model$resid(),"fitted_location" = model$fitted_location,
+                "man_fitted_location" = model$beta[2]*x+model$beta[1] , 
+                "y_hat"=model$fitted_location+0.01045657,
+                "manResid" = y-model$beta[2]*x+model$beta[1] , 
+                "fitted_scale" = model$fitted_scale,
+                "upperTube" = model$gamma[1]+  model$fitted_location + model$fitted_location*model$fitted_scale,
+                "downTube" =-1*model$gamma[1] + model$fitted_location - model$fitted_location*model$fitted_scale)
+
+#"upperTube" = model$gamma[1]+  model$fitted_location + model$fitted_location*model$fitted_scale,
+#"downTube" =-1*model$gamma[1] + model$fitted_location - model$fitted_location*model$fitted_scale)
+#sd = exp(-3 + 2 * x)
+
+plot(x, y, ylim = c(-2,2))
+lines(x,df$fitted_location,type="l")
+lines(x,df$upperTube,type="p",col="blue")
+lines(x,df$downTube,type="p",col="green")
+
+
