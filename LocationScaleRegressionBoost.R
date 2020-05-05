@@ -5,16 +5,7 @@ library(R6)
 
 LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                         inherit = LocationScaleRegression,
-                                        private = list(
-                                          update_beta = function(value) {
-                                          private$.beta <- value
-                                          self$fitted_location <- drop(private$X %*% self$beta)
-                                          private$.resid <- private$y - self$fitted_location
-                                          #message("update beta \n")
-                                          #message( self$beta)
-                                          invisible(self)
-                                        }
-                                        ),
+                                       
                                    active = list(
                                           lstSqrResid = function()
                                           {
@@ -104,7 +95,7 @@ model$gamma<-c(0,0)
 model$beta<-c(0,0)
 model$loglik()
 boostJohannes(model, 
-              stepsize = 0.0001, maxit = 40000,
+              stepsize = 0.001, maxit = 40000,
               abstol = 0.001,
               verbose = TRUE)
 
