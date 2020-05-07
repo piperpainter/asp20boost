@@ -5,24 +5,71 @@ library(R6)
 
 LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                         inherit = LocationScaleRegression,
-                                       
-                                   active = list(
+                                        public = list(
+                                          
+                                          X_tr_X_inv = numeric(),
+                                          Proj_M_X = numeric(),
+                                          Z_tr_Z_inv = numeric(),
+                                          Proj_M_Z = numeric(),
+                                          y_upperTube = numeric(),
+                                          y_downTube = numeric(),
+                                          
+                                          initProj_M = function() {
+                                            #𝑃𝑟𝑜𝑗𝑀𝑎𝑡𝑟𝑖𝑥=(𝑋𝑇𝑋)−1𝑋𝑇
+                                            #https://stats.stackexchange.com/questions/154485/least-squares-regression-step-by-step-linear-algebra-computation?noredirect=1&lq=1
+                                            self$X_tr_X_inv <- solve(t(private$X) %*% private$X)    
+                                            self$Proj_M_X <- self$X_tr_X_inv %*% t(private$X)
+                                            
+                                            self$Z_tr_Z_inv <- solve(t(private$Z) %*% private$Z)    
+                                            self$Proj_M_Z <- self$Z_tr_Z_inv %*% t(private$Z)
+                                            
+                                          },
+                                          negloglik = function() {
+                                            location <- self$fitted_location
+                                            scale <- self$fitted_scale
+                                            
+                                            sum(dnorm(private$y, location, scale, log = TRUE))
+                                          }
+                                          
+                                          
+                                          
+                                          
+                                        ),
+                                        active = list(
                                           lstSqrResid = function()
                                           {
                                             
-                                            X_tr_X_inv <- solve(t(private$X) %*% private$X)    
-                                            Proj_M <- X_tr_X_inv %*% t(private$X)
-                                            Proj_M %*% self$resid()
+                                            self$Proj_M_X %*% self$resid()
                                           },
-                                          lstSqrResidZ = function()
+                                          
+                                          derivative1 = function()
                                           {
                                             
-                                            X_tr_X_inv <- solve(t(private$X) %*% private$X)    
-                                            Proj_M <- X_tr_X_inv %*% t(private$X)
+                                            sum(self$resid()^2*private$Z[,1]*exp(-2*(private$Z[,1]*self$gamma[1]+self$gamma[2]*private$Z[,2]))-private$Z[,1])
                                             
-                                            Proj_M %*% (self$resid("deviance"))
+                                            
+                                            
+                                          },
+                                          derivative2 = function()
+                                          {
+                                            sum((self$resid()^2)*private$Z[,2]*exp(-2*(private$Z[,2]*self$gamma[2]+self$gamma[1]*private$Z[,1]))-private$Z[,2])
+                                          },
+                                          
+                                          
+                                          
+                                          getX = function()
+                                          {
+                                            private$X
+                                          },
+                                          getZ = function()
+                                          {
+                                            private$Z
                                           }
-                                          )
+                                          
+                                          
+                                          
+                                          
+                                        )
                                         
                                         
 )
@@ -45,11 +92,19 @@ boostJohannes = function(model,
   #check if location scale model
   for (i in seq_len(maxit)) {
     model$beta <- model$beta + v*model$lstSqrResid
+    
+
+    #message(par_msg2)
+    
     grad_beta <- model$grad_beta()
     
-    model$gamma <- model$gamma + 0.00001*model$lstSqrResidZ
-   
+    newgamma<-c(model$gamma[1] + v*model$derivative1,model$gamma[2] + v*model$derivative2)
+    model$gamma<-newgamma
+    
+    #model$gamma <- c(model$gamma[1] + v*model$derivative1,model$gamma[2] + v*model$derivative2)
+    
     grad_gamma <- model$grad_gamma()
+    
     
     
     
@@ -81,7 +136,7 @@ boostJohannes = function(model,
       message("Iteration:      ", i, "\n")
       break 
     }
-      
+    
     
   }
   
@@ -97,41 +152,49 @@ n <- 500
 x <- runif(n)
 y <- x + rnorm(n, sd = exp(-3 + 2 * x))
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-model$gamma<-c(0,0.5)
-model$beta<-c(0,0)
-model$loglik()
+model$initProj_M()
+model$gamma<-c(10,20)
+model$beta<-c(-20,50)
+
 boostJohannes(model, 
-              stepsize = 0.001, maxit = 50000,
+              stepsize = 0.001, maxit = 5000,
               abstol = 0.001,
-              verbose = FALSE)
+              verbose = TRUE)
 
 
 #
 ####
 #
 
+model$loglik()
+
+dftest = data.frame(x,y,
+                    "resid"=model$resid(),"fitted_location" = model$fitted_location,
+                    "man_fitted_location" = model$beta[2]*x+model$beta[1] , 
+                    "y_hat"=model$fitted_location+0.01045657,
+                    "manResid" = y-model$beta[2]*x+model$beta[1] , 
+                    "fitted_scale" = model$fitted_scale,
+                    "upperTube" = model$fitted_location + model$fitted_location*model$fitted_scale,
+                    "downTube" =  model$fitted_location - model$fitted_location*model$fitted_scale)
 
 
-
-
-df = data.frame(x,y,
-                "resid"=model$resid(),"fitted_location" = model$fitted_location,
-                "man_fitted_location" = model$beta[2]*x+model$beta[1] , 
-                "y_hat"=model$fitted_location+0.01045657,
-                "manResid" = y-model$beta[2]*x+model$beta[1] , 
-                "fitted_scale" = model$fitted_scale,
-                "upperTube" = model$fitted_location + model$fitted_location*model$fitted_scale,
-                "downTube" =  model$fitted_location - model$fitted_location*model$fitted_scale)
 
 #"upperTube" = model$gamma[1]+  model$fitted_location + model$fitted_location*model$fitted_scale,
 #"downTube" =-1*model$gamma[1] + model$fitted_location - model$fitted_location*model$fitted_scale)
 #sd = exp(-3 + 2 * x)
 
-plot(x, y, ylim = c(-2,2))
-lines(x,df$fitted_location,type="l")
-lines(x,df$upperTube,type="p",col="blue")
-lines(x,df$downTube,type="p",col="green")
 
 
+plot(x,y)
+lines(dftest$x,dftest$upperTube, type = "p", col="blue")
+lines(dftest$x,dftest$downTube, type = "p", col="green")
+lines(x,model$fitted_location)
+abline(0, 0) 
 
-model$beta
+model$fitted_location + model$fitted_location*model$fitted_scale
+
+
+model$gamma
+
+model$grad_beta()
+model$grad_gamma()
