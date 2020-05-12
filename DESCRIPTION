@@ -1,15 +1,19 @@
 Package: asp20boost
-Title: An R6 Class for Location-Scale Regression Models
+Title: An R6 Class for Location-Scale Regression Models using Gradient Boosting
 Version: 0.0.0.9000
-Authors@R: as.person("Levin Wiebelt <levin.wiebelt@uni-goettingen.de> [aut, cre]")
-Description: This package implements an R6 class for location-scale regression
-    models and a gradient descent algorithm for maximum likelihood estimation.
-    It was written for the course "Advanced statistical programming with R" at
-    the University of Göttingen.
-Imports: R6
-Suggests: testthat, numDeriv
-License: MIT + file LICENSE
+Authors@R: 
+    person(given = "First",
+           family = "Last",
+           role = c("aut", "cre"),
+           email = "first.last@example.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: MIT
+Imports: R6,
+        asp20model
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
+Suggests: 
+    testthat, numDeriv

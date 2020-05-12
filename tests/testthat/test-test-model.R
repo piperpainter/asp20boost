@@ -8,7 +8,7 @@ x2 <- runif(n)
 x3 <- runif(n)
 y <- rnorm(n, x1 + x3, exp(-3 + x2 + x3))
 
-model <- LocationScaleRegression$new(y ~ x1 + x3, ~ x2 + x3)
+model <- LocationScaleRegressionBoost$new(y ~ x1 + x3, ~ x2 + x3)
 
 f <- function(x) {
   model <- model$clone()
@@ -30,6 +30,8 @@ test_that("gamma gradient works", {
   expect_equivalent(model$grad_gamma(), grad(f, model$gamma))
 })
 
-test_that("gradient descent does not throw an error", {
-  expect_error(gradient_descent(model, verbose = TRUE), NA)
-})
+
+#test_that("gradient boost does not throw an error", {
+#  expect_error(gradient_boost(model, verbose = TRUE), NA)
+#})
+

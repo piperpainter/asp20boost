@@ -45,3 +45,26 @@ curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 ```
 
 <img src="man/figures/README-data-1.png" width="100%" />
+
+## Location Scale Regression Boost Model
+
+``` r
+library(asp20boost)
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model, 
+              stepsize = 0.001, maxit = 1000,
+              abstol = 0.001,
+              verbose = FALSE)
+#> boost js
+plot(x, y)
+lines(x,model$fitted_location)
+#Todo do create similar graphic
+curve(x + 1.96 * exp(x*model$gamma), -0.1, 1.1, add = TRUE)
+#> Warning in x * model$gamma: longer object length is not a multiple of shorter
+#> object length
+curve(x - 1.96 * exp(x*model$gamma), -0.1, 1.1, add = TRUE)
+#> Warning in x * model$gamma: longer object length is not a multiple of shorter
+#> object length
+```
+
+<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
