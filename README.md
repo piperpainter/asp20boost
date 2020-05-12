@@ -46,7 +46,18 @@ curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 
 <img src="man/figures/README-data-1.png" width="100%" />
 
-## Location Scale Regression Boost Model
+## Working with Location Scale Regression Boost Model
+
+First, you need to install the `asp20model` & `asp20boost` package from
+GitLab and load it:
+
+``` r
+## install.packages("devtools")
+## #This throws an error for asp20boost
+#devtools::install_gitlab("asp20/asp20model", host = "gitlab.gwdg.de")
+## #devtools::install_gitlab("asp20/asp20boost", host = "gitlab.gwdg.de")
+## 
+```
 
 ``` r
 library(asp20boost)
