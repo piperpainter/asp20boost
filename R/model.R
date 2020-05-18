@@ -17,6 +17,10 @@
 #' @import asp20model
 #' @export
 
+
+#
+
+
 LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                         inherit = LocationScaleRegression,
                                         public = list(
@@ -80,6 +84,41 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                             }
                                             coefficients
 
+                                          },
+
+                                          lstSqrCovariates = function()
+                                          {
+                                            #Page 219
+
+                                            lstSqrsCovariate <- numeric()
+
+                                            for(j in 1:dim(private$X)[2]) {
+                                              xj_mean <- mean(private$X[,j])
+
+                                              #Compute the resdiuals for the jth covariate
+                                              ui <- y - self$beta[j]*private$X[,j]
+
+                                              #Create Prjection Matrix for jth covariate
+                                              X_tr_X_inv <- solve(t(private$X[,j]) %*% private$X[,j])
+                                              Proj_M_X <- X_tr_X_inv %*% t(private$X[,j])
+
+                                              #Fit least-squares base-learning procedures for all the parameters yielding
+                                              bjhat <- Proj_M_X * self$resid()
+
+                                              lstSqrs <- sum((ui - private$X[,j]*bjhat)^2)
+                                              lstSqrsCovariate[j] <- lstSqrs
+
+                                            }
+                                            #which.min(lstSqrsCovariate)
+                                            lstSqrsCovariate
+                                          },
+                                          getX = function()
+                                          {
+                                            private$X
+                                          },
+                                          getY = function()
+                                          {
+                                            private$y
                                           }
                                         )
 
@@ -112,27 +151,60 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
 
 
 gradient_boost = function(model,
-                         stepsize = 0.001,
-                         maxit = 1000,
-                         abstol = 0.001,
-                         verbose = TRUE) {
+                          stepsize = 0.001,
+                          maxit = 1000,
+                          abstol = 0.001,
+                          verbose = TRUE) {
   grad_beta <- model$grad_beta()
   grad_gamma <- model$grad_gamma()
 
   message("boost js")
   v <- stepsize
 
+  tmp_DerviatesB <- c(0,0)
+  tmp_DerviatesZ <- c(0,0)
 
   #check if location scale model
   for (i in seq_len(maxit)) {
+
+    #Compontentwise Boosting for Beta
+    #
+    tmp_lstSqrsCovariate <- model$lstSqrCovariates2
+    indexOfCovariateUpdate = which.min(tmp_lstSqrsCovariate)
+
+    # betanew <- model$beta
+    #betanew[indexOfCovariateUpdate] <- model$beta[indexOfCovariateUpdate] + v*tmp_lstSqrsCovariate[indexOfCovariateUpdate]
+
+    #model$beta<-betanew
+
+    #old
+    #
+
+
     model$beta <- model$beta + v*model$lstSqrResid
     grad_beta <- model$grad_beta()
 
-    model$gamma<-model$gamma+(v*model$derivativesZ)
+    #new
+    #tmp_DerviatesB <- model$lstSqrCovariates
+    #indexOfBetaUpdate = which.max((tmp_DerviatesB))
+    #tmp_newbeta <-model$beta
+    #tmp_newbeta[indexOfBetaUpdate] <- model$beta[indexOfBetaUpdate] + v*tmp_DerviatesB[indexOfBetaUpdate]
+    #model$beta<-tmp_newbeta
+    #grad_beta <- model$grad_beta()
+
+    #Update Gamma with greatest gradient
+
+    indexOfGammaUpdate = which.max(abs(tmp_DerviatesZ))
+    tmp_newgamma <-model$gamma
+    tmp_newgamma[indexOfGammaUpdate] <- model$gamma[indexOfGammaUpdate] + v*tmp_DerviatesZ[indexOfGammaUpdate]
+    model$gamma<-tmp_newgamma
+    tmp_DerviatesZ <- model$derivativesZ
     grad_gamma <- model$grad_gamma()
-
-
-
+    #old
+    #model$gamma<-model$gamma+(v*model$derivativesZ)
+    #grad_gamma <- model$grad_gamma()
+    #lstsqrcov_msg <- format((abs(c( model$lstSqrCovariates))), digits = 3)
+    #message("show covariats:", lstsqrcov_msg)
 
     if (verbose) {
       par_msg <- c(model$beta, model$gamma)
@@ -152,6 +224,13 @@ gradient_boost = function(model,
         "Parameters:     ", par_msg, "\n",
         "Gradient:       ", grad_msg, "\n",
         "Log-likelihood: ", loglik_msg, "\n",
+        "Componentwise boosting: ", loglik_msg, "\n",
+        "------------Beta---------------\n",
+        "Lst Sqr Covariate min: ", which.min(tmp_DerviatesB)," ", tmp_DerviatesB[which.min(tmp_DerviatesB)], "\n",
+        "Lst Sqr Covariate: ", which.max(tmp_DerviatesB)," ", tmp_DerviatesB[which.max(tmp_DerviatesB)], "\n",
+        "------------Gamma---------------\n",
+        "Lst Sqr Covariate: ", which.min(tmp_DerviatesZ)," ", tmp_DerviatesZ[indexOfGammaUpdate], "\n",
+        "Lst Sqr Covariate: ", which.max(tmp_DerviatesZ)," ", tmp_DerviatesZ[which.max(tmp_DerviatesZ)], "\n",
         "ABS:",all(abs(c(grad_beta, grad_gamma)) <= abstol), abs_msg, "\n",
         "==============="
       )
@@ -167,9 +246,16 @@ gradient_boost = function(model,
 
 
   }
-
   invisible(model)
 }
 
+## for testing purpose
+#library(asp20model)
+#set.seed(1337)
+#
+#n <- 500
+#x <- runif(n)
+#y <- x + rnorm(n, sd = exp(-3 + 2 * x))
+#model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
 
-
+#gradient_boost(model,stepsize = 0.0001, maxit = 10000, abstol = 0.001, verbose = TRUE)
