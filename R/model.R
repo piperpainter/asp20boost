@@ -18,7 +18,7 @@
 #' @export
 
 
-#
+library(R6)
 
 
 LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
@@ -75,42 +75,25 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                           #' model$<-derivativesZ
                                           derivativesZ = function()
                                           {
-                                            #Calculates current first derivates for Zn of Log Likelehood
+                                            #Calculates current first derivates for Gamma n of Log Likelehood
                                             #Could be further improved by moving the matrix multiplaction to the update gamma function to reduce the calculation time
                                             Z_countCoefficient <- dim(model$getZ)[2]
-                                            coefficients <- numeric()
+                                            derivatives <- numeric()
                                             for(n in 1:dim(private$Z)[2]) {
-                                              coefficients[n]<-sum((self$resid()^2)*private$Z[,n]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,n])
+                                              derivatives[n]<-sum((self$resid()^2)*private$Z[,n]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,n])
                                             }
-                                            coefficients
-
+                                            derivatives
                                           },
-
-                                          lstSqrCovariates = function()
+                                          derivativesB = function()
                                           {
-                                            #Page 219
-
-                                            lstSqrsCovariate <- numeric()
-
-                                            for(j in 1:dim(private$X)[2]) {
-                                              xj_mean <- mean(private$X[,j])
-
-                                              #Compute the resdiuals for the jth covariate
-                                              ui <- y - self$beta[j]*private$X[,j]
-
-                                              #Create Prjection Matrix for jth covariate
-                                              X_tr_X_inv <- solve(t(private$X[,j]) %*% private$X[,j])
-                                              Proj_M_X <- X_tr_X_inv %*% t(private$X[,j])
-
-                                              #Fit least-squares base-learning procedures for all the parameters yielding
-                                              bjhat <- Proj_M_X * self$resid()
-
-                                              lstSqrs <- sum((ui - private$X[,j]*bjhat)^2)
-                                              lstSqrsCovariate[j] <- lstSqrs
-
+                                            #Calculates current first derivates for Beta n of Squared Residuals ()
+                                            #Could be further improved by moving the matrix multiplaction to the update beta function to reduce the calculation time
+                                            derivatives <- numeric()
+                                            for(n in 1:dim(private$X)[2]) {
+                                              #First derivative of (y-X*B)^2
+                                              derivatives[n]<-sum(2*private$X[,n]*(model$resid()))
                                             }
-                                            #which.min(lstSqrsCovariate)
-                                            lstSqrsCovariate
+                                            derivatives
                                           },
                                           getX = function()
                                           {
@@ -157,40 +140,30 @@ gradient_boost = function(model,
                           verbose = TRUE) {
   grad_beta <- model$grad_beta()
   grad_gamma <- model$grad_gamma()
-
-  message("boost js")
   v <- stepsize
-
+  #Page 226 init b0 wiht mean of y
   tmp_DerviatesB <- c(0,0)
   tmp_DerviatesZ <- c(0,0)
 
   #check if location scale model
   for (i in seq_len(maxit)) {
 
-    #Compontentwise Boosting for Beta
-    #
-    tmp_lstSqrsCovariate <- model$lstSqrCovariates2
-    indexOfCovariateUpdate = which.min(tmp_lstSqrsCovariate)
-
-    # betanew <- model$beta
-    #betanew[indexOfCovariateUpdate] <- model$beta[indexOfCovariateUpdate] + v*tmp_lstSqrsCovariate[indexOfCovariateUpdate]
-
-    #model$beta<-betanew
-
-    #old
-    #
+    #Set values for checking progress -> abstol
+    old_grad_beta <-grad_beta
+    old_grad_gamma <-grad_gamma
 
 
-    model$beta <- model$beta + v*model$lstSqrResid
+    #Update Beta with greatest gradient
+    #should be evaluated to use minial Least Squares
+    indexOfBetaUpdate = which.max(abs(tmp_DerviatesB))
+    tmp_newbeta<-model$beta
+    tmp_newbeta[indexOfBetaUpdate] <- model$beta[indexOfBetaUpdate] + v*tmp_DerviatesB[indexOfBetaUpdate]
+    model$beta<-tmp_newbeta
+    tmp_DerviatesB <- model$derivativesB
     grad_beta <- model$grad_beta()
 
-    #new
-    #tmp_DerviatesB <- model$lstSqrCovariates
-    #indexOfBetaUpdate = which.max((tmp_DerviatesB))
-    #tmp_newbeta <-model$beta
-    #tmp_newbeta[indexOfBetaUpdate] <- model$beta[indexOfBetaUpdate] + v*tmp_DerviatesB[indexOfBetaUpdate]
-    #model$beta<-tmp_newbeta
-    #grad_beta <- model$grad_beta()
+
+
 
     #Update Gamma with greatest gradient
 
@@ -200,11 +173,7 @@ gradient_boost = function(model,
     model$gamma<-tmp_newgamma
     tmp_DerviatesZ <- model$derivativesZ
     grad_gamma <- model$grad_gamma()
-    #old
-    #model$gamma<-model$gamma+(v*model$derivativesZ)
-    #grad_gamma <- model$grad_gamma()
-    #lstsqrcov_msg <- format((abs(c( model$lstSqrCovariates))), digits = 3)
-    #message("show covariats:", lstsqrcov_msg)
+
 
     if (verbose) {
       par_msg <- c(model$beta, model$gamma)
@@ -223,25 +192,22 @@ gradient_boost = function(model,
         "Iteration:      ", i, "\n",
         "Parameters:     ", par_msg, "\n",
         "Gradient:       ", grad_msg, "\n",
+        "Squared Resid:       ", sum(model$resid()^2), "\n",
         "Log-likelihood: ", loglik_msg, "\n",
         "Componentwise boosting: ", loglik_msg, "\n",
         "------------Beta---------------\n",
-        "Lst Sqr Covariate min: ", which.min(tmp_DerviatesB)," ", tmp_DerviatesB[which.min(tmp_DerviatesB)], "\n",
-        "Lst Sqr Covariate: ", which.max(tmp_DerviatesB)," ", tmp_DerviatesB[which.max(tmp_DerviatesB)], "\n",
+        "Beta Update Coeff: ", which.min(tmp_DerviatesB)," ", tmp_DerviatesB[indexOfBetaUpdate], "\n",
         "------------Gamma---------------\n",
-        "Lst Sqr Covariate: ", which.min(tmp_DerviatesZ)," ", tmp_DerviatesZ[indexOfGammaUpdate], "\n",
-        "Lst Sqr Covariate: ", which.max(tmp_DerviatesZ)," ", tmp_DerviatesZ[which.max(tmp_DerviatesZ)], "\n",
-        "ABS:",all(abs(c(grad_beta, grad_gamma)) <= abstol), abs_msg, "\n",
+        "Gamma Update Coeff: ", which.min(tmp_DerviatesZ)," ", tmp_DerviatesZ[indexOfGammaUpdate], "\n",
+        #"ABS:",all(abs(c(grad_beta-old_grad_beta, grad_gamma-old_grad_gamma)))  , "\n",
         "==============="
       )
     }
 
-    #early stopping needs to be checked
-    if (all(abs(c(grad_beta, grad_gamma)) <= abstol))
-    {
-      message("abs stop at")
-      message("Iteration:      ", i, "\n")
-      break
+
+    if (i>1&& all(abs(c(grad_beta-old_grad_beta, grad_gamma-old_grad_gamma)) <= abstol)) {
+       message("break")
+      break()
     }
 
 
@@ -250,12 +216,11 @@ gradient_boost = function(model,
 }
 
 ## for testing purpose
-#library(asp20model)
-#set.seed(1337)
-#
-#n <- 500
-#x <- runif(n)
-#y <- x + rnorm(n, sd = exp(-3 + 2 * x))
-#model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+library(asp20model)
+set.seed(1337)
+n <- 500
+x <- runif(n)
+y <- x + rnorm(n, sd = exp(-3 + 2 * x))
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model,stepsize = 0.001, maxit = 5000, abstol = 0.001, verbose = TRUE)
 
-#gradient_boost(model,stepsize = 0.0001, maxit = 10000, abstol = 0.001, verbose = TRUE)
