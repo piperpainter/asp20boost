@@ -88,10 +88,12 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                           {
                                             #Calculates current first derivates for Beta n of Squared Residuals ()
                                             #Could be further improved by moving the matrix multiplaction to the update beta function to reduce the calculation time
-                                            derivatives <- numeric()
+                                            derivatives<-numeric()
                                             for(n in 1:dim(private$X)[2]) {
-                                              #First derivative of (y-X*B)^2
-                                              derivatives[n]<-sum(2*private$X[,n]*(model$resid()))
+                                              ui <- (self$resid())
+                                              xn <- private$X[,n]
+                                              bjhat <- solve(t(xn)%*%xn)%*%t(xn)%*%ui
+                                              derivatives[n]<-sum((ui-xn%*%bjhat)^2)
                                             }
                                             derivatives
                                           },
@@ -154,19 +156,28 @@ gradient_boost = function(model,
 
 
     #Update Beta with greatest gradient
-    #should be evaluated to use minial Least Squares
-    indexOfBetaUpdate = which.max(abs(tmp_DerviatesB))
-    tmp_newbeta<-model$beta
-    tmp_newbeta[indexOfBetaUpdate] <- model$beta[indexOfBetaUpdate] + v*tmp_DerviatesB[indexOfBetaUpdate]
-    model$beta<-tmp_newbeta
-    tmp_DerviatesB <- model$derivativesB
-    grad_beta <- model$grad_beta()
+    #should be evaluated to check Least Squares Criterion to identify component to update?
+    # indexOfBetaUpdate = which.max(abs(tmp_DerviatesB))
+    # tmp_newbeta<-model$beta
+    # tmp_newbeta[indexOfBetaUpdate] <- model$beta[indexOfBetaUpdate] + v*tmp_DerviatesB[indexOfBetaUpdate]
+    # model$beta<-tmp_newbeta
+    # tmp_DerviatesB <- model$derivativesB
+    # grad_beta <- model$grad_beta()
+    #END OF OLD
 
+    #needs custom step size for Beta, otherwise it would take to long
+    stepsize <- 0.1
+    indexOfBetaUpdate <-which.min(model$derivativesB)
+
+    newbeta <- model$beta
+    xn <- model$getX[,indexOfBetaUpdate]
+    newbeta[indexOfBetaUpdate] <- newbeta[indexOfBetaUpdate] + stepsize*solve(t(xn)%*%xn)%*% t(xn) %*% model$resid()
+    model$beta <- newbeta
 
 
 
     #Update Gamma with greatest gradient
-
+    #needs to be changes to fit sperate linear models for all coveraites and use min function to determin min loss
     indexOfGammaUpdate = which.max(abs(tmp_DerviatesZ))
     tmp_newgamma <-model$gamma
     tmp_newgamma[indexOfGammaUpdate] <- model$gamma[indexOfGammaUpdate] + v*tmp_DerviatesZ[indexOfGammaUpdate]
@@ -207,7 +218,7 @@ gradient_boost = function(model,
 
     if (i>1&& all(abs(c(grad_beta-old_grad_beta, grad_gamma-old_grad_gamma)) <= abstol)) {
        message("break")
-      break()
+       break()
     }
 
 
@@ -222,5 +233,5 @@ n <- 500
 x <- runif(n)
 y <- x + rnorm(n, sd = exp(-3 + 2 * x))
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-gradient_boost(model,stepsize = 0.001, maxit = 5000, abstol = 0.001, verbose = TRUE)
+gradient_boost(model,stepsize = 0.001, maxit = 10000, abstol = 0.0001, verbose = TRUE)
 
