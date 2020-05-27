@@ -141,7 +141,7 @@ gradient_boost = function(model,
     #needs custom step size for Beta, otherwise it would take to long ? increase with this factor
     stepsize <-10
 
-    model$bet0a<-model$beta + stepsize*v*model$bestFittingVariableBeta
+    model$beta<-model$beta + stepsize*v*model$bestFittingVariableBeta
     grad_beta <- model$grad_beta()
 
 
