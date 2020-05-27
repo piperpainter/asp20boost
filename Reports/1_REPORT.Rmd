@@ -45,6 +45,7 @@ To cite:
 In the `report` folder there's two `.bib` files. 
 These contain all reference we should need. 
 To update the `package.bib` write the name of the package in the following chunk and *actively* run it (It should be installed in your terminal).
+The`citavi.bib` file needs to be exported from citavi. 
 
 ```{r pack tex, eval=FALSE, include=TRUE}
 # automatically create a bib database for R packages
@@ -91,24 +92,39 @@ Here those inputs that are easy to configuration for you guys to get an idea:
 * `lof` and `lot` set to true give me a list of figures and tables respectively. 
 
 
-# 0. Lead Questions to be answered (from Hannes' e-mail):
-
-* Which open questions do you have about the statistical model and methodology?
-*  What functionality are you planning to (or did you already) implement? What did you decide to leave out?
-* What are the critical aspects of your implementation and your package? Stability? Performance? User-friendliness? How are you going to deal with these potential issues?
-    What design designs did you make with respect to your implementation? How are you going to extend the R6 class? What additional functions are you going to provide?
 
 
-# 1. Description of the problem
+# 1. Introduction:
 
-We have been working on an implementation for a boosting implementation with gradient descent for location and scale.
+* The developement of this package takes place in the framework of the seminar "Advanced Statisical Programming" -> SS20
+* We expand the R6 class *"LocationScaleRegression"* belonging to the `asp20model` package concieved specifficaly for this seminar [@R-asp20model]
+* Our aim is to develope an multi-faceted implementation of boosting for location and scale including component-wise boosting, use of cross-validation to determine the optimal stopping critera  and useful options for visualization.
+
 
 # 2. Description of progress
 
-## Johannes is
-> gzus.
+> Hannes lead question: What are the critical aspects of your implementation and your package? Stability? Performance? User-friendliness? How are you going to deal with these potential issues?
 
-# 3. Intended extensions to be implemented. 
-# 4. Comments
-# 5. References
+> 2. What design designs did you make with respect to your implementation? How are you going to extend the R6 class? What additional functions are you going to provide?
+
+I propose a timeline where the implementation process is described step by step as a list e.g:
+
+1. Primitive implementation of boosting
+2. Simple boosting for location implemented
+3. Adressed the estimation for the variance of gamma. 
+4. Johannes finished everything #lol. 27.05. 
+
+## Johannes is *gzus*.
+
+# 3. Description of the problem
+
+> Hannes lead question: Which open questions do you have about the statistical model and methodology?
+
+
+# 4. Extensions to be implemented. 
+
+> Hannes' Lead question: What functionality are you planning to (or did you already) implement? What did you decide to leave out?
+
+# 5. Summary?
+# 6. References
 

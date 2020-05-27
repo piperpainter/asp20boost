@@ -127,6 +127,9 @@ It consists of two paragraphs.
 \chapter{How to cite and configure the document's
 appearance}\label{how-to-cite-and-configure-the-documents-appearance}}
 
+If you don't have Latex download latex for R with
+\texttt{tinytex::install\_tinytex()}.
+
 \hypertarget{write}{%
 \section{Write}\label{write}}
 
@@ -147,7 +150,8 @@ To cite:
 In the \texttt{report} folder there's two \texttt{.bib} files. These
 contain all reference we should need. To update the \texttt{package.bib}
 write the name of the package in the following chunk and \emph{actively}
-run it (It should be installed in your terminal).
+run it (It should be installed in your terminal). The\texttt{citavi.bib}
+file needs to be exported from citavi.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -214,49 +218,91 @@ idea:
   and tables respectively.
 \end{itemize}
 
-\hypertarget{lead-questions-to-be-answered-from-hannes-e-mail}{%
-\chapter{0.Lead Questions to be answered (from Hannes'
-e-mail):}\label{lead-questions-to-be-answered-from-hannes-e-mail}}
+\hypertarget{introduction}{%
+\chapter{1. Introduction:}\label{introduction}}
 
 \begin{itemize}
 \tightlist
 \item
-  Which open questions do you have about the statistical model and
-  methodology?
+  The developement of this package takes place in the framework of the
+  seminar ``Advanced Statisical Programming'' -\textgreater{} SS20
 \item
-  What functionality are you planning to (or did you already) implement?
-  What did you decide to leave out?
+  We expand the R6 class \emph{``LocationScaleRegression''} belonging to
+  the \texttt{asp20model} package concieved specifficaly for this
+  seminar (Riebl 2020)
 \item
-  What are the critical aspects of your implementation and your package?
-  Stability? Performance? User-friendliness? How are you going to deal
-  with these potential issues? What design designs did you make with
-  respect to your implementation? How are you going to extend the R6
-  class? What additional functions are you going to provide?
+  Our aim is to develope an multi-faceted implementation of boosting for
+  location and scale including component-wise boosting, use of
+  cross-validation to determine the optimal stopping critera and useful
+  options for visualization.
 \end{itemize}
-
-\hypertarget{description-of-the-problem}{%
-\chapter{1. Description of the
-problem}\label{description-of-the-problem}}
-
-We have been working on an implementation for a boosting implementation
-with gradient descent for location and scale.
 
 \hypertarget{description-of-progress}{%
 \chapter{2. Description of progress}\label{description-of-progress}}
 
+\begin{quote}
+Hannes lead question: What are the critical aspects of your
+implementation and your package? Stability? Performance?
+User-friendliness? How are you going to deal with these potential
+issues?
+\end{quote}
+
+\begin{quote}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  What design designs did you make with respect to your implementation?
+  How are you going to extend the R6 class? What additional functions
+  are you going to provide?
+\end{enumerate}
+\end{quote}
+
+I propose a timeline where the implementation process is described step
+by step as a list e.g:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Primitive implementation of boosting
+\item
+  Simple boosting for location implemented
+\item
+  Adressed the estimation for the variance of gamma.
+\item
+  Johannes finished everything \#lol. 27.05.
+\end{enumerate}
+
 \hypertarget{johannes-is-gzus.}{%
-\section{Johannes is gzus.}\label{johannes-is-gzus.}}
+\section{\texorpdfstring{Johannes is
+\emph{gzus}.}{Johannes is gzus.}}\label{johannes-is-gzus.}}
 
-\hypertarget{intended-extensions-to-be-implemented.}{%
-\chapter{3. Intended extensions to be
-implemented.}\label{intended-extensions-to-be-implemented.}}
+\hypertarget{description-of-the-problem}{%
+\chapter{3. Description of the
+problem}\label{description-of-the-problem}}
 
-\hypertarget{comments}{%
-\chapter{4. Comments}\label{comments}}
+\begin{quote}
+Hannes lead question: Which open questions do you have about the
+statistical model and methodology?
+\end{quote}
+
+\hypertarget{extensions-to-be-implemented.}{%
+\chapter{4. Extensions to be
+implemented.}\label{extensions-to-be-implemented.}}
+
+\begin{quote}
+Hannes' Lead question: What functionality are you planning to (or did
+you already) implement? What did you decide to leave out?
+\end{quote}
+
+\hypertarget{summary}{%
+\chapter{5. Summary?}\label{summary}}
 
 \hypertarget{references}{%
-\chapter*{5. References}\label{references}}
-\addcontentsline{toc}{chapter}{5. References}
+\chapter*{6. References}\label{references}}
+\addcontentsline{toc}{chapter}{6. References}
 
 \hypertarget{refs}{}
 \leavevmode\hypertarget{ref-R-R6}{}%
