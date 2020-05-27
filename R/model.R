@@ -17,9 +17,8 @@
 #' @import asp20model
 #' @export
 
-
-library(R6)
-
+#Uncomment for testing
+# library(R6)
 
 LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                         inherit = LocationScaleRegression,
@@ -47,63 +46,48 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                             self$Proj_M_Z <- self$Z_tr_Z_inv %*% t(private$Z)
 
                                           }
-
-
-
-
                                         ),
                                         active = list(
-                                          #' @details
-                                          #' Least Square Residual
-                                          #'
-                                          #' @return
-                                          #' Current gradient of the coefficents
-                                          #'
-                                          #' @examples
-                                          #' model$<-lstSqrResid
-                                          lstSqrResid = function()
-                                          {
-                                            self$Proj_M_X %*% self$resid()
-                                          },
-                                          #' @details
-                                          #' First derivatives of Log Likelehood
-                                          #'
-                                          #' @return
-                                          #' Current first derivates of each Coeffizent
-                                          #'
-                                          #' @examples
-                                          #' model$<-derivativesZ
-                                          derivativesZ = function()
-                                          {
-                                            #Calculates current first derivates for Gamma n of Log Likelehood
-                                            #Could be further improved by moving the matrix multiplaction to the update gamma function to reduce the calculation time
-                                            Z_countCoefficient <- dim(model$getZ)[2]
-                                            derivatives <- numeric()
+                                             bestFittingVariableGamma = function()
+                                            {
+                                            #Fit separate linear models for all covariates of gamma
+                                            loss <- numeric()
+                                            ui <- self$resid("deviance")
                                             for(n in 1:dim(private$Z)[2]) {
-                                              derivatives[n]<-sum((self$resid()^2)*private$Z[,n]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,n])
-                                            }
-                                            derivatives
+                                               zn <- private$Z[,n]
+
+                                               u <- ((self$resid()^2)*private$Z[,n]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,n])
+
+                                               bjhat <- solve(t(private$Z[,n])%*%private$Z[,n])%*%t(private$Z[,n])%*% u
+                                               loss[n]<-sum((ui-(self$resid()/zn%*%bjhat))^2)
+                                               }
+                                            #determine index of the best-fitting variable
+                                            indexOfGammaUpdate = which.min(loss)
+                                            #build update vector
+                                            updateGamma <- replicate(length(model$gamma), 0)
+                                            #Calculates current first derivates for Gamma (index of the best-fitting variable) of Log Likelehood
+                                            updateGamma[indexOfGammaUpdate] <- sum((self$resid()^2)*private$Z[,indexOfGammaUpdate]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,indexOfGammaUpdate])
+                                            updateGamma
                                           },
-                                          derivativesB = function()
+                                          bestFittingVariableBeta = function()
                                           {
-                                            #Calculates current first derivates for Beta n of Squared Residuals ()
-                                            #Could be further improved by moving the matrix multiplaction to the update beta function to reduce the calculation time
-                                            derivatives<-numeric()
+                                            #Fit separate linear models for all covariates of beta
+                                            loss <- numeric()
+                                            ui <- (self$resid())
                                             for(n in 1:dim(private$X)[2]) {
-                                              ui <- (self$resid())
                                               xn <- private$X[,n]
-                                              bjhat <- solve(t(xn)%*%xn)%*%t(xn)%*%ui
-                                              derivatives[n]<-sum((ui-xn%*%bjhat)^2)
+                                              bjhat <- solve(t(private$X[,n])%*%private$X[,n])%*%t(private$X[,n])%*%ui
+                                              loss[n]<-sum((ui-xn%*%bjhat)^2)
                                             }
-                                            derivatives
-                                          },
-                                          getX = function()
-                                          {
-                                            private$X
-                                          },
-                                          getY = function()
-                                          {
-                                            private$y
+                                            #determine index of the best-fitting variable
+                                            indexOfBetaUpdate = which.min(loss)
+
+                                            #build update vector
+                                            updateBeta <- replicate(length(model$beta), 0)
+                                            #Calculates current first derivates for Beta - the residuals
+                                            updateBeta[indexOfBetaUpdate] <- solve(t(private$X[,indexOfBetaUpdate])%*%private$X[,indexOfBetaUpdate])%*% t(private$X[,indexOfBetaUpdate]) %*% model$resid()
+                                            updateBeta
+
                                           }
                                         )
 
@@ -143,7 +127,7 @@ gradient_boost = function(model,
   grad_beta <- model$grad_beta()
   grad_gamma <- model$grad_gamma()
   v <- stepsize
-  #Page 226 init b0 wiht mean of y
+  #Page 226 init b0 wiht mean of y?
   tmp_DerviatesB <- c(0,0)
   tmp_DerviatesZ <- c(0,0)
 
@@ -154,37 +138,15 @@ gradient_boost = function(model,
     old_grad_beta <-grad_beta
     old_grad_gamma <-grad_gamma
 
+    #needs custom step size for Beta, otherwise it would take to long ? increase with this factor
+    stepsize <-10
 
-    #Update Beta with greatest gradient
-    #should be evaluated to check Least Squares Criterion to identify component to update?
-    # indexOfBetaUpdate = which.max(abs(tmp_DerviatesB))
-    # tmp_newbeta<-model$beta
-    # tmp_newbeta[indexOfBetaUpdate] <- model$beta[indexOfBetaUpdate] + v*tmp_DerviatesB[indexOfBetaUpdate]
-    # model$beta<-tmp_newbeta
-    # tmp_DerviatesB <- model$derivativesB
-    # grad_beta <- model$grad_beta()
-    #END OF OLD
-
-    #needs custom step size for Beta, otherwise it would take to long
-    stepsize <- 0.1
-    indexOfBetaUpdate <-which.min(model$derivativesB)
-
-    newbeta <- model$beta
-    xn <- model$getX[,indexOfBetaUpdate]
-    newbeta[indexOfBetaUpdate] <- newbeta[indexOfBetaUpdate] + stepsize*solve(t(xn)%*%xn)%*% t(xn) %*% model$resid()
-    model$beta <- newbeta
+    model$bet0a<-model$beta + stepsize*v*model$bestFittingVariableBeta
+    grad_beta <- model$grad_beta()
 
 
-
-    #Update Gamma with greatest gradient
-    #needs to be changes to fit sperate linear models for all coveraites and use min function to determin min loss
-    indexOfGammaUpdate = which.max(abs(tmp_DerviatesZ))
-    tmp_newgamma <-model$gamma
-    tmp_newgamma[indexOfGammaUpdate] <- model$gamma[indexOfGammaUpdate] + v*tmp_DerviatesZ[indexOfGammaUpdate]
-    model$gamma<-tmp_newgamma
-    tmp_DerviatesZ <- model$derivativesZ
+    model$gamma<-model$gamma + v*model$bestFittingVariableGamma
     grad_gamma <- model$grad_gamma()
-
 
     if (verbose) {
       par_msg <- c(model$beta, model$gamma)
@@ -205,11 +167,10 @@ gradient_boost = function(model,
         "Gradient:       ", grad_msg, "\n",
         "Squared Resid:       ", sum(model$resid()^2), "\n",
         "Log-likelihood: ", loglik_msg, "\n",
-        "Componentwise boosting: ", loglik_msg, "\n",
         "------------Beta---------------\n",
-        "Beta Update Coeff: ", which.min(tmp_DerviatesB)," ", tmp_DerviatesB[indexOfBetaUpdate], "\n",
+        #"Beta Update Coeff: ", which.min(tmp_DerviatesB)," ", tmp_DerviatesB[indexOfBetaUpdate], "\n",
         "------------Gamma---------------\n",
-        "Gamma Update Coeff: ", which.min(tmp_DerviatesZ)," ", tmp_DerviatesZ[indexOfGammaUpdate], "\n",
+        #"Gamma Update Coeff: ", which.min(tmp_DerviatesZ)," ", tmp_DerviatesZ[indexOfGammaUpdate], "\n",
         #"ABS:",all(abs(c(grad_beta-old_grad_beta, grad_gamma-old_grad_gamma)))  , "\n",
         "==============="
       )
@@ -226,12 +187,11 @@ gradient_boost = function(model,
   invisible(model)
 }
 
-## for testing purpose
-library(asp20model)
-set.seed(1337)
-n <- 500
-x <- runif(n)
-y <- x + rnorm(n, sd = exp(-3 + 2 * x))
-model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-gradient_boost(model,stepsize = 0.001, maxit = 10000, abstol = 0.0001, verbose = TRUE)
-
+## for testing p for testing purpose
+# library(asp20model)
+# set.seed(1337)
+# n <- 500
+# x <- runif(n)
+# y <- x + rnorm(n, sd = exp(-3 + 2 * x))
+# model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+# model,stepsize = 0.001, maxit = 20000, abstol = 0.0001, verbose = TRUE)
