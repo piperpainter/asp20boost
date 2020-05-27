@@ -32,6 +32,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # How to cite and configure the document's appearance 
+If you don't have Latex download latex for R with `tinytex::install_tinytex()`. 
 
 ## Write
 
@@ -90,7 +91,7 @@ Here those inputs that are easy to configuration for you guys to get an idea:
 * `lof` and `lot` set to true give me a list of figures and tables respectively. 
 
 
-# 0.Lead Questions to be answered (from Hannes' e-mail):
+# 0. Lead Questions to be answered (from Hannes' e-mail):
 
 * Which open questions do you have about the statistical model and methodology?
 *  What functionality are you planning to (or did you already) implement? What did you decide to leave out?
@@ -104,7 +105,8 @@ We have been working on an implementation for a boosting implementation with gra
 
 # 2. Description of progress
 
-## Johannes is gzus.
+## Johannes is
+> gzus.
 
 # 3. Intended extensions to be implemented. 
 # 4. Comments
