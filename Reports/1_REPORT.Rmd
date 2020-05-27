@@ -1,0 +1,112 @@
+---
+title: "1 Report ASP20 Boost"
+subtitle: "First Report"
+author:
+- "Johannes Strauß"
+- "Levin Wiebelt"
+- "Sebastian Aristizabal"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+tags: [nothing, nothingness]
+abstract: |
+  This is the abstract.
+
+  It consists of two paragraphs.
+documentclass: report
+bibliography: ["citavi_27.05.bib", "packages.bib"]
+biblio-style: apalike
+geometry: "left=4cm, right=3cm, top=2.5cm, bottom=2.5cm"
+lof: FALSE
+lot: FALSE
+output: 
+    pdf_document:
+      toc: true
+      toc_depth: 2
+      latex_engine: xelatex
+      keep_tex: yes
+      template: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# How to cite and configure the document's appearance 
+
+## Write
+
+To cite:
+
+* Parentheses: Implementation builds upon the asp20 model [@R-asp20model]. 
+* Inline: It is implemented as R6 class @R-R6.
+* Including pages: For the theoretical foundations of our implementation, we rely mostly on  [@Fahrmeir.2013, 219] and [@Hastie.2009, 358]. 
+
+In the `report` folder there's two `.bib` files. 
+These contain all reference we should need. 
+To update the `package.bib` write the name of the package in the following chunk and *actively* run it (It should be installed in your terminal).
+
+```{r pack tex, eval=FALSE, include=TRUE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'R6', 'knitr', 'rmarkdown', 'asp20model', 'gamboostLSS','mboost', 'tidyverse'  
+), 'packages.bib')
+```
+
+To cite write a ``@` followed by `firstname.year` as shown in the `.bib` files for reference. 
+See further [cite](https://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
+
+As a tip hit always enter after each period for better readability in R Studio.
+Like this. 
+
+Two enters give me a new paragraph.
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+
+## Appearance using the `YAML` Header:
+
+We can regulate the appearance of the document from here. 
+There's a lot flexibility but the learning curve is somehow steep.
+I'll link useful resources to learn, but, in principle, the document is *ready for writing*.
+
+Here the corresponding references:
+
+*  [PDF output](https://bookdown.org/yihui/rmarkdown/pdf-document.html)
+*  [Pandoc Manuals](https://pandoc.org/MANUAL.html#templates)
+*  [TOC](https://bookdown.org/yihui/rmarkdown/pdf-document.html#table-of-contents-1)
+*  [Cite with Pandoc](https://github.com/jgm/pandoc-citeproc/blob/master/man/pandoc-citeproc.1.md)
+
+
+Here those inputs that are easy to configuration for you guys to get an idea:
+
+* With `documentclass` has three base templates: `article`, `report` and `book`. 
+* `geometry` let's me change the margins. 
+* `lof` and `lot` set to true give me a list of figures and tables respectively. 
+
+
+# 0.Lead Questions to be answered (from Hannes' e-mail):
+
+* Which open questions do you have about the statistical model and methodology?
+*  What functionality are you planning to (or did you already) implement? What did you decide to leave out?
+* What are the critical aspects of your implementation and your package? Stability? Performance? User-friendliness? How are you going to deal with these potential issues?
+    What design designs did you make with respect to your implementation? How are you going to extend the R6 class? What additional functions are you going to provide?
+
+
+# 1. Description of the problem
+
+We have been working on an implementation for a boosting implementation with gradient descent for location and scale.
+
+# 2. Description of progress
+
+## Johannes is gzus.
+
+# 3. Intended extensions to be implemented. 
+# 4. Comments
+# 5. References
+
