@@ -57,8 +57,8 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                                zn <- private$Z[,n]
 
                                                u <- ((self$resid()^2)*private$Z[,n]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,n])
-
-                                                             #Can be further improvied by moving ProjectionMatrix Calculation to initializalisation                                 bjhat <- solve(t(private$Z[,n])%*%private$Z[,n])%*%t(private$Z[,n])%*% u
+                                               #Can be further improvied by moving ProjectionMatrix Calculation to initializalisation
+                                               bjhat <- solve(t(private$Z[,n])%*%private$Z[,n])%*%t(private$Z[,n])%*% u
                                                loss[n]<-sum((ui-(self$resid()/zn%*%bjhat))^2)
                                                }
                                             #determine index of the best-fitting variable
@@ -76,8 +76,8 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                             ui <- (self$resid())
                                             for(n in 1:dim(private$X)[2]) {
                                               xn <- private$X[,n]
-                                              bjhat <- solve(#Can be further improvied by moving ProjectionMatrix Calculation to initializalisation
-                                              t(private$X[,n])%*%private$X[,n])%*%t(private$X[,n])%*%ui
+                                              #Can be further improvied by moving ProjectionMatrix Calculation to initializalisation
+                                              bjhat <- solve(t(private$X[,n])%*%private$X[,n])%*%t(private$X[,n])%*%ui
                                               loss[n]<-sum((ui-xn%*%bjhat)^2)
                                             }
                                             #determine index of the best-fitting variable
@@ -117,9 +117,6 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
 #' gradient_boost(model)
 #'
 #' @export
-
-
-
 gradient_boost = function(model,
                           stepsize = 0.001,
                           maxit = 1000,
