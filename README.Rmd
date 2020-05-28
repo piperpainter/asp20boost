@@ -24,6 +24,18 @@ set.seed(1337)
 
 ## Tasks 
 
+### until ~ mid June
+
+* extend documentation of R6-Class
+  + inherit documentation from Hannes
+  + add own extensions
+  + both can be done via roxygen (see Wickham R-PAckages chp5)
+  
+* maybe move component-selection mechanism from active field in R6-Class to gradient_boost-function
+  + intuition tells me R6-Class is not the right place to do central calculations of the algorithm
+  + maybe create new helper function component_selection() which gradien_boost() can call
+
+
 ### until ~ 11 May
 
 * simple boost function for scale (estimate var(yi))
@@ -63,7 +75,7 @@ curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 First, you need to install the `asp20model` &  `asp20boost` package from GitLab and load it:
 
 ```{r installation, eval = 3}
-install.packages("devtools")
+#install.packages("devtools")
 #This throws an error for asp20boost
 #devtools::install_gitlab("asp20/asp20model", host = "gitlab.gwdg.de")
 #devtools::install_gitlab("asp20/asp20boost", host = "gitlab.gwdg.de")
@@ -73,20 +85,20 @@ model$gamma
 
 
 ```{r fig.width = 11, echo=FALSE}
-library(asp20boost)
-model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-gradient_boost(model, 
-              stepsize = 0.001, maxit = 10000,
-              abstol = 0.001,
-              verbose = FALSE)
-
-
-
-plot(x, y)
-lines(x,model$fitted_location)
-#For a 95% confidence interval, the value c = 1.96 is agood approximation
-curve(x + 1.96 * exp(model$gamma[1]+model$gamma[2]*x), -0.1, 1.1, add = TRUE)
-curve(x - 1.96 * exp(model$gamma[1]+model$gamma[2]*x), -0.1, 1.1, add = TRUE)
+# library(asp20boost)
+# model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+# gradient_boost(model, 
+#               stepsize = 0.001, maxit = 10000,
+#               abstol = 0.001,
+#               verbose = FALSE)
+# 
+# 
+# 
+# plot(x, y)
+# lines(x,model$fitted_location)
+# #For a 95% confidence interval, the value c = 1.96 is agood approximation
+# curve(x + 1.96 * exp(model$gamma[1]+model$gamma[2]*x), -0.1, 1.1, add = TRUE)
+# curve(x - 1.96 * exp(model$gamma[1]+model$gamma[2]*x), -0.1, 1.1, add = TRUE)
 
 ```
 

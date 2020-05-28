@@ -109,7 +109,7 @@
 \makeatother
 \subtitle{First Report}
 \author{Johannes Strauß \and Levin Wiebelt \and Sebastian Aristizabal}
-\date{27 Mai 2020}
+\date{28 Mai 2020}
 
 \begin{document}
 \maketitle
@@ -247,6 +247,32 @@ User-friendliness? How are you going to deal with these potential
 issues?
 \end{quote}
 
+JS: Performance Needs to be checked and maybe more outputs - messages?
+Starting point of Beta and Gamma?
+
+L:
+
+\begin{itemize}
+\tightlist
+\item
+  user-friendliness: allow for convenient input of model, possibly as
+  data.frame
+\item
+  stability: trying to implement automated testing (unit tests)
+\item
+  performance:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    custom step size for Beta needed, otherwise slow --\textgreater{}
+    improve
+  \item
+    move ProjectionMatrix Calculation to initializalisation to enhance
+    efficiency
+  \end{itemize}
+\end{itemize}
+
 \begin{quote}
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -275,9 +301,32 @@ by step as a list e.g:
   Johannes finished everything \#lol. 27.05.
 \end{enumerate}
 
-\hypertarget{johannes-is-gzus.}{%
-\section{\texorpdfstring{Johannes is
-\emph{gzus}.}{Johannes is gzus.}}\label{johannes-is-gzus.}}
+\hypertarget{johannes-is-gzus-2.}{%
+\section{\texorpdfstring{Johannes is \emph{gzus}
+\^{}\{2\}.}{Johannes is gzus \^{}\{2\}.}}\label{johannes-is-gzus-2.}}
+
+L: implementation designs r6-Class ``LocScRegBoost''
+
+\begin{itemize}
+\tightlist
+\item
+  moved calculation of central calculation matrices in boosting
+  algorithm to initializer of R6-Class via super-command
+\item
+  component-selection implemented inside R6-Class via additional
+  active-fields
+
+  \begin{itemize}
+  \tightlist
+  \item
+    mechanism: calculation of n loss-function-values (n =
+    \#gamma-parameters = \#beta-parameters), then compare to
+    loss-functions of last iteration and choose highest loss-improvement
+  \item
+    calculation does NOT work via derivatives as Kneib suggested, but by
+    Hannes' deviance-residuals
+  \end{itemize}
+\end{itemize}
 
 \hypertarget{description-of-the-problem}{%
 \chapter{3. Description of the
@@ -288,6 +337,28 @@ Hannes lead question: Which open questions do you have about the
 statistical model and methodology?
 \end{quote}
 
+JS : Can this model be used to mathematically evaluate outliers, for
+example in the Munich rent data set -\textgreater{} use it to identify
+cheap apartments
+
+L:
+
+\begin{itemize}
+\tightlist
+\item
+  How does cross-validation work in order to optimize stopping?
+
+  \begin{itemize}
+  \tightlist
+  \item
+    This connects to other applications of boosters such as variable
+    selection. Variable selection is especially viable since
+    component-wise boosting is already implemented
+  \end{itemize}
+\item
+  Is it possible to optimize the learning rate?
+\end{itemize}
+
 \hypertarget{extensions-to-be-implemented.}{%
 \chapter{4. Extensions to be
 implemented.}\label{extensions-to-be-implemented.}}
@@ -296,6 +367,41 @@ implemented.}\label{extensions-to-be-implemented.}}
 Hannes' Lead question: What functionality are you planning to (or did
 you already) implement? What did you decide to leave out?
 \end{quote}
+
+L: Already implemented
+
+\begin{itemize}
+\tightlist
+\item
+  boosting for multidimensional (\textgreater2) beta or gamma
+\item
+  component-wise boosting
+\end{itemize}
+
+L: Ideas for further functionality
+
+\begin{itemize}
+\tightlist
+\item
+  better user-friendliness - allow inputs like my\_model \textless-
+  gradient\_boost(formula, data = mtcars)
+
+  \begin{itemize}
+  \tightlist
+  \item
+    allow for model creation via dataframe-input
+  \item
+    this may reduce errors due to unexpected inputs
+  \end{itemize}
+\item
+  illustrate functions of package with real dataframe (= Vignette)
+\item
+  Visualization of results via connecting to plot team
+\item
+  functionality: predict
+\item
+  Include model diagnostics
+\end{itemize}
 
 \hypertarget{summary}{%
 \chapter{5. Summary?}\label{summary}}

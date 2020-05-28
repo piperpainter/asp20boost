@@ -108,6 +108,15 @@ Here those inputs that are easy to configuration for you guys to get an idea:
 JS: Performance Needs to be checked and maybe more outputs - messages?
 Starting point of Beta and Gamma?
 
+L: 
+
+* user-friendliness: allow for convenient input of model, possibly as data.frame
+* stability: trying to implement automated testing (unit tests)
+* performance: 
+  + custom step size for Beta needed, otherwise slow --> improve
+  + move ProjectionMatrix Calculation to initializalisation to enhance efficiency
+
+
 > 2. What design designs did you make with respect to your implementation? How are you going to extend the R6 class? What additional functions are you going to provide?
 
 I propose a timeline where the implementation process is described step by step as a list e.g:
@@ -117,7 +126,15 @@ I propose a timeline where the implementation process is described step by step 
 3. Adressed the estimation for the variance of gamma. 
 4. Johannes finished everything #lol. 27.05. 
 
-## Johannes is *gzus*.
+## Johannes is *gzus* ^{2}.
+
+
+L: implementation designs r6-Class "LocScRegBoost"
+
+* moved calculation of central calculation matrices in boosting algorithm to initializer of R6-Class via super-command
+* component-selection implemented inside R6-Class via additional active-fields
+  + mechanism: calculation of n loss-function-values (n = #gamma-parameters = #beta-parameters), then compare to loss-functions of last iteration and choose highest loss-improvement
+  + calculation does NOT work via derivatives as Kneib suggested, but by Hannes' deviance-residuals 
 
 # 3. Description of the problem
 
@@ -125,10 +142,35 @@ I propose a timeline where the implementation process is described step by step 
 
 JS : Can this model be used to mathematically evaluate outliers, for example in the Munich rent data set -> use it to identify cheap apartments
 
+L: 
+
+* How does cross-validation work in order to optimize stopping?
+  + This connects to other applications of boosters such as variable selection. Variable selection is especially viable since component-wise boosting is already implemented
+*	Is it possible to optimize the learning rate?
+
+
 
 # 4. Extensions to be implemented. 
 
 > Hannes' Lead question: What functionality are you planning to (or did you already) implement? What did you decide to leave out?
+
+L: Already implemented
+
+* boosting for multidimensional (>2) beta or gamma 
+* component-wise boosting
+
+L: Ideas for further functionality
+
+* better user-friendliness - allow inputs like my_model <- gradient_boost(formula, data = mtcars)
+  + allow for model creation via dataframe-input
+  + this may reduce errors due to unexpected inputs
+* illustrate functions of package with real dataframe (= Vignette)
+*	Visualization of results via connecting to plot team
+*	functionality: predict 
+*	Include model diagnostics
+
+
+
 
 # 5. Summary?
 # 6. References
