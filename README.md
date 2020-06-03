@@ -72,3 +72,10 @@ GitLab and load it:
 ## 
 ## model$gamma
 ```
+<<<<<<< Updated upstream
+=======
+
+    #> break
+
+<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
+>>>>>>> Stashed changes

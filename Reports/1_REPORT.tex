@@ -82,7 +82,7 @@
 \newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
 \newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
 \newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\usepackage{graphicx,grffile}
+\usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
 \def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
@@ -99,6 +99,12 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newenvironment{cslreferences}%
+  {\setlength{\parindent}{0pt}%
+  \everypar{\setlength{\hangindent}{\cslhangindent}}\ignorespaces}%
+  {\par}
 
 \title{1 Report ASP20 Boost}
 \usepackage{etoolbox}
@@ -109,7 +115,7 @@
 \makeatother
 \subtitle{First Report}
 \author{Johannes Strauß \and Levin Wiebelt \and Sebastian Aristizabal}
-\date{28 Mai 2020}
+\date{03 June 2020}
 
 \begin{document}
 \maketitle
@@ -128,10 +134,8 @@ It consists of two paragraphs.
 appearance}\label{how-to-cite-and-configure-the-documents-appearance}}
 
 If you don't have Latex download latex for R with
-\texttt{tinytex::install\_tinytex()}.
-
-\hypertarget{write}{%
-\section{Write}\label{write}}
+\texttt{tinytex::install\_tinytex()}. To install pandoc on Mac, install
+it via Terminal with \texttt{brew\ install\ pandoc-citeproc}. \#\# Write
 
 To cite:
 
@@ -155,10 +159,10 @@ file needs to be exported from citavi.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# automatically create a bib database for R packages}
-\NormalTok{knitr}\OperatorTok{::}\KeywordTok{write_bib}\NormalTok{(}\KeywordTok{c}\NormalTok{(}
-  \KeywordTok{.packages}\NormalTok{(), }\StringTok{'R6'}\NormalTok{, }\StringTok{'knitr'}\NormalTok{, }\StringTok{'rmarkdown'}\NormalTok{, }\StringTok{'asp20model'}\NormalTok{, }\StringTok{'gamboostLSS'}\NormalTok{,}\StringTok{'mboost'}\NormalTok{, }\StringTok{'tidyverse'}  
-\NormalTok{), }\StringTok{'packages.bib'}\NormalTok{)}
+\CommentTok{\# automatically create a bib database for R packages}
+\NormalTok{knitr}\OperatorTok{::}\KeywordTok{write\_bib}\NormalTok{(}\KeywordTok{c}\NormalTok{(}
+  \KeywordTok{.packages}\NormalTok{(), }\StringTok{\textquotesingle{}R6\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}knitr\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}rmarkdown\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}asp20model\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}gamboostLSS\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}mboost\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}tidyverse\textquotesingle{}}  
+\NormalTok{), }\StringTok{\textquotesingle{}packages.bib\textquotesingle{}}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -227,14 +231,14 @@ idea:
   The developement of this package takes place in the framework of the
   seminar ``Advanced Statisical Programming'' -\textgreater{} SS20
 \item
-  We expand the R6 class \emph{``LocationScaleRegression''} belonging to
+  We extend the R6 class \emph{``LocationScaleRegression''} belonging to
   the \texttt{asp20model} package concieved specifficaly for this
   seminar (Riebl 2020)
 \item
   Our aim is to develope an multi-faceted implementation of boosting for
-  location and scale including component-wise boosting, use of
-  cross-validation to determine the optimal stopping critera and useful
-  options for visualization.
+  location and scale regression including component-wise boosting, use
+  of cross-validation to determine the optimal stopping critera and
+  useful options for visualization.
 \end{itemize}
 
 \hypertarget{description-of-progress}{%
@@ -247,8 +251,23 @@ User-friendliness? How are you going to deal with these potential
 issues?
 \end{quote}
 
-JS: Performance Needs to be checked and maybe more outputs - messages?
-Starting point of Beta and Gamma?
+Our package rely heavily on the asp20model package, any changes, or
+errors in the code of the package might break the functionality.
+Currently there is no validation of the given input, with respect to
+heteroscedasticity.
+
+The package also does not provide any auto optimization of the gradient
+boost step-size, a wrongly picked step-size can lead to a deficient
+performance, but an already implemented early stopping mechanism can
+prevent an overfitting. An input check and cross-validation of the
+step-size is on the to-do list. Also, the initial starting values for
+Beta and Gamma can be further improved, see (Fahrmeir 2013, 219).
+Further optimizations can be made to reduce the computation time, by
+moving the calculation of the Projection Matrix for individual
+covariates in the initialization section of the model. In regard to
+User-friendliness of the package, we will try to implement further input
+validation and try to write up with a comprehensive vignette containing
+various examples in the next weeks.
 
 L:
 
@@ -284,6 +303,20 @@ L:
   are you going to provide?
 \end{enumerate}
 \end{quote}
+
+JS: During the learning process, we tried several methods to implement
+the required functionality. At first, we started with a simple function
+in a R-File. While looking at other online resources, we agreed on using
+the asp20model packages as a requirement for our package and inheriting
+the existing LocationScaleRegression class. Our
+\texttt{LocationScaleRegressionBoost} R6 class implements a boosting
+algorithm, two functions within the model for calculating the best
+fitting covariate with respect to Gamma and Beta and has four new
+variables which are set at the initialization of the model to reduce
+computation time of the Projection Matrixes during the gradient boosting
+(subject to change). The package provides the gradient boost function
+for the \texttt{LocationScaleRegressionBoost} class, which uses the two
+model functions to optimize stepwise the Beta and Gamma Vector.
 
 I propose a timeline where the implementation process is described step
 by step as a list e.g:
@@ -373,7 +406,7 @@ L: Already implemented
 \begin{itemize}
 \tightlist
 \item
-  boosting for multidimensional (\textgreater2) beta or gamma
+  boosting for multidimensional (\textgreater2) beta and gamma
 \item
   component-wise boosting
 \end{itemize}
@@ -397,11 +430,15 @@ L: Ideas for further functionality
   illustrate functions of package with real dataframe (= Vignette)
 \item
   Visualization of results via connecting to plot team
+  \texttt{asp20plot}
 \item
   functionality: predict
 \item
   Include model diagnostics
 \end{itemize}
+
+JS: check when run gradientboost, if model is
+LocationScaleRegressionBoost class
 
 \hypertarget{summary}{%
 \chapter{5. Summary?}\label{summary}}
@@ -411,6 +448,7 @@ L: Ideas for further functionality
 \addcontentsline{toc}{chapter}{6. References}
 
 \hypertarget{refs}{}
+\begin{cslreferences}
 \leavevmode\hypertarget{ref-R-R6}{}%
 Chang, Winston. 2019. \emph{R6: Encapsulated Classes with Reference
 Semantics}. \url{https://CRAN.R-project.org/package=R6}.
@@ -428,5 +466,6 @@ Series in Statistics. New York: Springer.
 \leavevmode\hypertarget{ref-R-asp20model}{}%
 Riebl, Hannes. 2020. \emph{Asp20model: An R6 Class for Location-Scale
 Regression Models}.
+\end{cslreferences}
 
 \end{document}

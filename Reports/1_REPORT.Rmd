@@ -33,7 +33,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # How to cite and configure the document's appearance 
 If you don't have Latex download latex for R with `tinytex::install_tinytex()`. 
-
+To install pandoc on Mac, install it via Terminal with `brew install pandoc-citeproc`.
 ## Write
 
 To cite:
@@ -97,16 +97,18 @@ Here those inputs that are easy to configuration for you guys to get an idea:
 # 1. Introduction:
 
 * The developement of this package takes place in the framework of the seminar "Advanced Statisical Programming" -> SS20
-* We expand the R6 class *"LocationScaleRegression"* belonging to the `asp20model` package concieved specifficaly for this seminar [@R-asp20model]
-* Our aim is to develope an multi-faceted implementation of boosting for location and scale including component-wise boosting, use of cross-validation to determine the optimal stopping critera  and useful options for visualization.
+* We extend the R6 class *"LocationScaleRegression"* belonging to the `asp20model` package concieved specifficaly for this seminar [@R-asp20model]
+* Our aim is to develope an multi-faceted implementation of boosting for location and scale regression including component-wise boosting, use of cross-validation to determine the optimal stopping critera  and useful options for visualization.
 
 
 # 2. Description of progress
 
 > Hannes lead question: What are the critical aspects of your implementation and your package? Stability? Performance? User-friendliness? How are you going to deal with these potential issues?
 
-JS: Performance Needs to be checked and maybe more outputs - messages?
-Starting point of Beta and Gamma?
+Our package rely heavily on the asp20model package, any changes, or errors in the code of the package might break the functionality. Currently there is no validation of the given input, with respect to heteroscedasticity.  
+
+The package also does not provide any auto optimization of the gradient boost step-size, a wrongly picked step-size can lead to a deficient performance, but an already implemented early stopping mechanism can prevent an overfitting. An input check and cross-validation of the step-size is on the to-do list. Also, the initial starting values for Beta and Gamma can be further improved, see [@Fahrmeir.2013, 219]. Further optimizations can be made to reduce the computation time, by moving the calculation of the Projection Matrix for individual covariates in the initialization section of the model. In regard to User-friendliness of the package, we will try to implement further input validation and try to write up with a comprehensive vignette containing various examples in the next weeks.
+
 
 L: 
 
@@ -118,6 +120,9 @@ L:
 
 
 > 2. What design designs did you make with respect to your implementation? How are you going to extend the R6 class? What additional functions are you going to provide?
+
+JS:
+During the learning process, we tried several methods to implement the required functionality. At first, we started with a simple function in a R-File. While looking at other online resources, we agreed on using the asp20model packages as a requirement for our package and inheriting the existing LocationScaleRegression class. Our `LocationScaleRegressionBoost` R6 class implements a boosting algorithm, two active fields within the model for calculating the best fitting covariate with respect to Gamma and Beta and has four new variables which are set at the initialization of the model to reduce computation time of the Projection Matrixes during the gradient boosting (subject to change). The package provides the gradient boost function for the `LocationScaleRegressionBoost` class, which uses the two model functions to optimize stepwise the Beta and Gamma Vector. 
 
 I propose a timeline where the implementation process is described step by step as a list e.g:
 
@@ -156,7 +161,7 @@ L:
 
 L: Already implemented
 
-* boosting for multidimensional (>2) beta or gamma 
+* boosting for multidimensional (>2) beta and gamma 
 * component-wise boosting
 
 L: Ideas for further functionality
@@ -165,10 +170,12 @@ L: Ideas for further functionality
   + allow for model creation via dataframe-input
   + this may reduce errors due to unexpected inputs
 * illustrate functions of package with real dataframe (= Vignette)
-*	Visualization of results via connecting to plot team
+*	Visualization of results via connecting to plot team `asp20plot`
 *	functionality: predict 
 *	Include model diagnostics
 
+JS:
+check when run gradientboost, if model is LocationScaleRegressionBoost class
 
 
 
