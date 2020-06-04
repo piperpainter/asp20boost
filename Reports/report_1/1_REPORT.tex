@@ -133,8 +133,6 @@ boosting \textbf{gamma} this term equals the score function of the
 model, that is the derivative of the loglikelihood of the normal
 distribution.
 
-\textbf{{[}Why is that? kurze Erklärung{]}}
-
 \hypertarget{implementation}{%
 \chapter{3. Implementation}\label{implementation}}
 
@@ -169,8 +167,6 @@ term here is the derivative of the loglikelihood of the normal
 distribution. To calculate this, our code makes use of the
 resid-function(), but this time passing the argument ``deviance'', which
 results in residuals adjusted by the fitted scale estimates.
-
-\textbf{{[}Erklärung weiter ausführen{]}}
 
 Having implemented a boosting algorithm for location and scale, the
 code-basis for our package was achieved.
@@ -246,13 +242,14 @@ Departing from this point we intend to reduce proneness to input errors.
 \item
   A major performance problem in our code is that small learning rates
   for the beta-booster cause processing time of the code to increase
-  sharply. This remains to be solved. *A good choice of starting values
-  for beta and gamma may enhance performance. A possible candidate is
-  the mean of the response.
+  sharply. This remains to be solved.
+\item
+  A good choice of starting values for beta and gamma may enhance
+  performance. A possible candidate is the mean of the response.
 \end{itemize}
 
-\hypertarget{further}{%
-\section{Further}\label{further}}
+\hypertarget{further-aspects}{%
+\section{Further Aspects}\label{further-aspects}}
 
 \begin{itemize}
 \item

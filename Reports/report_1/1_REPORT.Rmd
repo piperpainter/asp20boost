@@ -70,20 +70,6 @@ A boosting algorithm for scale parameters **gamma** consists in the same two rep
 The term in the estimating step is, however, not the residual.
 For boosting **gamma** this term equals the score function of the model, that is the derivative of the loglikelihood of the normal distribution.
 
-**[Why is that? kurze Erklärung]**
-
-
-<!-- The concept for boosting scale parameters is the same. However, residuals for the variance estimates can not be calculated, since there is no such thing as "observed" variances for individual response values. The solution is to substitute the calculated residuals with a different term: the derivative of the loss function, which in our case is the log-likelihood of the normal distribution. Instead of estiamting stepwise residuals, one estiamtes hence stepwise the score. -->
-
-<!-- The resulting loss fcuntion then, is defined by sum of squares oa the term: -->
-<!-- ui (=deviance-residuals) - inverse predicted scores * working-residuals -->
-
-<!-- We employed the resid-function of the asp20model class, on which our class is built on. -->
-<!-- The working and response residuals are the observed values -->
-<!-- minus the fitted values for the location. -->
-<!-- The deviance and Pearson residuals are weighted residuals, -->
-<!-- divided by the fitted values for the scale. -->
-
 
 
 
@@ -104,8 +90,6 @@ This is what's needed to repeat the procedure of estimating residuals and updati
 The simple booster for the scale parameters **gamma**, as already mentioned, consists in the same two repeating steps of first estimating a term, and second updating the scale parameters gamma by adding the estimated effect - adjusted by a learning rate **v**. 
 The estimated term here is the derivative of the loglikelihood of the normal distribution.
 To calculate this, our code makes use of the resid-function(), but this time passing the argument "deviance", which results in residuals adjusted by the fitted scale estimates.
-
-**[Erklärung weiter ausführen]**
 
 Having implemented a boosting algorithm for location and scale, the code-basis for our package was achieved.
 
@@ -150,10 +134,10 @@ We intend to implement further automated unit tests. This will enable us to asse
 ## Performance
 
 * A major performance problem in our code is that small learning rates for the beta-booster cause processing time of the code to increase sharply. This remains to be solved.
-*A good choice of starting values for beta and gamma may enhance performance. A possible candidate is the mean of the response.
+* A good choice of starting values for beta and gamma may enhance performance. A possible candidate is the mean of the response.
 
 
-## Further
+## Further Aspects
 
 * Allow user-input of the LocationScaleRegressionBoost-model in form of a dataframe, for example by allowing to pass an optional "data"-argument as known from the lm-call. This may reduce proneness to input-errors.
 
