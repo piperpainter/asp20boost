@@ -55,17 +55,22 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                             ui <- self$resid("deviance")
                                             for(n in 1:dim(private$Z)[2]) {
                                                zn <- private$Z[,n]
-
+                                                #u -> first derivation of Log Likelihood - see documentation for further reading
                                                u <- ((self$resid()^2)*private$Z[,n]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,n])
+                                               #bjhat -> Fit separate linear models
+                                               #Kneib book Page 226
+                                               #Johannes: I can't really explain this
                                                #Can be further improvied by moving ProjectionMatrix Calculation to initializalisation
                                                bjhat <- solve(t(private$Z[,n])%*%private$Z[,n])%*%t(private$Z[,n])%*% u
-                                               loss[n]<-sum((ui-(self$resid()/zn%*%bjhat))^2)
+                                               #Calculate new squared error by subtracting the partial deviance of covariate with new gamma (first derivation u) of the total deviance
+                                               #partial deviance -> (self$resid()/zn%*%bjhat)
+                                               loss[n] <- sum((ui-(self$resid()/zn%*%bjhat))^2)
                                                }
-                                            #determine index of the best-fitting variable
+                                            #determine index of the best-fitting variable, the covariate with the greates influance on the deviance will decrease the loss at most
                                             indexOfGammaUpdate = which.min(loss)
                                             #build update vector
                                             updateGamma <- replicate(length(model$gamma), 0)
-                                            #Calculates current first derivates for Gamma (index of the best-fitting variable) of Log Likelehood
+                                            #Calculates current first derivates for Gamma (index of the best-fitting variable) again like u, but as sum, since Gamma covariate is a single
                                             updateGamma[indexOfGammaUpdate] <- sum((self$resid()^2)*private$Z[,indexOfGammaUpdate]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,indexOfGammaUpdate])
                                             updateGamma
                                           },
