@@ -53,6 +53,7 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                             #Fit separate linear models for all covariates of gamma
                                             loss <- numeric()
                                             ui <- self$resid("deviance")
+               # Our u_i for gamma in page 226 step 2.
                                             for(n in 1:dim(private$Z)[2]) {
                                                zn <- private$Z[,n]
                                                 #u -> first derivation of Log Likelihood - see documentation for further reading
@@ -64,7 +65,7 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                                bjhat <- solve(t(private$Z[,n])%*%private$Z[,n])%*%t(private$Z[,n])%*% u
                                                #Calculate new squared error by subtracting the partial deviance of covariate with new gamma (first derivation u) of the total deviance
                                                #partial deviance -> (self$resid()/zn%*%bjhat)
-                                               loss[n] <- sum((ui-(self$resid()/zn%*%bjhat))^2)
+                                               loss[n] <- sum((ui-(self$resid()/zn%*%bjhat))^2) # Punkt 3 Formel
                                                }
                                             #determine index of the best-fitting variable, the covariate with the greates influance on the deviance will decrease the loss at most
                                             indexOfGammaUpdate = which.min(loss)
@@ -78,8 +79,7 @@ LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
                                           {
                                             #Fit separate linear models for all covariates of beta
                                             loss <- numeric()
-                                            ui <- (self$resid())
-                                            for(n in 1:dim(private$X)[2]) {
+                                            ui <- (self$resid()) #  Our u_i for beta in page 226 step 2.                              for(n in 1:dim(private$X)[2]) {
                                               xn <- private$X[,n]
                                               #Can be further improvied by moving ProjectionMatrix Calculation to initializalisation
                                               bjhat <- solve(t(private$X[,n])%*%private$X[,n])%*%t(private$X[,n])%*%ui

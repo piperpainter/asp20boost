@@ -45,7 +45,7 @@ To cite:
 In the `report` folder there's two `.bib` files. 
 These contain all reference we should need. 
 To update the `package.bib` write the name of the package in the following chunk and *actively* run it (It should be installed in your terminal).
-The`citavi.bib` file needs to be exported from citavi. 
+The`citavi.bib` file needs to be exported from `citavi`. 
 
 ```{r pack tex, eval=FALSE, include=TRUE}
 # automatically create a bib database for R packages
