@@ -42,7 +42,7 @@ The course "Advanced Statistical Programming with R" consists in implementing a 
 The sample dataset consists of a response $y$, i.e, the expectation is in linear relationship to a set of predictors $x_i$. 
 Its variance, in contrast, is dependent on a different set of linear predictors $z_i$, however transformed by the response function $g(x) = exp(x)$. 
 This ensures positiveness of the variances. 
-The goal approach is to estimate the effects of both: $x_i$ on the expectation of $y$ (location) - this is captured by the estimates $\beta$, and $z_i$ on the variance of $y$ (scale) - this is captured by the estimates $\gamma$.
+The goal is to estimate the effects of both: $x_i$ on the expectation of $y$ (location) - this is captured by the estimates $\beta$, and $z_i$ on the variance of $y$ (scale) - this is captured by the estimates $\gamma$.
 Our student group `asp20boost` solves this task applying the concept of boosting. 
 
 ```{r data, echo=FALSE, cache=TRUE, fig.cap = "A visual example of Heteroskedasticity. Source: asp20model"}
@@ -76,9 +76,9 @@ The boosting concept relies on the idea of iterative estimation.
 To estimate the location parameters $\beta$ via boosting, one starts with initial estimates, which may be far from optimal. 
 However, with estimates and the response vector at hand, residuals can be calculated. 
 The boosting algorithm focuses on those calculated residuals.
-The effect of the predictors $x_i$ on these residuals is estimated using least squares and the resulting effect is added to the location-estimate $\beta$ adjusting it  by means of the learning rate $\nu$. 
+The effect of the predictors $x_i$ on these residuals is estimated using least squares and the resulting effect is added to the location-estimate $\beta$ - adjusted by the learning rate $\nu$. 
 This yields a better fit of the location-model, which results in smaller residuals.
-> These new residuals are estimated again in the next iteration, yielding smaller effect sizes, and hence a convergence of the boosting algorithm towards the OLS-estimate.
+These new residuals are estimated again in the next iteration, yielding smaller effect sizes, and hence a convergence of the boosting algorithm towards the OLS-estimate.
 
 A simple booster stops after a fixed number of iterations is reached.
 
@@ -99,7 +99,7 @@ ll = \frac{1}{2\pi\exp(Z\Gamma)^2}\times\exp(-\frac{u^2}{2\exp(Z\Gamma)^2})
 
 # 3. Implementation
 
-To implement a boosting algorithm we constructed the function `gradient_boost` as a part of our R6-Class `LocationScaleRegressionBoost`. which  directly builds upon the `LocationScaleRegression` R6 class of the `asp20model`package set at our disposal for this course and this purpose specifically [@R-asp20model].   
+To implement a boosting algorithm we constructed the function `gradient_boost` as a part of our R6-Class `LocationScaleRegressionBoost`, which  directly builds upon the `LocationScaleRegression` R6 class of the `asp20model`package set at our disposal for this course and this purpose specifically [@R-asp20model].   
 
 In the current version of the `asp20boost`-package, the boosting algorithm is already implemented in order to allow for componentwise boosting, which will be explained in part 4. 
 
@@ -110,12 +110,13 @@ A simple booster for the location parameters $\beta$ works without extending the
 The current residuals may be extracted with the `resid()` command and then estimated.
 The location parameter is updated. 
 This causes the `LocationScaleRegression` class to calculate updated state-dependent objects, such as the log likelihood, the gradients and the residuals. 
-This objects are again used to repeatedly  estimate residuals and update the location parameter $\beta$.
+These objects are again used to repeatedly  estimate residuals and update the location parameter $\beta$.
 
-The simple booster for the scale parameters $\gamma$, as already mentioned, consists in repeating the same two steps of first, estimating a term and then updating the scale parameters $\gamma$ by adding the estimated effect - adjusted by the learning rate $\nu$. 
+The simple booster for the scale parameters $\gamma$, as already mentioned, consists in repeating the same two steps of first estimating a term and then updating the scale parameters $\gamma$ by adding the estimated effect - adjusted by the learning rate $\nu$. 
 The estimated term here is the derivative of the log likelihood of the normal distribution.
-To calculate this, our code makes use of the `resid-function()`, but this time passing the argument "deviance", which results in residuals adjusted by the fitted scale estimates.
-This simple implementation of a boosting algorithm for location and scale served the code-basis or "skeleton" for our package and can, hence, be thought as the file milestone of this project. 
+To calculate this, our code makes use of the `resid()`-function, but this time passing the argument "deviance", which results in residuals adjusted by the fitted scale estimates.
+
+This simple implementation of a boosting algorithm for location and scale served the code-basis or "skeleton" for our package and can be thought of as the first milestone of this project. 
 
 
 # 4. Functionality: Componentwise Boosting
@@ -123,7 +124,7 @@ This simple implementation of a boosting algorithm for location and scale served
 A useful extension of our simple boosting algorithm regards *componentwise boosting*. 
 The key idea here is to not update a whole parameter vector, but only one entry of it.
 The entry chosen for the update at this juncture is the one yielding the best improvement in terms of minimization of the loss function.
-> Corrected: Check again. The loss function in our case is the deviance calculated using $\gamma$ and our $\beta$.
+The loss function in our case is the deviance calculated using $\gamma$ and our $\beta$.
 
 Hence, in each iteration only one component of the location- and one component of the scale-parameters are updated.
 
@@ -177,7 +178,7 @@ j^* = \arg\min_{j = 0,..,k} \sum_{i=1}^{n}(u_i-x_{ij}\hat{b}_j)^2.
 
 
 
-We implement this in our package by the extending the `LocationScaleRegression` class to include the two active fields `bestFittingVariableBeta` and `bestFittingVariableGamma`. 
+We implement this in our package by extending the `LocationScaleRegression` class to include the two active fields `bestFittingVariableBeta` and `bestFittingVariableGamma`. 
 
 These functions partition the design matrix $X$- respectively $Z$ - into its single columns and then estimate the residuals - respectively the scores - separately for each component, and determine loss functions for a hypothetical update with the respective component. 
 Respective to the old loss function value, the highest loss-improvement is determined and the respective component is used to update the parameter-vector.
@@ -222,12 +223,6 @@ We also intend to implement measures for proneness reduction to input errors.
 * Visualize the results of the boosted estimates
 
 * Document the extension of the R6-Class properly and inherit documentation of the `LocationScaleRegression-Class` using roxygen2.
-
-
-## Application
-
-[Johannes: Munich Rent Data? - Identify Outliers]
-If you want to cite Kneib to include this copy the following and update the page number:  @Fahrmeir.2013, 217-219.
 
 
 # 6. References
