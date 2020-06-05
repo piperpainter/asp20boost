@@ -93,7 +93,7 @@ The term in the estimating step is, however, not the residual.
 For boosting $\gamma$ this term equals the score function of the model i.e  the derivative of the log likelihood of the normal distribution.
 
 \begin{equation}
-ll = \frac{1}{2\pi\exp(Z\Gamma)^2}\times\exp(-\frac{u^2}{2\exp(Z\Gamma)^2})
+ll = \frac{1}{2\pi\exp(Z\gamma)^2}\times\exp(-\frac{u^2}{2\exp(Z\gamma)^2})
 \end{equation}
 
 
@@ -129,54 +129,81 @@ The loss function in our case is the deviance calculated using $\gamma$ and our 
 Hence, in each iteration only one component of the location- and one component of the scale-parameters are updated.
 
 
-### 1. Beta
+### 1. Initialize the regression coefficients
 
 \begin{equation} 
 \begin{aligned}
 \beta_{j}^{(0)} = 0, \text{ for} j = 1,..,k. \\
+\gamma_{j}^{(0)} = 0, \text{ for} j = 1,..,k. \\
+\end{aligned}
+\end{equation}
+
+### 2. Compute the negative gradients
+
+Beta
+\begin{equation} 
+\begin{aligned}
 u_i = y - X\hat{\beta}^{(t-1)} \\
 \hat{b}_j = ((\vec{x}^j)^T \space\vec{x}^j)^{-1}((\vec{x}^j)^T \vec{u} \\
 \end{aligned}
 \end{equation}
 
-### 2. Gamma
-
+Gamma
 \begin{equation} 
 \begin{aligned}
-\gamma_{j}^{(0)} = 0, \text{ for} j = 1,..,k. \\
-u_i = \text{deviance} \\
-\hat{b}_j = U^2Z^2e^{-2(Z\Gamma)} \\
+u = y - X\hat{\beta}^{(t-1)} \\
+u_i = X\hat{\beta}^{(t-1)}/Z\hat{\gamma}^{(t-1)} \\
+\hat{b}_j = u^2(\vec{z}^j)^Te^{-2(Z\hat{\gamma}^{(t-1)})} \\
 \end{aligned}
 \end{equation} 
 
-### 3. Same procedure. 
+### 3. Fit separate models for all covariates 
 
-Fit separate models for all covariates i.e obtain
-
+Beta
 \begin{equation} 
-\hat{b}_j = ((\vec{x}^j)^T \space\vec{x}^j)^{-1}((\vec{x}^j)^T \vec{u}, \text{ for} \space j = 1,..,k. 
+\hat{b}_j = ((\vec{x}^j)^T \space\vec{x}^j)^{-1}((\vec{x}^j)^T \vec{u}, \text{for} \space j = 1,..,k. 
 \end{equation}
 
-
-And determine the best fitting variable via 
-
+Gamma
 \begin{equation} 
-j^* = \arg\min_{j = 0,..,k} \sum_{i=1}^{n}(u_i-x_{ij}\hat{b}_j)^2.
+\hat{b}_j = ((\vec{z}^j)^T \space\vec{z}^j)^{-1}((\vec{z}^j)^T \vec{u}, \text{ for} \space j = 1,..,k. 
 \end{equation}
- 
+
+And determine the best fitting variable via:
+
+Beta
+\begin{equation} 
+\begin{aligned}
+u_i = y-X\hat{\beta}^{(t-1)} \\
+j^* = \arg\min_{j = 0,..,k} \sum_{i=1}^{n}(u_i-x_{ij}\hat{b}_j)^2\\
+\end{aligned}
+\end{equation}
+
+Gamma
+\begin{equation} 
+\begin{aligned}
+u_i = X\hat{\beta}^{(t-1)}/Z\hat{\gamma}^{(t-1)} \\
+j^* = \arg\min_{j = 0,..,k} \sum_{i=1}^{n}(u_i-x_{ij}\hat{b}_j)^2
+\end{aligned}
+\end{equation}
 
 ### 4. Update Coefficients. 
 
-
+Beta
 \begin{equation} 
 \begin{aligned}
-\hat{\beta}_{j^*}^{(1)}  = \hat{\beta}_{j^*}^{(0)}+ \nu\hat{b}_{j^*} \\
-\hat{\beta}_{j}^{(1)}  = \hat{\beta}_{j}^{(0)}, j\neq j^*.
+\hat{\beta}_{j^*}^{(t)}  = \hat{\beta}_{j^*}^{(t-1)}+ \nu\hat{b}_{j^*} \\
+\hat{\beta}_{j}^{(t)}  = \hat{\beta}_{j}^{(t-1)}, j\neq j^*.
+\end{aligned}
+\end{equation}
+
+Gamma
+\begin{equation} 
+\begin{aligned}
+\hat{\gamma}_{j^*}^{(t)}  = \hat{\gamma}_{j^*}^{(t-1)}+ \nu\hat{b}_{j^*} \\
+\hat{\gamma}_{j}^{(t)}  = \hat{\gamma}_{j}^{(t-1)}, j\neq j^*.
 \end{aligned}
 \end{equation} 
-
-
-
 
 We implement this in our package by extending the `LocationScaleRegression` class to include the two active fields `bestFittingVariableBeta` and `bestFittingVariableGamma`. 
 
