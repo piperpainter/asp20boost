@@ -18,105 +18,111 @@
 #' @export
 
 #Uncomment for testing
- library(R6)
+library(R6)
 
-LocationScaleRegressionBoost <- R6Class("LocationScaleRegression",
-                                        inherit = LocationScaleRegression,
+LocationScaleRegressionBoost <- R6Class(
+  "LocationScaleRegression",
+  inherit = LocationScaleRegression,
 
-                                        private = list(
-                                          #' @details
-                                          #' Returns the loss - squared error of the partial deviance for each covariate of Gamma
-                                          #' @return
-                                          #' Vector of sum of squared errors for each covariate
-                                          componentwiseLossGamma = function ()
-                                          {
-                                            #Fit separate linear models for all covariates of gamma
-                                            loss <- numeric()
-                                            ui <- self$resid("deviance")
-                                            # Our u_i for gamma in page 226 step 2.
-                                            for(n in 1:dim(private$Z)[2]) {
-                                              zn <- private$Z[,n]
-                                              #u -> first derivation of Log Likelihood - see documentation for further reading
-                                              u <- ((self$resid()^2)*private$Z[,n]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,n])
-                                              #bjhat -> Fit separate linear models
-                                              #Kneib book Page 226
-                                              #Johannes: I can't really explain this
-                                              #Can be further improvied by moving ProjectionMatrix Calculation to initializalisation
+  private = list(
 
-                                              #old
-                                              #bjhat <- solve(t(private$Z[,n])%*%private$Z[,n])%*%t(private$Z[,n])%*% u
-                                              #
-                                              bjhat <- chol2inv(chol(crossprod(private$Z[,n],private$Z[,n])))%*%crossprod(private$Z[,n], u)
+    #' @details
+    #' Returns the loss - squared error of the partial deviance for each covariate of Gamma
+    #' @return
+    #' Vector of sum of squared errors for each covariate
+    componentwiseLossGamma = function (){
+      #Fit separate linear models for all covariates of gamma
+      loss <- numeric()
+      ui <- self$resid("deviance")
+      # Our u_i for gamma in page 226 step 2
+
+      for(n in 1:dim(private$Z)[2]) {
+        zn <- private$Z[,n]
+        #u -> first derivation of Log Likelihood - see documentation for further reading
+        u <- ((self$resid()^2)*private$Z[,n]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,n])
+        #bjhat -> Fit separate linear models
+        #Kneib book Page 226
+        #Johannes: I can't really explain this
+        #Can be further improvied by moving ProjectionMatrix Calculation to initializalisation
+
+        #old
+        #bjhat <- solve(t(private$Z[,n])%*%private$Z[,n])%*%t(private$Z[,n])%*% u
+        #
+        bjhat <- chol2inv(chol(crossprod(private$Z[,n],private$Z[,n])))%*%crossprod(private$Z[,n], u)
 
 
-                                              #Calculate new squared error by subtracting the partial deviance of covariate with new gamma (first derivation u) of the total deviance
-                                              #partial deviance -> (self$resid()/zn%*%bjhat)
-                                              loss[n] <- sum((ui-(self$resid()/zn%*%bjhat))^2) # Punkt 3 Formel
-                                            }
-                                            loss
-                                          },
-                                          #' @details
-                                          #' Returns the loss - squared error of the partial deviance for each covariate of Beta
-                                          #' @return
-                                          #' Vector of sum of squared errors for each covariate
-                                          componentwiseLossBeta = function ()
-                                          {
-                                            #Fit separate linear models for all covariates of beta
-                                            loss <- numeric()
-                                            ui <- (self$resid()) #  Our u_i for beta in page 226 step 2.
-                                            for(n in 1:dim(private$X)[2]) {
-                                              xn <- private$X[,n]
-                                              #old
-                                              #bjhat <- solve(t(private$X[,n])%*%private$X[,n])%*%t(private$X[,n])%*%ui
+        #Calculate new squared error by subtracting the partial deviance of covariate with new gamma (first derivation u) of the total deviance
+        #partial deviance -> (self$resid()/zn%*%bjhat)
+        loss[n] <- sum((ui-(self$resid()/zn%*%bjhat))^2) # Punkt 3 Formel
+      }
+      loss
+    },
 
-                                              bjhat <- chol2inv(chol(crossprod(private$X[,n],private$X[,n])))%*%crossprod(private$X[,n], ui)
 
-                                              loss[n]<-sum((ui-xn%*%bjhat)^2)
-                                            }
-                                            loss
+    #' @details
+    #' Returns the loss - squared error of the partial deviance for each covariate of Beta
+    #' @return
+    #' Vector of sum of squared errors for each covariate
+    componentwiseLossBeta = function ()
+    {
+      #Fit separate linear models for all covariates of beta
+      loss <- numeric()
+      ui <- (self$resid()) #  Our u_i for beta in page 226 step 2.
+      for(n in 1:dim(private$X)[2]) {
+        xn <- private$X[,n]
+        #old
+        #bjhat <- solve(t(private$X[,n])%*%private$X[,n])%*%t(private$X[,n])%*%ui
 
-                                          }
-                                        ),
+        bjhat <- chol2inv(chol(crossprod(private$X[,n],private$X[,n])))%*%crossprod(private$X[,n], ui)
 
-                                        public = list(
-                                          #' Determins the best variable for componentwise boosting
-                                          #'
-                                          #' @return
-                                          #' New Gamma Vector with updated values on the best fitted covariate
-                                          #' @export
-                                          bestFittingVariableGamma = function()
-                                            {
+        loss[n]<-sum((ui-xn%*%bjhat)^2)
+      }
+      loss
 
-                                            #determine index of the best-fitting variable, the covariate with the greates influance on the deviance will decrease the loss at most
-                                            indexOfGammaUpdate = which.min(private$componentwiseLossGamma())
-                                            #build update vector
-                                            updateGamma <- replicate(length(model$gamma), 0)
-                                            #Calculates current first derivates for Gamma (index of the best-fitting variable) again like u, but as sum, since Gamma covariate is a single
-                                            updateGamma[indexOfGammaUpdate] <- sum((self$resid()^2)*private$Z[,indexOfGammaUpdate]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,indexOfGammaUpdate])
+    }
+  ),
 
-                                            updateGamma
-                                          },
-                                          #' Determins the best variable for componentwise boosting
-                                          #'
-                                          #' @return
-                                          #' New Beta Vector with updated values on the best fitted covariate
-                                          #' @export
-                                          bestFittingVariableBeta = function()
-                                          {
+  public = list(
 
-                                            #determine index of the best-fitting variable
-                                            indexOfBetaUpdate = which.min(private$componentwiseLossBeta())
+    #' @details
+    #' Determins the best variable for componentwise boosting
+    #' @return
+    #' New Gamma Vector with updated values on the best fitted covariate
+    #' @export
+    bestFittingVariableGamma = function()
+    {
 
-                                            #build update vector
-                                            updateBeta <- replicate(length(model$beta), 0)
-                                            #Calculates current first derivates for Beta - the residuals
-                                            #updateBeta[indexOfBetaUpdate] <- solve(t(private$X[,indexOfBetaUpdate])%*%private$X[,indexOfBetaUpdate])%*% t(private$X[,indexOfBetaUpdate]) %*% model$resid()
-                                            updateBeta[indexOfBetaUpdate] <- chol2inv(chol(crossprod(private$X[,indexOfBetaUpdate],private$X[,indexOfBetaUpdate]))) %*% crossprod(private$X[,indexOfBetaUpdate], model$resid())
+      #determine index of the best-fitting variable, the covariate with the greates influance on the deviance will decrease the loss at most
+      indexOfGammaUpdate = which.min(private$componentwiseLossGamma())
+      #build update vector
+      updateGamma <- replicate(length(model$gamma), 0)
+      #Calculates current first derivates for Gamma (index of the best-fitting variable) again like u, but as sum, since Gamma covariate is a single
+      updateGamma[indexOfGammaUpdate] <- sum((self$resid()^2)*private$Z[,indexOfGammaUpdate]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,indexOfGammaUpdate])
 
-                                            updateBeta
+      updateGamma
+    },
+    #' @details
+    #' Determins the best variable for componentwise boosting
+    #'
+    #' @return
+    #' New Beta Vector with updated values on the best fitted covariate
+    #' @export
+    bestFittingVariableBeta = function()
+    {
 
-                                          }
-                                        )
+      #determine index of the best-fitting variable
+      indexOfBetaUpdate = which.min(private$componentwiseLossBeta())
+
+      #build update vector
+      updateBeta <- replicate(length(model$beta), 0)
+      #Calculates current first derivates for Beta - the residuals
+      #updateBeta[indexOfBetaUpdate] <- solve(t(private$X[,indexOfBetaUpdate])%*%private$X[,indexOfBetaUpdate])%*% t(private$X[,indexOfBetaUpdate]) %*% model$resid()
+      updateBeta[indexOfBetaUpdate] <- chol2inv(chol(crossprod(private$X[,indexOfBetaUpdate],private$X[,indexOfBetaUpdate]))) %*% crossprod(private$X[,indexOfBetaUpdate], model$resid())
+
+      updateBeta
+
+    }
+  )
 
 
 )
@@ -202,8 +208,8 @@ gradient_boost = function(model,
 
 
     if (i>1&& all(abs(c(grad_beta-old_grad_beta, grad_gamma-old_grad_gamma)) <= abstol)) {
-       message("break")
-       break()
+      message("break")
+      break()
     }
 
 
