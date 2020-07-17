@@ -17,14 +17,11 @@
 #' @import asp20model
 #' @export
 
-#Uncomment for testing
-library(R6)
-
 LocationScaleRegressionBoost <- R6Class(
   "LocationScaleRegression",
   inherit = LocationScaleRegression,
 
-  private = list(
+  public = list(
 
     #' @details
     #' Returns the loss - squared error of the partial deviance for each covariate of Gamma
@@ -80,9 +77,8 @@ LocationScaleRegressionBoost <- R6Class(
       loss
 
     }
-  ),
+  ,
 
-  public = list(
 
     #' @details
     #' Determins the best variable for componentwise boosting
@@ -93,7 +89,7 @@ LocationScaleRegressionBoost <- R6Class(
     {
 
       #determine index of the best-fitting variable, the covariate with the greates influance on the deviance will decrease the loss at most
-      indexOfGammaUpdate = which.min(private$componentwiseLossGamma())
+      indexOfGammaUpdate = which.min(self$componentwiseLossGamma())
       #build update vector
       updateGamma <- replicate(length(model$gamma), 0)
       #Calculates current first derivates for Gamma (index of the best-fitting variable) again like u, but as sum, since Gamma covariate is a single
@@ -111,7 +107,7 @@ LocationScaleRegressionBoost <- R6Class(
     {
 
       #determine index of the best-fitting variable
-      indexOfBetaUpdate = which.min(private$componentwiseLossBeta())
+      indexOfBetaUpdate = which.min(self$componentwiseLossBeta())
 
       #build update vector
       updateBeta <- replicate(length(model$beta), 0)
@@ -216,15 +212,3 @@ gradient_boost = function(model,
   }
   invisible(model)
 }
-
-# # for testing p for testing purpose
-# start_time <- Sys.time()
-# library(asp20model)
-# set.seed(1337)
-# n <- 500
-# x <- runif(n)
-# y <- x + rnorm(n, sd = exp(-3 + 2 * x))
-# model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-# gradient_boost(model,stepsize = 0.001, maxit = 20, abstol = 0.0001, verbose = TRUE)
-# end_time <- Sys.time()
-# end_time - start_time
