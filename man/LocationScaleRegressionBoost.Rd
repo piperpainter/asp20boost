@@ -4,14 +4,12 @@
 \alias{LocationScaleRegressionBoost}
 \title{asp20boost}
 \description{
-This model class builds on the class "LocationScaleRegression" of the package
-asp20model. It provides measures used by the gradient_boost algorithm to enable
-parameter estimation and variable selection.
-The model class assumes a normal response, linear precidtors for
-location (expectation), as well as linear predictors for scale (variance).
-The scale uses the log as a link function.
-The linear predictors for the location and
-the scale are called \eqn{X\beta} and \eqn{Z\gamma} respectively.
+asp20boost
+
+asp20boost
+}
+\details{
+This model class \link{...}
 }
 \section{Super class}{
 \code{\link[asp20model:LocationScaleRegression]{asp20model::LocationScaleRegression}} -> \code{LocationScaleRegression}
@@ -19,36 +17,38 @@ the scale are called \eqn{X\beta} and \eqn{Z\gamma} respectively.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{beta}}{A numeric vector with the \code{beta} parameters.}
+\item{\code{componentwiseLossGamma}}{Calculates loss function for
+every component in scale-dimension/gamma}
 
-\item{\code{gamma}}{A numeric vector with the \code{gamma} parameters.}
+\item{\code{componentwiseLossBeta}}{Calculates loss function for
+every component in location-dimension/beta}
 
-\item{\code{fitted_location}}{A numeric vector with the fitted values
-for the location.}
+\item{\code{bestFittingVariableGamma}}{Calculates the actual update for gamma}
 
-\item{\code{fitted_scale}}{A numeric vector with the fitted values
-for the scale.}
+\item{\code{bestFittingVariableBeta}}{Calculates the actual update for beta}
 }
 \if{html}{\out{</div>}}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
-\item{\code{beta}}{A numeric vector with the \code{beta} parameters.}
+\item{\code{componentwiseLossGamma}}{Calculates loss function for
+every component in scale-dimension/gamma}
 
-\item{\code{gamma}}{A numeric vector with the \code{gamma} parameters.}
+\item{\code{componentwiseLossBeta}}{Calculates loss function for
+every component in location-dimension/beta}
 
-\item{\code{fitted_location}}{A numeric vector with the fitted values
-for the location.}
+\item{\code{bestFittingVariableGamma}}{Calculates the actual update for gamma}
 
-\item{\code{fitted_scale}}{A numeric vector with the fitted values
-for the scale.}
+\item{\code{bestFittingVariableBeta}}{Calculates the actual update for beta}
 }
 \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
+\item \href{#method-componentwiseLossGamma}{\code{LocationScaleRegressionBoost$componentwiseLossGamma()}}
+\item \href{#method-componentwiseLossBeta}{\code{LocationScaleRegressionBoost$componentwiseLossBeta()}}
 \item \href{#method-bestFittingVariableGamma}{\code{LocationScaleRegressionBoost$bestFittingVariableGamma()}}
 \item \href{#method-bestFittingVariableBeta}{\code{LocationScaleRegressionBoost$bestFittingVariableBeta()}}
 \item \href{#method-clone}{\code{LocationScaleRegressionBoost$clone()}}
@@ -66,6 +66,38 @@ for the scale.}
 \out{</details>}
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-componentwiseLossGamma"></a>}}
+\if{latex}{\out{\hypertarget{method-componentwiseLossGamma}{}}}
+\subsection{Method \code{componentwiseLossGamma()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$componentwiseLossGamma()}\if{html}{\out{</div>}}
+}
+
+\subsection{Details}{
+Returns the loss - squared error of the partial deviance for each covariate of Gamma
+}
+
+\subsection{Returns}{
+Vector of sum of squared errors for each covariate
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-componentwiseLossBeta"></a>}}
+\if{latex}{\out{\hypertarget{method-componentwiseLossBeta}{}}}
+\subsection{Method \code{componentwiseLossBeta()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$componentwiseLossBeta()}\if{html}{\out{</div>}}
+}
+
+\subsection{Details}{
+Returns the loss - squared error of the partial deviance for each covariate of Beta
+}
+
+\subsection{Returns}{
+Vector of sum of squared errors for each covariate
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-bestFittingVariableGamma"></a>}}
 \if{latex}{\out{\hypertarget{method-bestFittingVariableGamma}{}}}
 \subsection{Method \code{bestFittingVariableGamma()}}{
@@ -74,17 +106,11 @@ for the scale.}
 }
 
 \subsection{Details}{
-Returns the loss - squared error of the partial deviance for each covariate of Gamma
-
-
-Returns the loss - squared error of the partial deviance for each covariate of Beta
-
-
 Determins the best variable for componentwise boosting
 }
 
 \subsection{Returns}{
-Vector of sum of squared errors for each covariate
+New Gamma Vector with updated values on the best fitted covariate
 }
 }
 \if{html}{\out{<hr>}}

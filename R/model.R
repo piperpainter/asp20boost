@@ -1,108 +1,104 @@
-#' R6 class for location-scale regression models
+#' @title asp20boost
 #'
-#' This model class assumes a normally distributed response variable with
-#' one linear predictor for the location (i.e. the mean) and one for the scale
-#' (i.e. the standard deviation). The linear predictors for the location and
-#' the scale are called \eqn{X\beta} and \eqn{Z\gamma} respectively. The scale
-#' uses a log link.
+#' This model class [...]
 #'
-#' @field beta A numeric vector with the `beta` parameters.
-#' @field gamma A numeric vector with the `gamma` parameters.
-#' @field fitted_location A numeric vector with the fitted values
-#'                        for the location.
-#' @field fitted_scale A numeric vector with the fitted values
-#'                     for the scale.
+#' @field componentwiseLossGamma Calculates loss function for
+#'   every component in scale-dimension/gamma
+#' @field componentwiseLossBeta Calculates loss function for
+#'   every component in location-dimension/beta
+#' @field bestFittingVariableGamma Calculates the actual update for gamma
+#' @field bestFittingVariableBeta Calculates the actual update for beta
 #'
 #' @import R6
 #' @import asp20model
 #' @export
 
 LocationScaleRegressionBoost <- R6Class(
-  "LocationScaleRegression",
+  "LocationScaleRegressionBoost",
   inherit = LocationScaleRegression,
 
   public = list(
 
     #' @details
-    #' Returns the loss - squared error of the partial deviance for each covariate of Gamma
-    #' @return
-    #' Vector of sum of squared errors for each covariate
-    componentwiseLossGamma = function (){
-      #Fit separate linear models for all covariates of gamma
-      loss <- numeric()
-      ui <- self$resid("deviance")
-      # Our u_i for gamma in page 226 step 2
-
-      for(n in 1:dim(private$Z)[2]) {
-        zn <- private$Z[,n]
-        #u -> first derivation of Log Likelihood - see documentation for further reading
-        u <- ((self$resid()^2)*private$Z[,n]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,n])
-        #bjhat -> Fit separate linear models
-        #Kneib book Page 226
-        #Johannes: I can't really explain this
-        #Can be further improvied by moving ProjectionMatrix Calculation to initializalisation
-
-        #old
-        #bjhat <- solve(t(private$Z[,n])%*%private$Z[,n])%*%t(private$Z[,n])%*% u
-        #
-        bjhat <- chol2inv(chol(crossprod(private$Z[,n],private$Z[,n])))%*%crossprod(private$Z[,n], u)
-
-
-        #Calculate new squared error by subtracting the partial deviance of covariate with new gamma (first derivation u) of the total deviance
-        #partial deviance -> (self$resid()/zn%*%bjhat)
-        loss[n] <- sum((ui-(self$resid()/zn%*%bjhat))^2) # Punkt 3 Formel
-      }
-      loss
-    },
-
-
-    #' @details
     #' Returns the loss - squared error of the partial deviance for each covariate of Beta
     #' @return
     #' Vector of sum of squared errors for each covariate
-    componentwiseLossBeta = function ()
-    {
+
+    componentwiseLossBeta = function(){
+
       #Fit separate linear models for all covariates of beta
       loss <- numeric()
-      ui <- (self$resid()) #  Our u_i for beta in page 226 step 2.
-      for(n in 1:dim(private$X)[2]) {
-        xn <- private$X[,n]
-        #old
-        #bjhat <- solve(t(private$X[,n])%*%private$X[,n])%*%t(private$X[,n])%*%ui
+      resid_working <- (self$resid()) #  Our u_i for beta in page 226 step 2.
+      number_of_columns <- dim(private$X)[2]
+      for(n in 1:number_of_columns) {
+        predictor_colwise <- private$X[,n]
 
-        bjhat <- chol2inv(chol(crossprod(private$X[,n],private$X[,n])))%*%crossprod(private$X[,n], ui)
+        # old way to do it: estimate residuals with predictor componentwise (columnwise)
+        # XX_inv_colwise <- t(predictor_colwise) %*% predictor_colwise)
+        # bjhat <- solve(XX_inv_colwise %*% t(predictor_colwise) %*% resid_working
 
-        loss[n]<-sum((ui-xn%*%bjhat)^2)
+        # new way including cholesky calculations
+        bjhat <- chol2inv(chol(crossprod(predictor_colwise, predictor_colwise))) %*% crossprod(predictor_colwise, resid_working)
+
+        loss[n] <- sum((resid_working - predictor_colwise %*% bjhat) ^ 2)
       }
-      loss
 
-    }
-  ,
+      return(loss)
+
+    },
+
 
 
     #' @details
-    #' Determins the best variable for componentwise boosting
+    #' Returns the loss - squared error of the partial deviance for each covariate of Gamma
     #' @return
-    #' New Gamma Vector with updated values on the best fitted covariate
-    #' @export
-    bestFittingVariableGamma = function()
-    {
+    #' Vector of sum of squared errors for each covariate
 
-      #determine index of the best-fitting variable, the covariate with the greates influance on the deviance will decrease the loss at most
-      indexOfGammaUpdate = which.min(self$componentwiseLossGamma())
-      #build update vector
-      updateGamma <- replicate(length(model$gamma), 0)
-      #Calculates current first derivates for Gamma (index of the best-fitting variable) again like u, but as sum, since Gamma covariate is a single
-      updateGamma[indexOfGammaUpdate] <- sum((self$resid()^2)*private$Z[,indexOfGammaUpdate]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,indexOfGammaUpdate])
+    componentwiseLossGamma = function(){
 
-      updateGamma
+      #Fit separate linear models for all covariates of gamma
+      loss <- numeric()
+      resid_deviance <- self$resid("deviance") # Our u_i for gamma in page 226 step 2
+      resid_working <- self$resid()
+      number_of_columns <- dim(private$Z)[2]
+
+      for(n in 1:number_of_columns) {
+        predictor_colwise <- private$Z[,n]
+
+        # u -> first derivation of Log Likelihood - see documentation for further reading
+        grad_loss_function <- ((resid_working ^ 2) * predictor_colwise * exp(-2 * (drop(private$Z %*% self$gamma))) - predictor_colwise)
+        # for location-estimation the gradient of the loss function results in the residuals
+        # for scale-estimation another term results
+
+        #Kneib book Page 226
+
+        #Can be further improvied by moving ProjectionMatrix Calculation to initializalisation
+
+        # old way to calculate "residual-estimator" bjhat
+        # ZZ_inv_colwise <- solve(t(predictor_colwise) %*% predictor_colwise)
+        # bjhat <- ZZ_inv_colwise %*% t(predictor_colwise) %*% grad_loss_function
+
+        # new way including cholesky calculations
+        bjhat <- chol2inv(chol(crossprod(predictor_colwise,predictor_colwise))) %*% crossprod(predictor_colwise, grad_loss_function)
+
+
+        # Calculate new squared error by subtracting the partial deviance of covariate with new gamma (first derivation u) of the total deviance
+        partial_deviance <- (resid_working / predictor_colwise %*% bjhat)
+        loss[n] <- sum((resid_deviance - partial_deviance) ^ 2) # Punkt 3 Formel
+      }
+
+      return(loss)
     },
+
+
+
     #' @details
     #' Determins the best variable for componentwise boosting
     #'
     #' @return
     #' New Beta Vector with updated values on the best fitted covariate
     #' @export
+
     bestFittingVariableBeta = function()
     {
 
@@ -117,6 +113,27 @@ LocationScaleRegressionBoost <- R6Class(
 
       updateBeta
 
+    },
+
+
+
+    #' @details
+    #' Determins the best variable for componentwise boosting
+    #' @return
+    #' New Gamma Vector with updated values on the best fitted covariate
+    #' @export
+
+    bestFittingVariableGamma = function()
+    {
+
+      #determine index of the best-fitting variable, the covariate with the greates influance on the deviance will decrease the loss at most
+      indexOfGammaUpdate = which.min(self$componentwiseLossGamma())
+      #build update vector
+      updateGamma <- replicate(length(model$gamma), 0)
+      #Calculates current first derivates for Gamma (index of the best-fitting variable) again like u, but as sum, since Gamma covariate is a single
+      updateGamma[indexOfGammaUpdate] <- sum((self$resid()^2)*private$Z[,indexOfGammaUpdate]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,indexOfGammaUpdate])
+
+      updateGamma
     }
   )
 
