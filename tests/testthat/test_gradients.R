@@ -1,3 +1,5 @@
+context("gradients")
+
 library(numDeriv)
 
 set.seed(1337)
@@ -29,9 +31,3 @@ f <- function(x) {
 test_that("gamma gradient works", {
   expect_equivalent(model$grad_gamma(), grad(f, model$gamma))
 })
-
-
-#test_that("gradient boost does not throw an error", {
-#  expect_error(gradient_boost(model, verbose = TRUE), NA)
-#})
-
