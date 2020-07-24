@@ -1,0 +1,37 @@
+---
+title: "ASP20 Boost"
+author:
+- Johannes Strauß
+- Levin Wiebelt
+- Sebastian Aristizabal
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  pdf_document:
+    keep_tex: no
+    latex_engine: xelatex
+    template: null
+    toc: yes
+    toc_depth: 2
+documentclass: report
+geometry: left=4cm, right=3cm, top=2.5cm, bottom=2.5cm
+lof: FALSE
+lot: FALSE
+bibliography:
+- citavi.bib
+- packages.bib
+subtitle: Second Report
+biblio-style: apalike
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+``` 
+
+```{r pack tex, include=FALSE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'R6', 'knitr', 'rmarkdown', 'asp20model', 'gamboostLSS','mboost', 'tidyverse'  
+), 'packages.bib')
+```
+
