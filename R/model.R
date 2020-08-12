@@ -367,18 +367,18 @@ gradient_boost = function(model,
   invisible(model)
 }
 
-library(R6)
-library(asp20model)
-start_time <- Sys.time()
-library(asp20model)
-set.seed(1337)
-n <- 500
-x <- runif(n)
-y <- x + rnorm(n, sd = exp(-3 + 2 * x))
-model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-gradient_boost(model,stepsize = 0.001, maxit = 1000, abstol = 0.0001,componentwise = FALSE, verbose = TRUE, plot=TRUE)
-end_time <- Sys.time()
-end_time - start_time
+# library(R6)
+# library(asp20model)
+# start_time <- Sys.time()
+# library(asp20model)
+# set.seed(1337)
+# n <- 500
+# x <- runif(n)
+# y <- x + rnorm(n, sd = exp(-3 + 2 * x))
+# model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+# gradient_boost(model,stepsize = 0.001, maxit = 1000, abstol = 0.0001,componentwise = TRUE, verbose = TRUE, plot=TRUE)
+# end_time <- Sys.time()
+# end_time - start_time
 
 
 
