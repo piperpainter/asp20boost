@@ -39,12 +39,12 @@ LocationScaleRegressionBoost <- R6Class(
       if(length(private$X_number_of_columns)>0){
         if(private$componentwise)
         {
-          self$lstSqrEstBeta_componentwise <- private$componentwiseLossBeta()
+          self$lstSqrEstBetaLossLoss_componentwise <- private$componentwiseLossBeta()
         }
         else
         {
 
-          self$lstSqrEstBeta <- private$X_HAT %*% crossprod(private$X, self$resid())
+          self$lstSqrEstBetaLoss <- private$X_HAT %*% crossprod(private$X, self$resid())
         }
       }
     },
@@ -56,10 +56,10 @@ LocationScaleRegressionBoost <- R6Class(
       #update least squares estimate only when model is initialized
       if(length(private$X_number_of_columns)>0){
         if(private$componentwise){
-          self$lstSqrEstGamma_componentwise <- private$componentwiseLossGamma()
+          self$lstSqrEstGammaLossLoss_componentwise <- private$componentwiseLossGamma()
         }
         else{
-          self$lstSqrEstGamma <- private$Z_HAT %*% crossprod(private$Z, self$resid("deviance"))
+          self$lstSqrEstGammaLoss <- private$Z_HAT %*% crossprod(private$Z, self$resid("deviance"))
         }
       }
     },
@@ -138,10 +138,10 @@ LocationScaleRegressionBoost <- R6Class(
   ),
 
   public = list(
-    lstSqrEstBeta = numeric(),
-    lstSqrEstBeta_componentwise = numeric(),
-    lstSqrEstGamma = numeric(),
-    lstSqrEstGamma_componentwise = numeric(),
+    lstSqrEstBetaLoss = numeric(),
+    lstSqrEstBetaLossLoss_componentwise = numeric(),
+    lstSqrEstGammaLoss = numeric(),
+    lstSqrEstGammaLossLoss_componentwise = numeric(),
 
     par_log = list(),
 
@@ -172,8 +172,8 @@ LocationScaleRegressionBoost <- R6Class(
       }
 
       #Init least square estimates for components of beta and gamma
-      self$lstSqrEstBeta_componentwise <- private$componentwiseLossBeta()
-      self$lstSqrEstGamma_componentwise <- private$componentwiseLossGamma()
+      self$lstSqrEstBetaLossLoss_componentwise <- private$componentwiseLossBeta()
+      self$lstSqrEstGammaLossLoss_componentwise <- private$componentwiseLossGamma()
     },
 
     #enable or disable componentwise boosting
@@ -197,7 +197,7 @@ LocationScaleRegressionBoost <- R6Class(
       updateBeta <- replicate(length(model$beta), 0)
       if(private$componentwise){
       #determine index of the best-fitting variable
-      indexOfBetaUpdate = which.min(model$lstSqrEstBeta_componentwise)
+      indexOfBetaUpdate = which.min(model$lstSqrEstBetaLossLoss_componentwise)
 
 
 
@@ -207,9 +207,9 @@ LocationScaleRegressionBoost <- R6Class(
       }
       else{
 
-        if(length(self$lstSqrEstBeta)>0)
+        if(length(self$lstSqrEstBetaLoss)>0)
         {
-          updateBeta <- updateBeta+self$lstSqrEstBeta
+          updateBeta <- updateBeta+self$lstSqrEstBetaLoss
         }
 
 
@@ -232,15 +232,15 @@ LocationScaleRegressionBoost <- R6Class(
       updateGamma <- replicate(length(model$gamma), 0)
       if(private$componentwise){
       #determine index of the best-fitting variable, the covariate with the greates influance on the deviance will decrease the loss at most
-      indexOfGammaUpdate = which.min(model$lstSqrEstGamma_componentwise)
+      indexOfGammaUpdate = which.min(model$lstSqrEstGammaLossLoss_componentwise)
 
       #Calculates current first derivates for Gamma (index of the best-fitting variable) again like u, but as sum, since Gamma covariate is a single
       updateGamma[indexOfGammaUpdate] <- sum((self$resid()^2)*private$Z[,indexOfGammaUpdate]*exp(-2*(drop(private$Z %*% self$gamma)))-private$Z[,indexOfGammaUpdate])
       }
       else{
-        if(length(self$lstSqrEstGamma)>0)
+        if(length(self$lstSqrEstGammaLoss)>0)
         {
-          updateGamma<- updateGamma+self$lstSqrEstGamma
+          updateGamma<- updateGamma+self$lstSqrEstGammaLoss
         }
       }
 
@@ -376,10 +376,9 @@ gradient_boost = function(model,
 # x <- runif(n)
 # y <- x + rnorm(n, sd = exp(-3 + 2 * x))
 # model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-# gradient_boost(model,stepsize = 0.001, maxit = 1000, abstol = 0.0001,componentwise = TRUE, verbose = TRUE, plot=TRUE)
+# gradient_boost(model,stepsize = 0.001, maxit = 10000, abstol = 0.0001,componentwise = TRUE, verbose = TRUE, plot=TRUE)
 # end_time <- Sys.time()
 # end_time - start_time
-
 
 
 
