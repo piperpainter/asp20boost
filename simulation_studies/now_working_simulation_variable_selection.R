@@ -1,4 +1,4 @@
-# This script analyses if variable selection in the case of multidemnsional
+# This script analyses if variable selection in the case of multidimensional
 # beta and gamma vectors works
 # For this reason some coefficients are 0.
 library(R6)
@@ -9,7 +9,7 @@ library(asp20boost)
 # in order to make this script work an extra step needs to be done:
 # the error is as follow: model creation inside the "boost_true_model"-function
 # below does not work, UNLESS a LocationScaleRegressionBoost-model class has been created before
-# for this reason asimple model call and estimation is performed here
+# for this reason a simple model call and estimation is performed here
 { x <- runif(100)
   y <- runif(100)
   model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)

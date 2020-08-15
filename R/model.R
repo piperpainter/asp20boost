@@ -93,7 +93,7 @@ LocationScaleRegressionBoost <- R6Class(
 
 
     #' @details
-    #' Determins the best variable for componentwise boosting
+    #' Determines the best variable for componentwise boosting
     #'
     #' @return
     #' New Beta Vector with updated values on the best fitted covariate
@@ -118,7 +118,7 @@ LocationScaleRegressionBoost <- R6Class(
 
 
     #' @details
-    #' Determins the best variable for componentwise boosting
+    #' Determines the best variable for componentwise boosting
     #' @return
     #' New Gamma Vector with updated values on the best fitted covariate
     #' @export

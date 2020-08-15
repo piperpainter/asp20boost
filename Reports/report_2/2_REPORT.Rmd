@@ -4,7 +4,7 @@ author:
 - Johannes Strauß
 - Levin Wiebelt
 - Sebastian Aristizabal
-date: "`r format(Sys.time(), '%d %B %Y')`"
+date: 24.07.2020
 output:
   pdf_document:
     keep_tex: no
@@ -105,12 +105,6 @@ A simple case consists in setting intercept and one slope for $\beta$ and $\gamm
 The algorithm should depict the $2 \times 2$ parameters of interest and estimate them close to one while the others should remain zero.
 The resulting estimates displayed below indicate proper estimates for the scale parameter vector $\hat{\gamma}$ but not for the location estimates $\hat{\beta}$.
 
-```
-model$beta
-[1]  0.15122097  1.72916260  0.61363927 -0.14620695  0.02756381  0.28560006
-> model$gamma
-[1]  0.95706770  1.15196564 -0.02756374  0.00000000 -0.06839582  0.00000000
-```
 ```
 model$beta
 [1]  0.15122097  1.72916260  0.61363927 -0.14620695  0.02756381  0.28560006
