@@ -1,10 +1,11 @@
 ---
-title: "ASP20 Boost"
+title: Report ASP20 Boost
+subtitle: Second Report.
 author:
 - Johannes Strauß
 - Levin Wiebelt
 - Sebastian Aristizabal
-date: 24.07.2020
+date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   pdf_document:
     keep_tex: no
@@ -19,7 +20,6 @@ lot: FALSE
 bibliography:
 - citavi.bib
 - packages.bib
-subtitle: Second Report
 biblio-style: apalike
 ---
 
