@@ -2,7 +2,7 @@
 % Please edit documentation in R/model.R
 \name{gradient_boost}
 \alias{gradient_boost}
-\title{Gradient bost for the \code{LocationScaleRegressionBoost} model class}
+\title{Gradient boost for the \code{LocationScaleRegressionBoost} model class}
 \usage{
 gradient_boost(
   model,

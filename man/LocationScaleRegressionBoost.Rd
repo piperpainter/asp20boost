@@ -2,78 +2,50 @@
 % Please edit documentation in R/model.R
 \name{LocationScaleRegressionBoost}
 \alias{LocationScaleRegressionBoost}
-\title{R6 class for performing either simple and generic componentwise
-boosting on location-scale regression models.
-
-This model class builts upon and thus inherits the basic structure
-from the \code{LocationScaleRegression} model class of the \code{asp20model} package.
-Consequently, it share similar syntax and structure. (Please  see the help
-page of that class \emph{Note: It would be nice to just link the vignette})
-
-It assumes a normally distributed response variable with
-one linear predictor for the location (i.e. the mean) and one for the
-scale (i.e. the standard deviation). The linear predictors for the
-location and the scale are called Xβ and Zγ respectively. The scale
-uses a log link.}
+\title{R6 class for performing either simple or generic componentwise
+boosting (CWB) on location-scale regression models.}
 \description{
-R6 class for performing either simple and generic componentwise
-boosting on location-scale regression models.
-
-This model class builts upon and thus inherits the basic structure
+This model class builds upon and thus inherits the basic structure
 from the \code{LocationScaleRegression} model class of the \code{asp20model} package.
-Consequently, it share similar syntax and structure. (Please  see the help
-page of that class \emph{Note: It would be nice to just link the vignette})
 
-It assumes a normally distributed response variable with
-one linear predictor for the location (i.e. the mean) and one for the
-scale (i.e. the standard deviation). The linear predictors for the
-location and the scale are called Xβ and Zγ respectively. The scale
-uses a log link.
-
-R6 class for performing either simple and generic componentwise
-boosting on location-scale regression models.
-
-This model class builts upon and thus inherits the basic structure
-from the \code{LocationScaleRegression} model class of the \code{asp20model} package.
-Consequently, it share similar syntax and structure. (Please  see the help
-page of that class \emph{Note: It would be nice to just link the vignette})
-
+Consequently, it shares a similar syntax and structure with the former#' #'
 It assumes a normally distributed response variable with
 one linear predictor for the location (i.e. the mean) and one for the
 scale (i.e. the standard deviation). The linear predictors for the
 location and the scale are called Xβ and Zγ respectively. The scale
 uses a log link.
 }
+\keyword{internal}
 \section{Super class}{
 \code{\link[asp20model:LocationScaleRegression]{asp20model::LocationScaleRegression}} -> \code{LocationScaleRegressionBoost}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{componentwiseLossGamma}}{Calculates loss function for
-every component in scale-dimension \code{gamma}}
+\item{\code{`componentwiseLossGamma`}}{Calculates loss function for
+every component in scale-dimension \code{gamma} in case of CWB}
 
-\item{\code{componentwiseLossBeta}}{Calculates loss function for
-every component in location-dimension \code{beta}}
+\item{\code{`componentwiseLossBeta`}}{Calculates loss function for
+every component in location-dimension \code{beta} in case of CWB.}
 
-\item{\code{bestFittingVariableGamma}}{Calculates the actual update for \code{gamma}}
+\item{\code{`bestFittingVariableGamma`}}{Calculates the actual update for \code{gamma}}
 
-\item{\code{bestFittingVariableBeta}}{Calculates the actual update for \code{beta}}
+\item{\code{`bestFittingVariableBeta`}}{Calculates the actual update for \code{beta}}
 }
 \if{html}{\out{</div>}}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
-\item{\code{componentwiseLossGamma}}{Calculates loss function for
-every component in scale-dimension \code{gamma}}
+\item{\code{`componentwiseLossGamma`}}{Calculates loss function for
+every component in scale-dimension \code{gamma} in case of CWB}
 
-\item{\code{componentwiseLossBeta}}{Calculates loss function for
-every component in location-dimension \code{beta}}
+\item{\code{`componentwiseLossBeta`}}{Calculates loss function for
+every component in location-dimension \code{beta} in case of CWB.}
 
-\item{\code{bestFittingVariableGamma}}{Calculates the actual update for \code{gamma}}
+\item{\code{`bestFittingVariableGamma`}}{Calculates the actual update for \code{gamma}}
 
-\item{\code{bestFittingVariableBeta}}{Calculates the actual update for \code{beta}}
+\item{\code{`bestFittingVariableBeta`}}{Calculates the actual update for \code{beta}}
 }
 \if{html}{\out{</div>}}
 }
@@ -114,7 +86,8 @@ every component in location-dimension \code{beta}}
 Returns the loss - squared error of the partial deviance for each covariate of Beta
 
 
-Returns the loss - squared error of the partial deviance for each covariate of Gamma
+Returns the loss - squared error of the partial deviance for each
+covariate of Gamma
 }
 
 \subsection{Returns}{
@@ -139,11 +112,12 @@ Vector of sum of squared errors for each covariate
 }
 
 \subsection{Details}{
-Determines the best variable for componentwise boosting
+Determines and returns the best variable for \code{beta} for
+componentwise boosting
 }
 
 \subsection{Returns}{
-New Beta Vector with updated values on the best fitted covariate
+A vector for \code{beta} with updated values on the best fitted covariate
 }
 }
 \if{html}{\out{<hr>}}
@@ -155,11 +129,12 @@ New Beta Vector with updated values on the best fitted covariate
 }
 
 \subsection{Details}{
-Determines the best variable for componentwise boosting
+Determines and returns the best variable for \code{gamma} for
+componentwise boosting.
 }
 
 \subsection{Returns}{
-New Gamma Vector with updated values on the best fitted covariate
+A vector for \code{gamma} with updated values on the best fitted covariate
 }
 }
 \if{html}{\out{<hr>}}

@@ -1,24 +1,22 @@
-#' @title R6 class for performing either simple and generic componentwise
-#'  boosting on location-scale regression models.
+#' @title R6 class for performing either simple or generic componentwise
+#'  boosting (CWB) on location-scale regression models.
 #'
-#'
-#' This model class builts upon and thus inherits the basic structure
+#' @description This model class builds upon and thus inherits the basic structure
 #' from the `LocationScaleRegression` model class of the `asp20model` package.
-#' Consequently, it share similar syntax and structure. (Please  see the help
-#' page of that class *Note: It would be nice to just link the vignette*)
 #'
+#' Consequently, it shares a similar syntax and structure with the former#' #'
 #' It assumes a normally distributed response variable with
 #' one linear predictor for the location (i.e. the mean) and one for the
 #' scale (i.e. the standard deviation). The linear predictors for the
 #' location and the scale are called Xβ and Zγ respectively. The scale
 #' uses a log link.
 #'
-#' @field componentwiseLossGamma Calculates loss function for
-#'   every component in scale-dimension `gamma`
-#' @field componentwiseLossBeta Calculates loss function for
-#'   every component in location-dimension `beta`
-#' @field bestFittingVariableGamma Calculates the actual update for `gamma`
-#' @field bestFittingVariableBeta Calculates the actual update for `beta`
+#' @field `componentwiseLossGamma` Calculates loss function for
+#'   every component in scale-dimension `gamma` in case of CWB
+#' @field `componentwiseLossBeta` Calculates loss function for
+#'   every component in location-dimension `beta` in case of CWB.
+#' @field `bestFittingVariableGamma` Calculates the actual update for `gamma`
+#' @field `bestFittingVariableBeta` Calculates the actual update for `beta`
 #'
 #' @import R6
 #' @import asp20model
@@ -27,8 +25,6 @@
 LocationScaleRegressionBoost <- R6Class(
   "LocationScaleRegressionBoost",
   inherit = LocationScaleRegression,
-
-
 
 
   private = list(
@@ -106,7 +102,8 @@ LocationScaleRegressionBoost <- R6Class(
 
 
     #' @details
-    #' Returns the loss - squared error of the partial deviance for each covariate of Gamma
+    #' Calculates the loss i.e the squared error of the partial deviance for each
+    #' covariate of `gamma`
     #' @return
     #' Vector of sum of squared errors for each covariate
 
@@ -196,11 +193,11 @@ LocationScaleRegressionBoost <- R6Class(
 
 
     #' @details
-    #' Determines the best variable for componentwise boosting
-    #'
+    #' Determines and returns the best variable for `beta` for
+    #' componentwise boosting
     #' @return
-    #' New Beta Vector with updated values on the best fitted covariate
-    #' @export
+    #' A vector for `beta` with updated values on the best fitted covariate
+    #' @keywords internal
 
     coefficentUpdateBeta = function()
     {
@@ -230,12 +227,12 @@ LocationScaleRegressionBoost <- R6Class(
     },
 
 
-
     #' @details
-    #' Determines the best variable for componentwise boosting
+    #' Determines and returns the best variable for `gamma` for
+    #' componentwise boosting.
     #' @return
-    #' New Gamma Vector with updated values on the best fitted covariate
-    #' @export
+    #' A vector for `gamma` with updated values on the best fitted covariate
+    #' @keywords internal
 
     coefficentUpdateGamma = function()
     {
@@ -263,7 +260,7 @@ LocationScaleRegressionBoost <- R6Class(
 
 )
 
-#' Gradient bost for the `LocationScaleRegressionBoost` model class
+#' Gradient boost for the `LocationScaleRegressionBoost` model class
 #'
 #' This function optimizes the log-likelihood of the given location-scale
 #' regression model by gradient descent. It has a side effect on the `model`
@@ -390,6 +387,5 @@ gradient_boost = function(model,
 # gradient_boost(model,stepsize = 0.001, maxit = 10000, abstol = 0.0001,componentwise = TRUE, verbose = TRUE, plot=TRUE)
 # end_time <- Sys.time()
 # end_time - start_time
-
 
 
