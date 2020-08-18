@@ -9,7 +9,9 @@ gradient_boost(
   stepsize = 0.001,
   maxit = 1000,
   abstol = 0.001,
-  verbose = TRUE
+  componentwise = TRUE,
+  verbose = TRUE,
+  plot = TRUE
 )
 }
 \arguments{

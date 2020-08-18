@@ -2,30 +2,63 @@
 % Please edit documentation in R/model.R
 \name{LocationScaleRegressionBoost}
 \alias{LocationScaleRegressionBoost}
-\title{asp20boost}
-\description{
-asp20boost
+\title{R6 class for performing either simple and generic componentwise
+boosting on location-scale regression models.
 
-asp20boost
-}
-\details{
-This model class \link{...}
+This model class builts upon and thus inherits the basic structure
+from the \code{LocationScaleRegression} model class of the \code{asp20model} package.
+Consequently, it share similar syntax and structure. (Please  see the help
+page of that class \emph{Note: It would be nice to just link the vignette})
+
+It assumes a normally distributed response variable with
+one linear predictor for the location (i.e. the mean) and one for the
+scale (i.e. the standard deviation). The linear predictors for the
+location and the scale are called Xβ and Zγ respectively. The scale
+uses a log link.}
+\description{
+R6 class for performing either simple and generic componentwise
+boosting on location-scale regression models.
+
+This model class builts upon and thus inherits the basic structure
+from the \code{LocationScaleRegression} model class of the \code{asp20model} package.
+Consequently, it share similar syntax and structure. (Please  see the help
+page of that class \emph{Note: It would be nice to just link the vignette})
+
+It assumes a normally distributed response variable with
+one linear predictor for the location (i.e. the mean) and one for the
+scale (i.e. the standard deviation). The linear predictors for the
+location and the scale are called Xβ and Zγ respectively. The scale
+uses a log link.
+
+R6 class for performing either simple and generic componentwise
+boosting on location-scale regression models.
+
+This model class builts upon and thus inherits the basic structure
+from the \code{LocationScaleRegression} model class of the \code{asp20model} package.
+Consequently, it share similar syntax and structure. (Please  see the help
+page of that class \emph{Note: It would be nice to just link the vignette})
+
+It assumes a normally distributed response variable with
+one linear predictor for the location (i.e. the mean) and one for the
+scale (i.e. the standard deviation). The linear predictors for the
+location and the scale are called Xβ and Zγ respectively. The scale
+uses a log link.
 }
 \section{Super class}{
-\code{\link[asp20model:LocationScaleRegression]{asp20model::LocationScaleRegression}} -> \code{LocationScaleRegression}
+\code{\link[asp20model:LocationScaleRegression]{asp20model::LocationScaleRegression}} -> \code{LocationScaleRegressionBoost}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
 \item{\code{componentwiseLossGamma}}{Calculates loss function for
-every component in scale-dimension/gamma}
+every component in scale-dimension \code{gamma}}
 
 \item{\code{componentwiseLossBeta}}{Calculates loss function for
-every component in location-dimension/beta}
+every component in location-dimension \code{beta}}
 
-\item{\code{bestFittingVariableGamma}}{Calculates the actual update for gamma}
+\item{\code{bestFittingVariableGamma}}{Calculates the actual update for \code{gamma}}
 
-\item{\code{bestFittingVariableBeta}}{Calculates the actual update for beta}
+\item{\code{bestFittingVariableBeta}}{Calculates the actual update for \code{beta}}
 }
 \if{html}{\out{</div>}}
 }
@@ -33,24 +66,24 @@ every component in location-dimension/beta}
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
 \item{\code{componentwiseLossGamma}}{Calculates loss function for
-every component in scale-dimension/gamma}
+every component in scale-dimension \code{gamma}}
 
 \item{\code{componentwiseLossBeta}}{Calculates loss function for
-every component in location-dimension/beta}
+every component in location-dimension \code{beta}}
 
-\item{\code{bestFittingVariableGamma}}{Calculates the actual update for gamma}
+\item{\code{bestFittingVariableGamma}}{Calculates the actual update for \code{gamma}}
 
-\item{\code{bestFittingVariableBeta}}{Calculates the actual update for beta}
+\item{\code{bestFittingVariableBeta}}{Calculates the actual update for \code{beta}}
 }
 \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-componentwiseLossGamma}{\code{LocationScaleRegressionBoost$componentwiseLossGamma()}}
-\item \href{#method-componentwiseLossBeta}{\code{LocationScaleRegressionBoost$componentwiseLossBeta()}}
-\item \href{#method-bestFittingVariableGamma}{\code{LocationScaleRegressionBoost$bestFittingVariableGamma()}}
-\item \href{#method-bestFittingVariableBeta}{\code{LocationScaleRegressionBoost$bestFittingVariableBeta()}}
+\item \href{#method-new}{\code{LocationScaleRegressionBoost$new()}}
+\item \href{#method-setComponentwiseBoosting}{\code{LocationScaleRegressionBoost$setComponentwiseBoosting()}}
+\item \href{#method-coefficentUpdateBeta}{\code{LocationScaleRegressionBoost$coefficentUpdateBeta()}}
+\item \href{#method-coefficentUpdateGamma}{\code{LocationScaleRegressionBoost$coefficentUpdateGamma()}}
 \item \href{#method-clone}{\code{LocationScaleRegressionBoost$clone()}}
 }
 }
@@ -59,21 +92,28 @@ every component in location-dimension/beta}
 \itemize{
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="grad_beta">}\href{../../asp20model/html/LocationScaleRegression.html#method-grad_beta}{\code{asp20model::LocationScaleRegression$grad_beta()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="grad_gamma">}\href{../../asp20model/html/LocationScaleRegression.html#method-grad_gamma}{\code{asp20model::LocationScaleRegression$grad_gamma()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="initialize">}\href{../../asp20model/html/LocationScaleRegression.html#method-initialize}{\code{asp20model::LocationScaleRegression$initialize()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="loglik">}\href{../../asp20model/html/LocationScaleRegression.html#method-loglik}{\code{asp20model::LocationScaleRegression$loglik()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="resid">}\href{../../asp20model/html/LocationScaleRegression.html#method-resid}{\code{asp20model::LocationScaleRegression$resid()}}\out{</span>}
 }
 \out{</details>}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-componentwiseLossGamma"></a>}}
-\if{latex}{\out{\hypertarget{method-componentwiseLossGamma}{}}}
-\subsection{Method \code{componentwiseLossGamma()}}{
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
+\subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$componentwiseLossGamma()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$new(
+  location,
+  scale = ~1,
+  data = environment(location),
+  ...
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Details}{
+Returns the loss - squared error of the partial deviance for each covariate of Beta
+
+
 Returns the loss - squared error of the partial deviance for each covariate of Gamma
 }
 
@@ -82,51 +122,44 @@ Vector of sum of squared errors for each covariate
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-componentwiseLossBeta"></a>}}
-\if{latex}{\out{\hypertarget{method-componentwiseLossBeta}{}}}
-\subsection{Method \code{componentwiseLossBeta()}}{
+\if{html}{\out{<a id="method-setComponentwiseBoosting"></a>}}
+\if{latex}{\out{\hypertarget{method-setComponentwiseBoosting}{}}}
+\subsection{Method \code{setComponentwiseBoosting()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$componentwiseLossBeta()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$setComponentwiseBoosting(value)}\if{html}{\out{</div>}}
 }
 
-\subsection{Details}{
-Returns the loss - squared error of the partial deviance for each covariate of Beta
-}
-
-\subsection{Returns}{
-Vector of sum of squared errors for each covariate
-}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-bestFittingVariableGamma"></a>}}
-\if{latex}{\out{\hypertarget{method-bestFittingVariableGamma}{}}}
-\subsection{Method \code{bestFittingVariableGamma()}}{
+\if{html}{\out{<a id="method-coefficentUpdateBeta"></a>}}
+\if{latex}{\out{\hypertarget{method-coefficentUpdateBeta}{}}}
+\subsection{Method \code{coefficentUpdateBeta()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$bestFittingVariableGamma()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$coefficentUpdateBeta()}\if{html}{\out{</div>}}
 }
 
 \subsection{Details}{
-Determins the best variable for componentwise boosting
-}
-
-\subsection{Returns}{
-New Gamma Vector with updated values on the best fitted covariate
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-bestFittingVariableBeta"></a>}}
-\if{latex}{\out{\hypertarget{method-bestFittingVariableBeta}{}}}
-\subsection{Method \code{bestFittingVariableBeta()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$bestFittingVariableBeta()}\if{html}{\out{</div>}}
-}
-
-\subsection{Details}{
-Determins the best variable for componentwise boosting
+Determines the best variable for componentwise boosting
 }
 
 \subsection{Returns}{
 New Beta Vector with updated values on the best fitted covariate
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-coefficentUpdateGamma"></a>}}
+\if{latex}{\out{\hypertarget{method-coefficentUpdateGamma}{}}}
+\subsection{Method \code{coefficentUpdateGamma()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$coefficentUpdateGamma()}\if{html}{\out{</div>}}
+}
+
+\subsection{Details}{
+Determines the best variable for componentwise boosting
+}
+
+\subsection{Returns}{
+New Gamma Vector with updated values on the best fitted covariate
 }
 }
 \if{html}{\out{<hr>}}

@@ -1,13 +1,24 @@
-#' @title asp20boost
+#' @title R6 class for performing either simple and generic componentwise
+#'  boosting on location-scale regression models.
 #'
-#' This model class [...]
+#'
+#' This model class builts upon and thus inherits the basic structure
+#' from the `LocationScaleRegression` model class of the `asp20model` package.
+#' Consequently, it share similar syntax and structure. (Please  see the help
+#' page of that class *Note: It would be nice to just link the vignette*)
+#'
+#' It assumes a normally distributed response variable with
+#' one linear predictor for the location (i.e. the mean) and one for the
+#' scale (i.e. the standard deviation). The linear predictors for the
+#' location and the scale are called Xβ and Zγ respectively. The scale
+#' uses a log link.
 #'
 #' @field componentwiseLossGamma Calculates loss function for
-#'   every component in scale-dimension/gamma
+#'   every component in scale-dimension `gamma`
 #' @field componentwiseLossBeta Calculates loss function for
-#'   every component in location-dimension/beta
-#' @field bestFittingVariableGamma Calculates the actual update for gamma
-#' @field bestFittingVariableBeta Calculates the actual update for beta
+#'   every component in location-dimension `beta`
+#' @field bestFittingVariableGamma Calculates the actual update for `gamma`
+#' @field bestFittingVariableBeta Calculates the actual update for `beta`
 #'
 #' @import R6
 #' @import asp20model
