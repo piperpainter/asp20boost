@@ -31,6 +31,11 @@ knitr::write_bib(c(
 ), 'packages.bib')
 ```
 
+# Abstract
+
+We describe version 1.0 of the R add-on package asp20boost. The package  implements boosting *Note: Expand*. 
+Keywords: component-wise boosting,  gradient descent, location and scale. 
+
 
 # 1. Introduction:
 
@@ -59,7 +64,7 @@ In *part 5*
 
 # 2 Model and Methods
 
-## Concept: Boosting
+## Concept: Simple Boosting
 
 The first step in our progress was to understand the theoretical concept of boosting and which types of problems it is able to solve.
 To explain the concept and follow our process of understanding we first explain boosting for location parameters. 
@@ -67,7 +72,7 @@ Boosting scale parameters required another way of thinking about it and constitu
 In the following, the term "booster" refers to a boosting algorithm.
 
 
-## Location-Booster
+### Location-Booster
 
 The following description of simple boosting algorithm is mainly based on @Fahrmeir.2013, 217-219. 
 
@@ -81,11 +86,13 @@ These new residuals are estimated again in the next iteration, yielding smaller 
 
 A simple booster stops after a fixed number of iterations is reached.
 
+*Note to self: Add the description of the whole algorithm. Not just the residuals*
+
 \begin{equation}
 u = y - X\hat{\beta}^{(t-1)}
 \end{equation}
 
-## Scale-Booster
+### Scale-Booster
 
 A boosting algorithm for scale parameters $\gamma$ consists in the same two repeating steps of first estimating a term, and second updating $\gamma$ by adding the estimated effect - adjusted by a learning rate. 
 The term in the estimating step is, however, not the residual.
@@ -96,7 +103,9 @@ ll = \frac{1}{2\pi\exp(Z\gamma)^2}\times\exp(-\frac{u^2}{2\exp(Z\gamma)^2})
 \end{equation}
 
 
-## Functionality: Componentwise Boosting
+## Componentwise Boosting
+
+*Note to self: Add rationale of CWB and motivation for prefering it over simple B*
 
 A useful extension of our simple boosting algorithm regards *componentwise boosting*. 
 The key idea here is to not update a whole parameter vector, but only one entry of it.
@@ -187,16 +196,9 @@ We implement this in our package by extending the `LocationScaleRegression` clas
 These functions partition the design matrix $X$- respectively $Z$ - into its single columns and then estimate the residuals - respectively the scores - separately for each component, and determine loss functions for a hypothetical update with the respective component. 
 Respective to the old loss function value, the highest loss-improvement is determined and the respective component is used to update the parameter-vector.
 
-We are in the process of reconsidering the design of this implementation.
-Other design possibilities are the following:
-
-* Create public fields for the heavily used score-function values.
-* Move the calculation of componentwise losses to an external function.
-* Harmonize boosting and componentwise boosting into one external function, determining the mode of operation by an argument `componentwise = TRUE`.
-
-Another conceptual questions that comes up is if the best loss-improvement may be indicated by the already existing gradients, and hence there is no need for extra calculation.
-
 # 3. Software Implementation
+
+*Note to self: I pooled all statements of report 1 regarding inplementation on this section. There is thus not coherent argument. Most of it is superfluous. Needs to be updated.*
 
 To implement a boosting algorithm we constructed the function `gradient_boost` as a part of our R6-Class `LocationScaleRegressionBoost`, which  directly builds upon the `LocationScaleRegression` R6 class of the `asp20model`package set at our disposal for this course and this purpose specifically [@R-asp20model].   
 
@@ -217,8 +219,18 @@ To calculate this, our code makes use of the `resid()`-function, but this time p
 
 This simple implementation of a boosting algorithm for location and scale served the code-basis or "skeleton" for our package and can be thought of as the first milestone of this project. 
 
+We are in the process of reconsidering the design of this implementation.
+Other design possibilities are the following:
+
+* Create public fields for the heavily used score-function values.
+* Move the calculation of componentwise losses to an external function.
+* Harmonize boosting and componentwise boosting into one external function, determining the mode of operation by an argument `componentwise = TRUE`.
+
+Another conceptual questions that comes up is if the best loss-improvement may be indicated by the already existing gradients, and hence there is no need for extra calculation.
+
 
 # 4. Simulation Studies
+
 
 
 
