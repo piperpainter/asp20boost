@@ -1,9 +1,9 @@
 library(asp20boost)
 
 # set true model parameters
-beta_0  <- 2
-beta_1  <- 2
-gamma_0 <- 2
+beta_0  <- 0
+beta_1  <- 1
+gamma_0 <- -3
 gamma_1 <- 2
 
 
@@ -19,7 +19,8 @@ y <- beta_0 + beta_1 * x + rnorm(
 
 # estimate data by boosting ------------
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-gradient_boost(model, stepsize = 0.001, maxit = 5000, abstol = 0.00000000000000000000000000000000000000000001, verbose = TRUE)
+gradient_boost(model, stepsize = c(0.01, 0.1), maxit = 5000, abstol = 0.001, verbose = TRUE, componentwise = F)
+model
 
 
 # plot results -------------------------
