@@ -30,27 +30,59 @@ LocationScaleRegressionBoost <- R6Class(
 
   public = list(
 
-    grad_loglik_mu = function() {
+    # gradients of the log-likelihood wrt eta_mu / eta_sigma. These gradients are estimated
+    gradients_loglik_mu = function() {
       resid <- self$resid("response")
       scale <- self$fitted_scale
       return(resid / (scale^2) )
     },
-
-    grad_loglik_sigma = function() {
+    gradients_loglik_sigma = function() {
       resid <- self$resid("response")
       scale <- self$fitted_scale
       return(resid^2 / scale^2 - 1)
     },
 
-    X_pub = function() {
+
+    # gradient estimators, also "bj_hat", which are added iteratively to the final estimates beta and gamma
+    gradient_estimators_mu = function() {
+      chol2inv(chol(crossprod(private$X, private$X))) %*% crossprod(private$X, self$gradients_loglik_mu())
+    },
+    gradient_estimators_sigma = function() {
+      chol2inv(chol(crossprod(private$Z, private$Z))) %*% crossprod(private$Z, self$gradients_loglik_sigma())
+    },
+
+
+    # functions useful for caching component-wise boosting stuff
+    gradient_estimators_mu_compwise = function() {
+      number_of_cols <- ncol(private$X)
+      result_list <- rep(NA, number_of_cols)
+      for(i in 1:number_of_cols){
+        result_list[i] <- chol2inv(chol(crossprod(private$X[, i], private$X[, i]))) %*% crossprod(private$X[, i], self$gradients_loglik_mu())
+      }
+      return(result_list)
+    },
+
+    gradient_estimators_sigma_compwise = function() {
+      number_of_cols <- ncol(private$Z)
+      result_list <- rep(NA, number_of_cols)
+      for(i in 1:number_of_cols){
+        result_list[i] <- chol2inv(chol(crossprod(private$Z[, i], private$Z[, i]))) %*% crossprod(private$Z[, i], self$gradients_loglik_sigma())
+      }
+      return(result_list)
+    },
+
+    # current version of algorithm needs access to full design matrices X and Z
+    # impossible if private
+    # --> later on cache results after checking correctness of loss calculation and get rid of public X, Z
+    X_pub = function(){
       private$X
     },
 
-    Z_pub = function() {
-      private$Z
+    Z_pub = function(){
+      private$X
     }
-  )
 
+  )
 
 )
 
@@ -86,68 +118,44 @@ gradient_boost = function(model,
                           plot = TRUE) {
 
   # store gradients from last iteration step to compare them with newly calculated ones
-  grad_old_mu <- model$grad_loglik_mu()
-  grad_old_sigma <- model$grad_loglik_sigma()
+  grad_old_mu <- model$gradients_loglik_mu()
+  grad_old_sigma <- model$gradients_loglik_sigma()
 
   for(iter in 1:maxit) {
 
     if(componentwise == T) helper_boost_compwise(model, stepsize)
     if(componentwise == F) helper_boost_conventional(model, stepsize)
 
-    # check for substantial change in gradients
-    grad_change_mu <- abs(grad_old_mu - model$grad_loglik_mu())
-    grad_change_sigma <- abs(grad_old_sigma - model$grad_loglik_sigma())
+    # check for substantial change in gradients of loglikelihood (wrt eta_mu, eta_sigma)
+    {
+    grad_change_mu <- abs(grad_old_mu - model$gradients_loglik_mu())
+    grad_change_sigma <- abs(grad_old_sigma - model$gradients_loglik_sigma())
     grad_changes <- c(grad_change_mu, grad_change_sigma)
+    }
 
-    if(iter > 1 && all(grad_changes) <= abstol){
+    if(iter > 1 && all(grad_changes <= abstol)){
       message("early stopping at iteration: ",i)
       break()
     }
 
-  #   if (verbose == T) {
-  #     par_msg <- c(model$beta, model$gamma)
-  #     par_msg <- format(par_msg, trim = TRUE, digits = 3)
-  #     par_msg <- paste(par_msg, collapse = " ")
-  #
-  #     grad_msg <- c(grad_beta, grad_gamma)
-  #     grad_msg <- format(grad_msg, trim = TRUE, digits = 3)
-  #     grad_msg <- paste(grad_msg, collapse = " ")
-  #
-  #     loglik_msg <- format(model$loglik(), digits = 3)
-  #
-  #     abs_msg <- format((abs(c(grad_beta, grad_gamma))), digits = 3)
-  #
-  #     message(
-  #       "Iteration:      ", i, "\n",
-  #       "Parameters:     ", par_msg, "\n",
-  #       "Gradient:       ", grad_msg, "\n",
-  #       "Squared Resid:       ", sum(model$resid()^2), "\n",
-  #       "Log-likelihood: ", loglik_msg, "\n",
-  #       "------------Beta---------------\n",
-  #       #"Beta Update Coeff: ", which.min(tmp_DerviatesB)," ", tmp_DerviatesB[indexOfBetaUpdate], "\n",
-  #       "------------Gamma---------------\n",
-  #       #"Gamma Update Coeff: ", which.min(tmp_DerviatesZ)," ", tmp_DerviatesZ[indexOfGammaUpdate], "\n",
-  #       #"ABS:",all(abs(c(grad_beta-old_grad_beta, grad_gamma-old_grad_gamma)))  , "\n",
-  #       "==============="
-  #     )
-  #
-  # }
-  #
-  # }
-  # if(plot == T) {
-  #   df <- data.frame(matrix(unlist(model$par_log), nrow=length(model$par_log), byrow=T))
-  #   plot(df$X1, type = "l",
-  #        ylim = c(min(df),max(df)),
-  #        xaxt = "n",
-  #        xlab = "No. of iterations",
-  #        ylab = "Parameter")
-  #   axis(1, at = c(1:dim(df)[1]), c(1:dim(df)[1]))
-  #   for(n in 2:dim(df)[2])
-  #   {
-  #     points(df[n], type = "l", col = "black")
-  #   }
-  # }
+    if (verbose == T) {
+      par_msg <- c(model$beta, model$gamma)
+      par_msg <- format(par_msg, trim = TRUE, digits = 3)
+      par_msg <- paste(par_msg, collapse = " ")
 
+      loglik_msg <- format(model$loglik(), digits = 3)
+
+      message(
+        "Iteration:      ", iter, "\n",
+        "Parameters:     ", par_msg, "\n",
+        "Squared Resid:  ", sum(model$resid()^2), "\n",
+        "Log-likelihood: ", loglik_msg, "\n",
+        "==============="
+      )
+
+    }
+
+  }
 
   invisible(model)
 
@@ -156,21 +164,8 @@ gradient_boost = function(model,
 helper_boost_conventional <- function(model,
                                       stepsize = c(0.01, 0.1)) {
 
-
-  X <- model$X_pub()
-  Z <- model$Z_pub()
-
-  number_of_cols_X <- dim(X)[2]
-  number_of_cols_Z <- dim(Z)[2]
-
-  gradients_mu <- model$grad_loglik_mu()
-  gradients_sigma <- model$grad_loglik_sigma()
-
-  gradient_estimators_mu <-  solve(t(X) %*% X) %*% t(X) %*% gradients_mu
-  gradient_estimators_sigma <-  solve(t(Z) %*% Z) %*% t(Z) %*% gradients_sigma
-
-  model$beta <- model$beta + stepsize[1] * gradient_estimators_mu
-  model$gamma <- model$gamma + stepsize[2] * gradient_estimators_sigma
+  model$beta <- model$beta + stepsize[1] * model$gradient_estimators_mu()
+  model$gamma <- model$gamma + stepsize[2] * model$gradient_estimators_sigma()
 
   invisible(model)
 }
@@ -178,34 +173,24 @@ helper_boost_conventional <- function(model,
 
 
 helper_boost_compwise <- function(model,
-                         stepsize = c(0.01, 0.1)
-                         ) {
+                                  stepsize = c(0.01, 0.1)
+) {
 
+  number_of_cols_X <- dim(model$X_pub())[2]
+  number_of_cols_Z <- dim(model$Z_pub())[2]
 
-  X <- model$X_pub()
-  Z <- model$Z_pub()
-
-  number_of_cols_X <- dim(X)[2]
-  number_of_cols_Z <- dim(Z)[2]
-
-  gradients_mu <- model$grad_loglik_mu()
-  gradients_sigma <- model$grad_loglik_sigma()
-
-
-  gradient_estimators_mu <- rep(NA, number_of_cols_X)
-  gradient_estimators_sigma <- rep(NA, number_of_cols_Z)
   losses_mu <- rep(NA, number_of_cols_X)
   losses_sigma <- rep(NA, number_of_cols_Z)
 
 
+  #check if least squares is appropriate for calculating loss
   for(j in 1:number_of_cols_X) {
-    gradient_estimators_mu[j] <-  solve(t(X[, j]) %*% X[, j]) %*% t(X[, j]) %*% gradients_mu
-    losses_mu[j] <- sum((gradients_mu - X[, j] * gradient_estimators_mu[j]) ^2)
+    losses_mu[j] <- sum((model$gradients_loglik_mu() - model$X_pub()[, j] * model$gradient_estimators_mu_compwise()[j]) ^2)
   }
 
-  for(j in 1:number_of_cols_Z) {
-    gradient_estimators_sigma[j] <-  solve(t(Z[, j]) %*% Z[, j]) %*% t(Z[, j]) %*% gradients_sigma
-    losses_sigma[j] <- sum((gradients_sigma - Z[, j] * gradient_estimators_sigma[j]) ^2)
+  #check if least squares is appropriate for calculating loss
+    for(j in 1:number_of_cols_Z) {
+    losses_sigma[j] <- sum((model$gradients_loglik_sigma() - model$Z_pub()[, j] * model$gradient_estimators_sigma_compwise()[j]) ^2)
   }
 
 
@@ -214,10 +199,10 @@ helper_boost_compwise <- function(model,
 
 
   update_vector_beta <- rep(0, number_of_cols_X)
-  update_vector_beta[least_loss_index_mu] <- gradient_estimators_mu[least_loss_index_mu]
+  update_vector_beta[least_loss_index_mu] <- model$gradient_estimators_mu_compwise()[least_loss_index_mu]
 
   update_vector_gamma <- rep(0, number_of_cols_X)
-  update_vector_gamma[least_loss_index_sigma] <- gradient_estimators_sigma[least_loss_index_sigma]
+  update_vector_gamma[least_loss_index_sigma] <-  model$gradient_estimators_sigma_compwise()[least_loss_index_sigma]
 
 
   model$beta <- model$beta + stepsize[1] * update_vector_beta
