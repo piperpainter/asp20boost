@@ -30,6 +30,26 @@ LocationScaleRegressionBoost <- R6Class(
 
   public = list(
 
+    par_log = list(),
+
+    plot = function() {
+
+        df <- data.frame(matrix(unlist(model$par_log), nrow=length(model$par_log), byrow=T))
+
+        plot(df$X1, type = "l",
+             ylim = c(min(df),max(df)),
+             xaxt = "n",
+             xlab = "No. of iterations",
+             ylab = "Parameter")
+        axis(1, at = c(1:dim(df)[1]), c(1:dim(df)[1]))
+        for(n in 2:dim(df)[2])
+        {
+          points(df[n], type = "l", col = "black")
+        }
+
+
+    },
+
     # gradients of the log-likelihood wrt eta_mu / eta_sigma. These gradients are estimated
     gradients_loglik_mu = function() {
       resid <- self$resid("response")
@@ -114,13 +134,13 @@ gradient_boost = function(model,
                           maxit = 1000,
                           abstol = 0.001,
                           componentwise = TRUE,
-                          verbose = TRUE,
-                          plot = TRUE) {
+                          verbose = TRUE) {
 
   # store gradients from last iteration step to compare them with newly calculated ones
   grad_old_mu <- model$gradients_loglik_mu()
   grad_old_sigma <- model$gradients_loglik_sigma()
 
+  model$par_log <- list()
   for(iter in 1:maxit) {
 
     if(componentwise == T) helper_boost_compwise(model, stepsize)
@@ -138,6 +158,7 @@ gradient_boost = function(model,
       break()
     }
 
+    model$par_log[[iter]]<-c(model$beta, model$gamma)
     if (verbose == T) {
       par_msg <- c(model$beta, model$gamma)
       par_msg <- format(par_msg, trim = TRUE, digits = 3)
@@ -210,3 +231,4 @@ helper_boost_compwise <- function(model,
 
   invisible(model)
 }
+
