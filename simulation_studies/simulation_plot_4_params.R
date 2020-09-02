@@ -19,7 +19,7 @@ y <- beta_0 + beta_1 * x + rnorm(
 
 # estimate data by boosting ------------
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-gradient_boost(model, stepsize = c(0.01, 0.1), maxit = 5000, abstol = 0.001, verbose = TRUE, componentwise = F)
+gradient_boost(model, abstol = 0.01, verbose = TRUE, componentwise = TRUE, plot = FALSE)
 model
 
 
