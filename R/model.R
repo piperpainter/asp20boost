@@ -1,27 +1,36 @@
-#' @title R6 class for performing either simple and generic componentwise
-#'  boosting on location-scale regression models.
+#' R6 Class for Specifying Location-Scale Regression Models
 #'
-#'
-#' This model class builts upon and thus inherits the basic structure
+#' @description
+#' Model obejcts created by this class may be estimated by the `gradient_boost` function.
+#' This model class builds upon and thus inherits the basic structure
 #' from the `LocationScaleRegression` model class of the `asp20model` package.
-#' Consequently, it share similar syntax and structure. (Please  see the help
+#' Consequently, it shares similar syntax and structure. (Please  see the help
 #' page of that class *Note: It would be nice to just link the vignette*)
 #'
+#' @usage
+#' example_model <- LocationScaleRegression$new(formula, ...)
+#'
+#' @details
 #' It assumes a normally distributed response variable with
-#' one linear predictor for the location (i.e. the mean) and one for the
-#' scale (i.e. the standard deviation). The linear predictors for the
-#' location and the scale are called Xβ and Zγ respectively. The scale
-#' uses a log link.
+#' one linear predictor eta_mu for the location (i.e. the mean) and one linear predictor
+#' eta_sigma for scale (i.e. the standard deviation). Scale is modeled by a log-link.
 #'
-#' @field componentwiseLossGamma Calculates loss function for
-#'   every component in scale-dimension `gamma`
-#' @field componentwiseLossBeta Calculates loss function for
-#'   every component in location-dimension `beta`
-#' @field bestFittingVariableGamma Calculates the actual update for `gamma`
-#' @field bestFittingVariableBeta Calculates the actual update for `beta`
 #'
-#' @import R6
-#' @import asp20model
+#' @field gradients_loglik_mu Caclulates the unit-wise gradients of the loss-functions,
+#' which is the negative loglikelihood.
+#' @field gradients_loglik_sigma Caclulates the unit-wise gradients of the loss-functions,
+#' which is the negative loglikelihood.
+#' @field gradient_estimators_mu Estimates the unit-wise gradients.
+#' @field gradient_estimators_sigma Estimates the unit-wise gradients.
+#' @field gradient_estimators_mu_compwise aaa
+#' @field gradient_estimators_sigma_compwise bbb
+#' @field update_parameters_conventional ccc
+#' @field update_parameters_compwise ddd
+#' @field par_log eee
+#' @field plot fff
+#'
+#' @inheritSection LocationScaleRegression Section description
+#'
 #' @export
 
 LocationScaleRegressionBoost <- R6Class(
@@ -30,8 +39,23 @@ LocationScaleRegressionBoost <- R6Class(
 
   public = list(
 
+    #for unit testing purposes
+    eta_mu = function(){
+      private$X %*% self$beta
+    },
+    eta_sigma = function(){
+      private$Z %*% self$gamma
+    },
+
     # gradients of the log-likelihood wrt eta_mu / eta_sigma.
     # these gradients are estimated and then stepwisely added
+    #' @details Returns the unit-wise gradients of the loss function, which is the negative loglikelihood.
+    #' @return a numeric vector nx1
+    #' @examples
+    #' y <- rnorm(30)
+    #' model <- LocationScaleRegression$new(y ~ 1)
+    #' model$gradients_loglik_mu()
+
     gradients_loglik_mu = function() {
       resid <- self$resid("response")
       scale <- self$fitted_scale
@@ -47,13 +71,19 @@ LocationScaleRegressionBoost <- R6Class(
     # estimators (bj_hat) for location and scale,
     # conventional <-> componentwise --------------------------------------------------------
 
-    gradient_estimators_mu = function() {
+    #' estimates the gradients of the loss function wrt. the location predictors eta_mu
+    #' @return a numeric vector nx1
+        gradient_estimators_mu = function() {
       chol2inv(chol(crossprod(private$X, private$X))) %*% crossprod(private$X, self$gradients_loglik_mu())
     },
+    #' estimates the gradients of the loss function wrt. the scale predictors eta_sigma
+    #' @return a numeric vector nx1
     gradient_estimators_sigma = function() {
       chol2inv(chol(crossprod(private$Z, private$Z))) %*% crossprod(private$Z, self$gradients_loglik_sigma())
     },
 
+    #' implementation for componentwise estiamtion of the loss gradients
+    #' @return a numeric vector nx1
     gradient_estimators_mu_compwise = function() {
       number_of_cols <- ncol(private$X)
       result_list <- rep(NA, number_of_cols)
@@ -62,6 +92,8 @@ LocationScaleRegressionBoost <- R6Class(
       }
       return(result_list)
     },
+    #' implementation for componentwise estiamtion of the loss gradients
+    #' @return a numeric vector nx1
     gradient_estimators_sigma_compwise = function() {
       number_of_cols <- ncol(private$Z)
       result_list <- rep(NA, number_of_cols)
@@ -73,10 +105,14 @@ LocationScaleRegressionBoost <- R6Class(
 
 
     # helper functions for boosting conventional <-> compwise ----------------------------------
+    #' a function using the gradient estimators to update parameters beta and gamma
+    #' @return a numeric vector nx1
     update_parameters_conventional = function() {
       self$beta <- self$beta + 0.01 * self$gradient_estimators_mu()
       self$gamma <- self$gamma + 0.1 * self$gradient_estimators_sigma()
     }, #possible naming: update parameters conventional
+    #' a function using the gradient estimators to update parameters beta and gamma
+    #' @return a numeric vector nx1
     update_parameters_compwise = function() {
 
       number_of_cols_X <- dim(private$X)[2]
@@ -107,8 +143,10 @@ LocationScaleRegressionBoost <- R6Class(
 
 
     # the following publics enable plotting -------------------------------------------------
+    #' enables plotting
     par_log = list(),
 
+    #' enables plotting
     plot = function() {
         df <- data.frame(matrix(unlist(model$par_log), nrow=length(model$par_log), byrow=T))
         plot(df$X1, type = "l",
@@ -128,21 +166,21 @@ LocationScaleRegressionBoost <- R6Class(
 
 )
 
-#' Gradient bost for the `LocationScaleRegressionBoost` model class
+#' Gradient Boost Algorithm for Location-Scale Regression
 #'
 #' This function optimizes the log-likelihood of the given location-scale
-#' regression model by gradient descent. It has a side effect on the `model`
-#' object.
+#' regression model by gradient boosting. It is designed to work specifically
+#' together with the LocationScaleRegressionBoost model class.
 #'
-#' @param model A [`LocationScaleRegressionBoost`] object.
-#' @param stepsize The scaling factor for the gradient.
+#' @param model A [LocationScaleRegressionBoost] object.
+#' @param stepsize The learning rate for the parameter updates.
 #' @param maxit The maximum number of iterations.
 #' @param abstol The absolute convergence tolerance. The algorithm stops if the
-#'               absolute value of the gradient drops below this value.
+#'               absolute value of the unit-wise gradients all drop below this value.
 #' @param verbose Whether to print the progress of the algorithm.
+#' @param plot Whether to plot the result of the algorithm.
 #'
-#' @return
-#' The updated model, invisibly.
+#' @return The updated model, invisibly.
 #'
 #' @examples
 #' y <- rnorm(30)
