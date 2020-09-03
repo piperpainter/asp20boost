@@ -20,22 +20,53 @@
 #' which is the negative loglikelihood.
 #' @field gradients_loglik_sigma Caclulates the unit-wise gradients of the loss-functions,
 #' which is the negative loglikelihood.
-#' @field gradient_estimators_mu Estimates the unit-wise gradients.
-#' @field gradient_estimators_sigma Estimates the unit-wise gradients.
-#' @field gradient_estimators_mu_compwise aaa
-#' @field gradient_estimators_sigma_compwise bbb
 #' @field update_parameters_conventional ccc
 #' @field update_parameters_compwise ddd
 #' @field par_log eee
 #' @field plot fff
 #'
-#' @inheritSection LocationScaleRegression Section description
+# #' @inheritSection asp20model::LocationScaleRegression Section description
 #'
 #' @export
 
 LocationScaleRegressionBoost <- R6Class(
   "LocationScaleRegressionBoost",
   inherit = LocationScaleRegression,
+
+  private = list(
+
+    # estimators (bj_hat) for location and scale,
+    # conventional <-> componentwise --------------------------------------------------------
+
+    gradient_estimators_mu = function() {
+      chol2inv(chol(crossprod(private$X, private$X))) %*% crossprod(private$X, self$gradients_loglik_mu())
+    },
+    gradient_estimators_sigma = function() {
+      chol2inv(chol(crossprod(private$Z, private$Z))) %*% crossprod(private$Z, self$gradients_loglik_sigma())
+    },
+
+    gradient_estimators_mu_compwise = function() {
+      number_of_cols <- ncol(private$X)
+      result_list <- rep(NA, number_of_cols)
+      for(i in 1:number_of_cols){
+        result_list[i] <- chol2inv(chol(crossprod(private$X[, i], private$X[, i]))) %*% crossprod(private$X[, i], self$gradients_loglik_mu())
+      }
+      return(result_list)
+    },
+
+    gradient_estimators_sigma_compwise = function() {
+      number_of_cols <- ncol(private$Z)
+      result_list <- rep(NA, number_of_cols)
+      for(i in 1:number_of_cols){
+        result_list[i] <- chol2inv(chol(crossprod(private$Z[, i], private$Z[, i]))) %*% crossprod(private$Z[, i], self$gradients_loglik_sigma())
+      }
+      return(result_list)
+    }
+
+
+
+
+  ),
 
   public = list(
 
@@ -68,48 +99,14 @@ LocationScaleRegressionBoost <- R6Class(
     },
 
 
-    # estimators (bj_hat) for location and scale,
-    # conventional <-> componentwise --------------------------------------------------------
-
-    #' estimates the gradients of the loss function wrt. the location predictors eta_mu
-    #' @return a numeric vector nx1
-        gradient_estimators_mu = function() {
-      chol2inv(chol(crossprod(private$X, private$X))) %*% crossprod(private$X, self$gradients_loglik_mu())
-    },
-    #' estimates the gradients of the loss function wrt. the scale predictors eta_sigma
-    #' @return a numeric vector nx1
-    gradient_estimators_sigma = function() {
-      chol2inv(chol(crossprod(private$Z, private$Z))) %*% crossprod(private$Z, self$gradients_loglik_sigma())
-    },
-
-    #' implementation for componentwise estiamtion of the loss gradients
-    #' @return a numeric vector nx1
-    gradient_estimators_mu_compwise = function() {
-      number_of_cols <- ncol(private$X)
-      result_list <- rep(NA, number_of_cols)
-      for(i in 1:number_of_cols){
-        result_list[i] <- chol2inv(chol(crossprod(private$X[, i], private$X[, i]))) %*% crossprod(private$X[, i], self$gradients_loglik_mu())
-      }
-      return(result_list)
-    },
-    #' implementation for componentwise estiamtion of the loss gradients
-    #' @return a numeric vector nx1
-    gradient_estimators_sigma_compwise = function() {
-      number_of_cols <- ncol(private$Z)
-      result_list <- rep(NA, number_of_cols)
-      for(i in 1:number_of_cols){
-        result_list[i] <- chol2inv(chol(crossprod(private$Z[, i], private$Z[, i]))) %*% crossprod(private$Z[, i], self$gradients_loglik_sigma())
-      }
-      return(result_list)
-    },
 
 
     # helper functions for boosting conventional <-> compwise ----------------------------------
     #' a function using the gradient estimators to update parameters beta and gamma
     #' @return a numeric vector nx1
     update_parameters_conventional = function() {
-      self$beta <- self$beta + 0.01 * self$gradient_estimators_mu()
-      self$gamma <- self$gamma + 0.1 * self$gradient_estimators_sigma()
+      self$beta <- self$beta + 0.01 * private$gradient_estimators_mu()
+      self$gamma <- self$gamma + 0.1 * private$gradient_estimators_sigma()
     }, #possible naming: update parameters conventional
     #' a function using the gradient estimators to update parameters beta and gamma
     #' @return a numeric vector nx1
@@ -123,19 +120,19 @@ LocationScaleRegressionBoost <- R6Class(
 
       #check if least squares is appropriate for calculating loss
       for(j in 1:number_of_cols_X) {
-        losses_mu[j] <- sum((self$gradients_loglik_mu() - private$X[, j] * self$gradient_estimators_mu_compwise()[j]) ^2)
+        losses_mu[j] <- sum((self$gradients_loglik_mu() - private$X[, j] * private$gradient_estimators_mu_compwise()[j]) ^2)
       }
       for(j in 1:number_of_cols_Z) {
-        losses_sigma[j] <- sum((self$gradients_loglik_sigma() - private$Z[, j] * self$gradient_estimators_sigma_compwise()[j]) ^2)
+        losses_sigma[j] <- sum((self$gradients_loglik_sigma() - private$Z[, j] * private$gradient_estimators_sigma_compwise()[j]) ^2)
       }
 
       least_loss_index_mu <- which.min(losses_mu)
       least_loss_index_sigma <- which.min(losses_sigma)
 
       update_vector_beta <- rep(0, number_of_cols_X)
-      update_vector_beta[least_loss_index_mu] <- self$gradient_estimators_mu_compwise()[least_loss_index_mu]
+      update_vector_beta[least_loss_index_mu] <- private$gradient_estimators_mu_compwise()[least_loss_index_mu]
       update_vector_gamma <- rep(0, number_of_cols_Z)
-      update_vector_gamma[least_loss_index_sigma] <-  self$gradient_estimators_sigma_compwise()[least_loss_index_sigma]
+      update_vector_gamma[least_loss_index_sigma] <-  private$gradient_estimators_sigma_compwise()[least_loss_index_sigma]
 
       self$beta <- self$beta + 0.01 * update_vector_beta
       self$gamma <- self$gamma + 0.1 * update_vector_gamma

@@ -27,7 +27,7 @@ eta_sigma for scale (i.e. the standard deviation). Scale is modeled by a log-lin
 y <- rnorm(30)
 model <- LocationScaleRegression$new(y ~ 1)
 model$gradients_loglik_mu()
-estimates the gradients of the loss function wrt. the location predictors eta_mu
+a function using the gradient estimators to update parameters beta and gamma
 }
 \section{Super class}{
 \code{\link[asp20model:LocationScaleRegression]{asp20model::LocationScaleRegression}} -> \code{LocationScaleRegressionBoost}
@@ -40,14 +40,6 @@ which is the negative loglikelihood.}
 
 \item{\code{gradients_loglik_sigma}}{Caclulates the unit-wise gradients of the loss-functions,
 which is the negative loglikelihood.}
-
-\item{\code{gradient_estimators_mu}}{Estimates the unit-wise gradients.}
-
-\item{\code{gradient_estimators_sigma}}{Estimates the unit-wise gradients.}
-
-\item{\code{gradient_estimators_mu_compwise}}{aaa}
-
-\item{\code{gradient_estimators_sigma_compwise}}{bbb}
 
 \item{\code{update_parameters_conventional}}{ccc}
 
@@ -68,14 +60,6 @@ which is the negative loglikelihood.}
 \item{\code{gradients_loglik_sigma}}{Caclulates the unit-wise gradients of the loss-functions,
 which is the negative loglikelihood.}
 
-\item{\code{gradient_estimators_mu}}{Estimates the unit-wise gradients.}
-
-\item{\code{gradient_estimators_sigma}}{Estimates the unit-wise gradients.}
-
-\item{\code{gradient_estimators_mu_compwise}}{aaa}
-
-\item{\code{gradient_estimators_sigma_compwise}}{bbb}
-
 \item{\code{update_parameters_conventional}}{ccc}
 
 \item{\code{update_parameters_compwise}}{ddd}
@@ -91,10 +75,6 @@ which is the negative loglikelihood.}
 \item \href{#method-eta_sigma}{\code{LocationScaleRegressionBoost$eta_sigma()}}
 \item \href{#method-gradients_loglik_mu}{\code{LocationScaleRegressionBoost$gradients_loglik_mu()}}
 \item \href{#method-gradients_loglik_sigma}{\code{LocationScaleRegressionBoost$gradients_loglik_sigma()}}
-\item \href{#method-gradient_estimators_mu}{\code{LocationScaleRegressionBoost$gradient_estimators_mu()}}
-\item \href{#method-gradient_estimators_sigma}{\code{LocationScaleRegressionBoost$gradient_estimators_sigma()}}
-\item \href{#method-gradient_estimators_mu_compwise}{\code{LocationScaleRegressionBoost$gradient_estimators_mu_compwise()}}
-\item \href{#method-gradient_estimators_sigma_compwise}{\code{LocationScaleRegressionBoost$gradient_estimators_sigma_compwise()}}
 \item \href{#method-update_parameters_conventional}{\code{LocationScaleRegressionBoost$update_parameters_conventional()}}
 \item \href{#method-update_parameters_compwise}{\code{LocationScaleRegressionBoost$update_parameters_compwise()}}
 \item \href{#method-plot}{\code{LocationScaleRegressionBoost$plot()}}
@@ -152,7 +132,7 @@ a numeric vector nx1
 \preformatted{y <- rnorm(30)
 model <- LocationScaleRegression$new(y ~ 1)
 model$gradients_loglik_mu()
-estimates the gradients of the loss function wrt. the location predictors eta_mu
+a function using the gradient estimators to update parameters beta and gamma
 }
 \if{html}{\out{</div>}}
 
@@ -167,58 +147,6 @@ estimates the gradients of the loss function wrt. the location predictors eta_mu
 \if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$gradients_loglik_sigma()}\if{html}{\out{</div>}}
 }
 
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-gradient_estimators_mu"></a>}}
-\if{latex}{\out{\hypertarget{method-gradient_estimators_mu}{}}}
-\subsection{Method \code{gradient_estimators_mu()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$gradient_estimators_mu()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-a numeric vector nx1
-estimates the gradients of the loss function wrt. the scale predictors eta_sigma
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-gradient_estimators_sigma"></a>}}
-\if{latex}{\out{\hypertarget{method-gradient_estimators_sigma}{}}}
-\subsection{Method \code{gradient_estimators_sigma()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$gradient_estimators_sigma()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-a numeric vector nx1
-implementation for componentwise estiamtion of the loss gradients
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-gradient_estimators_mu_compwise"></a>}}
-\if{latex}{\out{\hypertarget{method-gradient_estimators_mu_compwise}{}}}
-\subsection{Method \code{gradient_estimators_mu_compwise()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$gradient_estimators_mu_compwise()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-a numeric vector nx1
-implementation for componentwise estiamtion of the loss gradients
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-gradient_estimators_sigma_compwise"></a>}}
-\if{latex}{\out{\hypertarget{method-gradient_estimators_sigma_compwise}{}}}
-\subsection{Method \code{gradient_estimators_sigma_compwise()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$gradient_estimators_sigma_compwise()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-a numeric vector nx1
-a function using the gradient estimators to update parameters beta and gamma
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_parameters_conventional"></a>}}
