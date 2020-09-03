@@ -2,39 +2,37 @@
 % Please edit documentation in R/model.R
 \name{gradient_boost}
 \alias{gradient_boost}
-\title{Gradient Boost Algorithm for Location-Scale Regression}
+\title{Gradient boost for the \code{LocationScaleRegressionBoost} model class}
 \usage{
 gradient_boost(
   model,
-  stepsize = c(0.01, 0.1),
+  stepsize = 0.001,
   maxit = 1000,
   abstol = 0.001,
-  componentwise = FALSE,
-  verbose = FALSE,
-  plot = FALSE
+  componentwise = TRUE,
+  verbose = TRUE,
+  plot = TRUE
 )
 }
 \arguments{
-\item{model}{A \link{LocationScaleRegressionBoost} object.}
+\item{model}{A \code{\link{LocationScaleRegressionBoost}} object.}
 
-\item{stepsize}{The learning rate for the parameter updates.}
+\item{stepsize}{The scaling factor for the gradient.}
 
 \item{maxit}{The maximum number of iterations.}
 
 \item{abstol}{The absolute convergence tolerance. The algorithm stops if the
-absolute value of the unit-wise gradients all drop below this value.}
+absolute value of the gradient drops below this value.}
 
 \item{verbose}{Whether to print the progress of the algorithm.}
-
-\item{plot}{Whether to plot the result of the algorithm.}
 }
 \value{
 The updated model, invisibly.
 }
 \description{
 This function optimizes the log-likelihood of the given location-scale
-regression model by gradient boosting. It is designed to work specifically
-together with the LocationScaleRegressionBoost model class.
+regression model by gradient descent. It has a side effect on the \code{model}
+object.
 }
 \examples{
 y <- rnorm(30)
