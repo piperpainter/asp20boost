@@ -1,0 +1,259 @@
+---
+title: "ASP20 Boost"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: rmarkdown::html_vignette
+#   pdf_document:
+#     keep_tex: no
+#     latex_engine: xelatex
+#     template: null
+#     toc: yes
+#     toc_depth: 2
+#     includes:
+#         in_header: preamble.tex
+#         before_body: frontpage.tex
+# documentclass: report
+# geometry: left=4cm, right=3cm, top=2.5cm, bottom=2.5cm
+# lof: FALSE
+# lot: FALSE
+# bibliography:
+# - citavi.bib
+# - packages.bib
+# biblio-style: apalike
+#---
+vignette: >
+  %\VignetteIndexEntry{ASP20 Boost}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+```{r setup, include=FALSE}
+library(asp20boost)
+knitr::opts_chunk$set(echo = TRUE)
+
+``` 
+
+```{r pack tex, include=FALSE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'R6', 'knitr', 'rmarkdown', 'asp20model', 'gamboostLSS','mboost', 'tidyverse'  
+), 'packages.bib')
+```
+
+# Abstract
+
+We describe version 1.0 of the R add-on package asp20boost. The package  implements boosting *Note: Expand*. 
+
+Keywords: component-wise boosting,  gradient descent, location and scale. 
+
+
+# 1. Introduction:
+
+
+The course "Advanced Statistical Programming with R" consists in implementing a package to address location-scale regression by building upon an R6 class [@R-R6] given to us as part of the `asp20model` repository [@R-asp20model]. 
+The sample dataset consists of a response $y$, i.e, the expectation is in linear relationship to a set of predictors $x_i$. 
+Its variance, in contrast, is dependent on a different set of linear predictors $z_i$, however transformed by the response function $g(x) = exp(x)$. 
+This ensures positiveness of the variances. 
+The goal is to estimate the effects of both: $x_i$ on the expectation of $y$ (location) - this is captured by the estimates $\beta$, and $z_i$ on the variance of $y$ (scale) - this is captured by the estimates $\gamma$.
+Our student group `asp20boost` solves this task applying the concept of boosting. 
+
+```{r data, echo=FALSE, cache=TRUE, fig.cap = "A visual example of Heteroskedasticity. Source: asp20model"}
+n <- 500
+x <- runif(n)
+y <- x + rnorm(n, sd = exp(-3 + 2 * x))
+plot(x, y)
+abline(0, 1, lwd = 2)
+curve(x + 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
+curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
+```
+
+In *part 2*  
+In *part 3*  
+In *part 5* 
+
+
+# 2 Model and Methods
+
+## Concept: Simple Boosting
+
+The first step in our progress was to understand the theoretical concept of boosting and which types of problems it is able to solve.
+To explain the concept and follow our process of understanding we first explain boosting for location parameters. 
+Boosting scale parameters required another way of thinking about it and constituted a first milestone in our understanding and implementation.
+In the following, the term "booster" refers to a boosting algorithm.
+
+
+### Location-Booster
+
+The following description of simple boosting algorithm is mainly based on @Fahrmeir.2013, 217-219. 
+
+The boosting concept relies on the idea of iterative estimation. 
+To estimate the location parameters $\beta$ via boosting, one starts with initial estimates, which may be far from optimal. 
+However, with estimates and the response vector at hand, residuals can be calculated. 
+The boosting algorithm focuses on those calculated residuals.
+The effect of the predictors $x_i$ on these residuals is estimated using least squares and the resulting effect is added to the location-estimate $\beta$ - adjusted by the learning rate $\nu$. 
+This yields a better fit of the location-model, which results in smaller residuals.
+These new residuals are estimated again in the next iteration, yielding smaller effect sizes, and hence a convergence of the boosting algorithm towards the OLS-estimate.
+
+A simple booster stops after a fixed number of iterations is reached.
+
+*Note to self: Add the description of the whole algorithm. Not just the residuals*
+
+\begin{equation}
+u = y - X\hat{\beta}^{(t-1)}
+\end{equation}
+
+### Scale-Booster
+
+A boosting algorithm for scale parameters $\gamma$ consists in the same two repeating steps of first estimating a term, and second updating $\gamma$ by adding the estimated effect - adjusted by a learning rate. 
+The term in the estimating step is, however, not the residual.
+For boosting $\gamma$ this term equals the score function of the model i.e  the derivative of the log likelihood of the normal distribution.
+
+\begin{equation}
+ll = \frac{1}{2\pi\exp(Z\gamma)^2}\times\exp(-\frac{u^2}{2\exp(Z\gamma)^2})
+\end{equation}
+
+
+## Componentwise Boosting
+
+*Note to self: Add rationale of CWB and motivation for prefering it over simple B*
+
+A useful extension of our simple boosting algorithm regards *componentwise boosting*. 
+The key idea here is to not update a whole parameter vector, but only one entry of it.
+The entry chosen for the update at this juncture is the one yielding the best improvement in terms of minimization of the loss function.
+The loss function in our case is the deviance calculated using $\gamma$ and our $\beta$.
+
+Hence, in each iteration only one component of the location- and one component of the scale-parameters are updated.
+
+
+### 1. Initialize the regression coefficients
+
+\begin{equation} 
+\begin{aligned}
+\beta_{j}^{(0)} = 0, \text{ for} j = 1,..,k. \\
+\gamma_{j}^{(0)} = 0, \text{ for} j = 1,..,k. \\
+\end{aligned}
+\end{equation}
+
+### 2. Compute the negative gradients
+
+Beta
+\begin{equation} 
+\begin{aligned}
+u_i = y - X\hat{\beta}^{(t-1)} \\
+\hat{b}_j = ((\vec{x}^j)^T \space\vec{x}^j)^{-1}((\vec{x}^j)^T \vec{u} \\
+\end{aligned}
+\end{equation}
+
+Gamma
+\begin{equation} 
+\begin{aligned}
+u = y - X\hat{\beta}^{(t-1)} \\
+u_i = X\hat{\beta}^{(t-1)}/Z\hat{\gamma}^{(t-1)} \\
+\hat{b}_j = u^2(\vec{z}^j)^Te^{-2(Z\hat{\gamma}^{(t-1)})} \\
+\end{aligned}
+\end{equation} 
+
+### 3. Fit separate models for all covariates 
+
+Beta
+\begin{equation} 
+\hat{b}_j = ((\vec{x}^j)^T \space\vec{x}^j)^{-1}((\vec{x}^j)^T \vec{u}, \text{for} \space j = 1,..,k. 
+\end{equation}
+
+Gamma
+\begin{equation} 
+\hat{b}_j = ((\vec{z}^j)^T \space\vec{z}^j)^{-1}((\vec{z}^j)^T \vec{u}, \text{ for} \space j = 1,..,k. 
+\end{equation}
+
+And determine the best fitting variable via:
+
+Beta
+\begin{equation} 
+\begin{aligned}
+u_i = y-X\hat{\beta}^{(t-1)} \\
+j^* = \arg\min_{j = 0,..,k} \sum_{i=1}^{n}(u_i-x_{ij}\hat{b}_j)^2\\
+\end{aligned}
+\end{equation}
+
+Gamma
+\begin{equation} 
+\begin{aligned}
+u_i = X\hat{\beta}^{(t-1)}/Z\hat{\gamma}^{(t-1)} \\
+j^* = \arg\min_{j = 0,..,k} \sum_{i=1}^{n}(u_i-x_{ij}\hat{b}_j)^2
+\end{aligned}
+\end{equation}
+
+### 4. Update Coefficients. 
+
+Beta
+\begin{equation} 
+\begin{aligned}
+\hat{\beta}_{j^*}^{(t)}  = \hat{\beta}_{j^*}^{(t-1)}+ \nu\hat{b}_{j^*} \\
+\hat{\beta}_{j}^{(t)}  = \hat{\beta}_{j}^{(t-1)}, j\neq j^*.
+\end{aligned}
+\end{equation}
+
+Gamma
+\begin{equation} 
+\begin{aligned}
+\hat{\gamma}_{j^*}^{(t)}  = \hat{\gamma}_{j^*}^{(t-1)}+ \nu\hat{b}_{j^*} \\
+\hat{\gamma}_{j}^{(t)}  = \hat{\gamma}_{j}^{(t-1)}, j\neq j^*.
+\end{aligned}
+\end{equation} 
+
+We implement this in our package by extending the `LocationScaleRegression` class to include the two active fields `bestFittingVariableBeta` and `bestFittingVariableGamma`. 
+
+These functions partition the design matrix $X$- respectively $Z$ - into its single columns and then estimate the residuals - respectively the scores - separately for each component, and determine loss functions for a hypothetical update with the respective component. 
+Respective to the old loss function value, the highest loss-improvement is determined and the respective component is used to update the parameter-vector.
+
+# 3. Software Implementation
+
+*Note to self: I pooled all statements of report 1 regarding inplementation on this section. There is thus not coherent argument. Most of it is superfluous. Needs to be updated.*
+
+To implement a boosting algorithm we constructed the function `gradient_boost` as a part of our R6-Class `LocationScaleRegressionBoost`, which  directly builds upon the `LocationScaleRegression` R6 class of the `asp20model`package set at our disposal for this course and this purpose specifically [@R-asp20model].   
+
+In the current version of the `asp20boost`-package, the boosting algorithm is already implemented in order to allow for componentwise boosting, which will be explained in part 4. 
+
+To further provide clarity, accountability and understanding during to our development process we describe briefly our first implementation of an ordinary boosting algorithm.
+This isn't visible in our code anymore.
+
+A simple booster for the location parameters $\beta$ works without extending the `asp20model`'s `LocationScaleRegression` class. 
+The current residuals may be extracted with the `resid()` command and then estimated.
+The location parameter is updated. 
+This causes the `LocationScaleRegression` class to calculate updated state-dependent objects, such as the log likelihood, the gradients and the residuals. 
+These objects are again used to repeatedly  estimate residuals and update the location parameter $\beta$.
+
+The simple booster for the scale parameters $\gamma$, as already mentioned, consists in repeating the same two steps of first estimating a term and then updating the scale parameters $\gamma$ by adding the estimated effect - adjusted by the learning rate $\nu$. 
+The estimated term here is the derivative of the log likelihood of the normal distribution.
+To calculate this, our code makes use of the `resid()`-function, but this time passing the argument "deviance", which results in residuals adjusted by the fitted scale estimates.
+
+This simple implementation of a boosting algorithm for location and scale served the code-basis or "skeleton" for our package and can be thought of as the first milestone of this project. 
+
+We are in the process of reconsidering the design of this implementation.
+Other design possibilities are the following:
+
+* Create public fields for the heavily used score-function values.
+* Move the calculation of componentwise losses to an external function.
+* Harmonize boosting and componentwise boosting into one external function, determining the mode of operation by an argument `componentwise = TRUE`.
+
+Another conceptual questions that comes up is if the best loss-improvement may be indicated by the already existing gradients, and hence there is no need for extra calculation.
+
+
+# 4. Simulation Studies
+
+
+
+
+
+# 5. Discussion/Outlook. 
+
+
+
+# 6. References
