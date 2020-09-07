@@ -194,27 +194,12 @@ gradient_boost = function(model,
                           verbose = FALSE,
                           plot = FALSE) {
 
-  # store gradients from last iteration step to compare them with newly calculated ones
-  grad_old_mu <- model$gradients_loglik_mu()
-  grad_old_sigma <- model$gradients_loglik_sigma()
-
   model$par_log <- list()
   for(iter in 1:maxit) {
 
     if(componentwise == T) model$update_parameters_compwise()
     if(componentwise == F) model$update_parameters_conventional()
 
-    # check for substantial change in gradients of loglikelihood (wrt eta_mu, eta_sigma)
-    {
-    grad_change_mu <- abs(grad_old_mu - model$gradients_loglik_mu())
-    grad_change_sigma <- abs(grad_old_sigma - model$gradients_loglik_sigma())
-    grad_changes <- c(grad_change_mu, grad_change_sigma)
-    }
-
-    if(iter > 1 && all(grad_changes <= abstol)){
-      message("early stopping at iteration: ",iter)
-      break()
-    }
 
     model$par_log[[iter]]<-c(model$beta, model$gamma)
     if(plot == T) model$plot()
@@ -224,7 +209,7 @@ gradient_boost = function(model,
       par_msg <- format(par_msg, trim = TRUE, digits = 3)
       par_msg <- paste(par_msg, collapse = " ")
 
-      loglik_msg <- format(model$loglik(), digits = 3)
+      loglik_msg <- format(model$loglik(), digits = 6)
 
       message(
         "Iteration:      ", iter, "\n",
