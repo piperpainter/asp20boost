@@ -1,11 +1,11 @@
-This is XeTeX, Version 3.14159265-2.6-0.999992 (TeX Live 2020/W32TeX) (preloaded format=xelatex 2020.9.13)  13 SEP 2020 13:14
+This is XeTeX, Version 3.14159265-2.6-0.999992 (TeX Live 2020/W32TeX) (preloaded format=xelatex 2020.9.13)  13 SEP 2020 21:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**C:/Users/Sebastian/AppData/Local/Temp/RtmpKo7Uke/preview-ce467f53409.dir/my-v
+**C:/Users/Sebastian/AppData/Local/Temp/RtmpKo7Uke/preview-ce438ac22f9.dir/my-v
 ignette.tex
 
-(c:/Users/Sebastian/AppData/Local/Temp/RtmpKo7Uke/preview-ce467f53409.dir/my-vi
+(c:/Users/Sebastian/AppData/Local/Temp/RtmpKo7Uke/preview-ce438ac22f9.dir/my-vi
 gnette.tex
 LaTeX2e <2020-02-02> patch level 5
 L3 programming layer <2020-09-06>
@@ -963,44 +963,44 @@ LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 ] [5
 
 ]
-File: C:/Users/Sebastian/AppData/Local/Temp/RtmpKo7Uke/preview-ce467f53409.dir/
+File: C:/Users/Sebastian/AppData/Local/Temp/RtmpKo7Uke/preview-ce438ac22f9.dir/
 my-vignette_files/figure-latex/data-1.pdf Graphic file (type pdf)
-<use C:/Users/Sebastian/AppData/Local/Temp/RtmpKo7Uke/preview-ce467f53409.dir/m
+<use C:/Users/Sebastian/AppData/Local/Temp/RtmpKo7Uke/preview-ce438ac22f9.dir/m
 y-vignette_files/figure-latex/data-1.pdf>
 [6
 
-] [7] [8] [9]
-Underfull \hbox (badness 1221) in paragraph at lines 366--372
+] [7] [8] [9] [10] [11]
+Underfull \hbox (badness 1221) in paragraph at lines 505--511
 \TU/lmr/m/n/10 part of our R6-Class \TU/lmtt/m/n/10 LocationScaleRegressionBoos
 t\TU/lmr/m/n/10 , which directly builds upon the
  []
 
-[10
+[12
 
-] [11
+] [13
 
-] [12
-
-]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 446.
-[13
+] [14
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 446.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 585.
+[15
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 585.
 (./my-vignette.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 446.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 446.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 585.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 585.
 Package rerunfilecheck Info: File `my-vignette.out' has not changed.
-(rerunfilecheck)             Checksum: B3A3A77CF467B3FFE0AB5774D6EC0257;1536.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 446.
+(rerunfilecheck)             Checksum: 07427DE5D2E61A15AC10F5C5E9650F81;1473.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 585.
  ) 
 Here is how much of TeX's memory you used:
- 17453 strings out of 481674
- 312473 string characters out of 5931104
- 741148 words of memory out of 5000000
- 34327 multiletter control sequences out of 15000+600000
+ 17456 strings out of 481674
+ 312532 string characters out of 5931104
+ 743277 words of memory out of 5000000
+ 34330 multiletter control sequences out of 15000+600000
  541539 words of font info for 82 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  52i,9n,118p,378b,435s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on my-vignette.pdf (15 pages).
+Output written on my-vignette.pdf (17 pages).
