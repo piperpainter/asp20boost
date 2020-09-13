@@ -112,7 +112,7 @@ Gradient boosting is able to address this heteroskedasticity yielding correct va
 
 ## Boosting
 
-In the following the concept of boosting is explained in two steps. To get a good grasp of the idea behind boosting we first introduce what we call *residual boosting*.
+We explain the concept of boosting in two steps. To get a good grasp of the idea behind boosting we first introduce what we call *residual boosting*.
 It is an intuitive and comprehensible algorithm, but only applicable to location estimation. Second, we explain *gradient boosting* which is a broader concept that allows for the estimation of the scale as well. 
 Because the latter case is the problem we attempt to address, the `asp20boost` package  implements exclusively gradient boosting as we describe it. 
 Lastly, we describe *componentwise boosting*, an additional functionality of the asp20boost package.
@@ -136,7 +136,7 @@ The effect of the location regressors on these residuals, summarized in the desi
 
 \begin{equation}
  \begin{gathered}
-\hat{b} = (X’X)^{-1} X' u  \\
+\hat{b} = (X'X)^{-1} X' u  \\
 \text{residual estimation step}
  \end{gathered}
 \end{equation}
@@ -156,27 +156,6 @@ With each update, the fit of the model improves leading to smaller residuals and
 This means than with each iteration the overall change in parameter $\beta$ decreases thus allowing the boosting algorithm to converge towards the OLS estimate which is, in fact, the true value of $\beta$.
 
 Boosting seems to be rather cumbersome for estimating location parameters alone, as it yields no advantage over OLS.  However, for models with varying scale, OLS is no reliable estimation method. This is where gradient boosting plays its role. It is able to address location-scale regression settings extending the idea of boosting by shifting the focus from residuals to gradients.
-
-
-### Location-Booster OLD
-
-The following description of simple boosting algorithm is mainly based on @Fahrmeir.2013, 217-219. 
-
-The boosting concept relies on the idea of iterative estimation. 
-To estimate the location parameters $\beta$ via boosting, one starts with initial estimates, which may be far from optimal. 
-However, with estimates and the response vector at hand, residuals can be calculated. 
-The boosting algorithm focuses on those calculated residuals.
-The effect of the predictors $x_i$ on these residuals is estimated using least squares and the resulting effect is added to the location-estimate $\beta$ - adjusted by the learning rate $\nu$. 
-This yields a better fit of the location-model, which results in smaller residuals.
-These new residuals are estimated again in the next iteration, yielding smaller effect sizes, and hence a convergence of the boosting algorithm towards the OLS-estimate.
-
-A simple booster stops after a fixed number of iterations is reached.
-
-*Note to self: Add the description of the whole algorithm. Not just the residuals*
-
-\begin{equation}
-u = y - X\hat{\beta}^{(t-1)}
-\end{equation}
 
 
 ### Gradient Boosting
@@ -266,9 +245,53 @@ Moreover, asp20boost implements componentwise boosting, which is an extension of
 It provides variable selection for designs, where many explaining variables are available including settings where number of regressors $p$ exceed the number of observations $n$. 
 The idea is to fit multiple base learners in each step and choosing the one that improves the loss function the most.
 Again, three steps are performed in each iteration:
+
     i. Gradient calculation 
     ii. Gradient estimation 
     iii. Parameter updating 
+    
+    
+Gradient calculation works equivalently as described above. Gradient estimation, in contrast, demands further calculations.
+The gradients are regressed on each covariate  or component  respectively, resulting in $p$ gradient estimators.
+
+\begin{equation}
+ \begin{gathered}
+\hat{B_j} = x’x^{-1}x’u_{\mu} \\
+\hat{G_j} = z’z^{-1}z’u_{\sigma}
+ \end{gathered}
+\end{equation}
+
+
+*Is it really called minimum SSC?*Then, the best loss improvement $j^*$ is determined by a minimum sum of squares criterion:
+
+\begin{equation}
+ \begin{gathered}
+j^{*} = \text{argmin} \sum(u_{\mu}- x_{ij} \hat{b}_j)^2 \\
+k^{*} = \text{argmin} \sum(u_{\sigma}- z_{ij} \hat{g}_j)^2
+ \end{gathered}
+\end{equation}
+
+The parameter vectors are then updated as well in a componentwise manner.
+This means that only one component of each parameter vector $\beta$ and $\gamma$ changes, while $ p-1$ components remain unaffected by the updating step:
+
+\begin{equation}
+ \begin{gathered}
+\beta^{(t)}_{j^*} = \beta^{(t-1)}_{j^*} + \nu  \hat{b_{j^*}} \\
+\beta^{(t)}_j = \beta^{(t-1)}_j \text{, } j \neq j^* \\
+\gamma^{(t)}_{k^*} = \gamma^{(t-1)}_{k^*} + \nu  \hat{g_{k^*}} \\
+\gamma^{(t)}_k = \gamma^{(t-1)}_k \text{, }   k \neq k^* \\
+ \text{[…]}
+ \end{gathered}
+\end{equation}
+
+
+With this update restriction some components may become updated quite late in the progression of the algorithm.
+This is the case when the particular component does not yield high improvements of model fit, which in turn reflects that this component, or the predictive variable,  has a rather small effect on the response.
+The algorithm is not executed until convergence of all parameter components but stopped after a predefined number of iterations `maxit`.
+Hence it could be the case, that covariates with small effect sizes do not become updated at all and remain zero after the componentwise gradient-boost algorithm runs completely.
+If this is the case, such variables will be drop out of the model.
+In this way i.e. by having parameter update restrictions combined with early stopping  implicit variable selection is achieved.
+
 
 
 ## Componentwise Boosting OLD

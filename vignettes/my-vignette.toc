@@ -7,16 +7,15 @@
 \contentsline {section}{Location-Scale Regression Model}{6}{section*.7}%
 \contentsline {section}{Boosting}{7}{section*.8}%
 \contentsline {subsection}{Residual Boosting}{7}{section*.9}%
-\contentsline {subsection}{Location-Booster OLD}{8}{section*.10}%
-\contentsline {subsection}{Gradient Boosting}{8}{section*.11}%
-\contentsline {subsection}{Scale-Booster OLD}{9}{section*.12}%
-\contentsline {subsection}{Componentwise boosting}{9}{section*.13}%
-\contentsline {section}{Componentwise Boosting OLD}{10}{section*.14}%
-\contentsline {subsection}{1. Initialize the regression coefficients}{10}{section*.15}%
-\contentsline {subsection}{2. Compute the negative gradients}{10}{section*.16}%
-\contentsline {subsection}{3. Fit separate models for all covariates}{10}{section*.17}%
-\contentsline {subsection}{4. Update Coefficients.}{11}{section*.18}%
-\contentsline {chapter}{3. Software Implementation}{12}{chapter*.19}%
-\contentsline {chapter}{4. Simulation Studies}{13}{chapter*.20}%
-\contentsline {chapter}{5. Discussion/Outlook.}{14}{chapter*.21}%
-\contentsline {chapter}{6. References}{15}{chapter*.22}%
+\contentsline {subsection}{Gradient Boosting}{8}{section*.10}%
+\contentsline {subsection}{Scale-Booster OLD}{9}{section*.11}%
+\contentsline {subsection}{Componentwise boosting}{9}{section*.12}%
+\contentsline {section}{Componentwise Boosting OLD}{10}{section*.13}%
+\contentsline {subsection}{1. Initialize the regression coefficients}{10}{section*.14}%
+\contentsline {subsection}{2. Compute the negative gradients}{10}{section*.15}%
+\contentsline {subsection}{3. Fit separate models for all covariates}{11}{section*.16}%
+\contentsline {subsection}{4. Update Coefficients.}{11}{section*.17}%
+\contentsline {chapter}{3. Software Implementation}{12}{chapter*.18}%
+\contentsline {chapter}{4. Simulation Studies}{13}{chapter*.19}%
+\contentsline {chapter}{5. Discussion/Outlook.}{14}{chapter*.20}%
+\contentsline {chapter}{6. References}{15}{chapter*.21}%
