@@ -1,29 +1,26 @@
 ---
 title: "ASP20 Boost"
 date: "`r format(Sys.time(), '%d %B %Y')`"
-output: rmarkdown::html_vignette
-#   pdf_document:
-#     keep_tex: no
-#     latex_engine: xelatex
-#     template: null
-#     toc: yes
-#     toc_depth: 2
-#     includes:
-#         in_header: preamble.tex
-#         before_body: frontpage.tex
-# documentclass: report
-# geometry: left=4cm, right=3cm, top=2.5cm, bottom=2.5cm
-# lof: FALSE
-# lot: FALSE
-# bibliography:
-# - citavi.bib
-# - packages.bib
-# biblio-style: apalike
-#---
-vignette: >
-  %\VignetteIndexEntry{ASP20 Boost}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+output:
+  pdf_document:
+    keep_tex: no
+    latex_engine: xelatex
+    template: null
+    toc: yes
+    toc_depth: 2
+    includes:
+      in_header: preamble.tex
+      before_body: frontpage.tex
+documentclass: report
+geometry: left=4cm, right=3cm, top=2.5cm, bottom=2.5cm
+lof: no
+lot: no
+bibliography:
+- citavi.bib
+- packages.bib
+biblio-style: apalike
+vignette: |
+  %\VignetteIndexEntry{ASP20 Boost} %\VignetteEngine{knitr::rmarkdown} %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
@@ -56,13 +53,15 @@ Keywords: component-wise boosting,  gradient descent, location and scale.
 
 # 1. Introduction:
 
+The R package asp20boost provides a boosting algorithm for estimation of location-scale regression models with gaussian response. It arose in the context of the course "Advanced Statistical Programming with R". It consists of a series of student projects that aim to estimate a location-scale regression model by implementing different  methods each building upon an R6 class [@R-R6] given to us as part of the `asp20model` repository [@R-asp20model].
 
-The course "Advanced Statistical Programming with R" consists in implementing a package to address location-scale regression by building upon an R6 class [@R-R6] given to us as part of the `asp20model` repository [@R-asp20model]. 
-The sample dataset consists of a response $y$, i.e, the expectation is in linear relationship to a set of predictors $x_i$. 
-Its variance, in contrast, is dependent on a different set of linear predictors $z_i$, however transformed by the response function $g(x) = exp(x)$. 
-This ensures positiveness of the variances. 
-The goal is to estimate the effects of both: $x_i$ on the expectation of $y$ (location) - this is captured by the estimates $\beta$, and $z_i$ on the variance of $y$ (scale) - this is captured by the estimates $\gamma$.
-Our student group `asp20boost` solves this task applying the concept of boosting. 
+In the following part 2  *model and methods* we first describe the nature of location-scale regression models as well as the concept of boosting.  This offers context and understanding of how gradient boosting approaches location-scale regression problems. An explanation on how we implemented model and boosting algorithm in the asp20boost package is given in part three  *software implementation*.  In part 4 *class and function* we present a  walkthrough of how to use both the class and the function provided by the package. Lastly, in part 5 *simulations* we present the results of  our simulation studies and assess the performance and the limitations of our package.
+
+# 2. Model and Methods
+
+## Location-Scale Regression Model
+
+Location-scale regression models are linear models, where the expectation (location), as well as the standard deviation (scale) of the response are dependent on some regressor(s). Modeling only the relationship influencing the location while dismissing the influence upon the scale would  lead to heteroskedasticity problems. Figure 1 below depicts the scatterplot of the sample model configuration of the asp20model [@R-asp20model]. The heteroskedastic response $y$ is plotted against the covariate $x$. In this case $x$ is used to model both location and scale, which allows nice plotting. In a more general case scale may be modeled by a different set of predictors $z$.
 
 ```{r data, echo=FALSE, cache=TRUE, fig.cap = "A visual example of Heteroskedasticity. Source: asp20model"}
 n <- 500
@@ -74,20 +73,50 @@ curve(x + 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 ```
 
-In *part 2*  
-In *part 3*  
-In *part 5* 
+In Figure 1 above, heteroskedasticity is clearly indicated by the funnel shape of the point cloud. Estimating such a model naively by means of OLS would lead to false variance estimates and hence invalid hypotheses tests and confidence intervals.
+Modeling the location part is done by a conventional linear model. The expectation of an observation $y_i$ is modeled as a linear combination of a vector of predictors $x_i$:
 
+\begin{equation}
+E(Y_i) = \eta_{\mu} = x_i’\beta
+\end{equation}
 
-# 2 Model and Methods
+Modeling the scale involves an additional concern: the modeled standard deviations $sd(y_i)$ should be non-negative. This is ensured by the response function $h(\eta) = \exp(\eta)$. Hence the standard deviations depend on transformed linear predictors:
 
-## Concept: Simple Boosting
+\begin{equation}
+sd(Y_i) = \exp(Z_i‘ \gamma)
+\end{equation}
+
+This means that the unit-specific standard deviations $sd(y_i)$ are not modeled linearly. Transforming them using the link function $g(\sigma_i) = \log(\sigma_i)$, which is the inverse of the response function, allows for linearly regressing on the scale predictor
+
+\begin{equation}
+\log-sd(y_i) = \eta_{\sigma} = z_i‘ \gamma
+\end{equation}
+
+The goal of estimating a location-scale regression model is to attain estimates for $\beta$ and $\gamma$. Gradient boosting is able to address this heteroskedasticity yielding correct variance estimates i.e. unbiased $\gamma$ estimates.
+
+## Boosting
 
 The first step in our progress was to understand the theoretical concept of boosting and which types of problems it is able to solve.
 To explain the concept and follow our process of understanding we first explain boosting for location parameters. 
 Boosting scale parameters required another way of thinking about it and constituted a first milestone in our understanding and implementation.
 In the following, the term "booster" refers to a boosting algorithm.
 
+\begin{equation}
+1+2
+\end{equation})
+
+
+
+\begin{equation}
+1+2
+\end{equation})
+
+
+
+
+\begin{equation}
+1+2
+\end{equation})
 
 ### Location-Booster
 
@@ -215,7 +244,7 @@ Respective to the old loss function value, the highest loss-improvement is deter
 
 # 3. Software Implementation
 
-*Note to self: I pooled all statements of report 1 regarding inplementation on this section. There is thus not coherent argument. Most of it is superfluous. Needs to be updated.*
+*Note to self: I pooled all statements of report 1 regarding implementation on this section. There is thus not coherent argument. Most of it is superfluous. Needs to be updated.*
 
 To implement a boosting algorithm we constructed the function `gradient_boost` as a part of our R6-Class `LocationScaleRegressionBoost`, which  directly builds upon the `LocationScaleRegression` R6 class of the `asp20model`package set at our disposal for this course and this purpose specifically [@R-asp20model].   
 
