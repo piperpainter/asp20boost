@@ -3,18 +3,17 @@ title: "ASP20 Boost"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   pdf_document:
-    keep_tex: no
-    latex_engine: xelatex
+    keep_tex: true
     template: null
-    toc: yes
+    toc: false
     toc_depth: 2
     includes:
       in_header: preamble.tex
       before_body: frontpage.tex
 documentclass: report
 geometry: left=4cm, right=3cm, top=2.5cm, bottom=2.5cm
-lof: no
-lot: no
+lof: false
+lot: false
 bibliography:
 - citavi.bib
 - packages.bib
@@ -22,14 +21,6 @@ biblio-style: apalike
 vignette: |
   %\VignetteIndexEntry{ASP20 Boost} %\VignetteEngine{knitr::rmarkdown} %\VignetteEncoding{UTF-8}
 ---
-
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
 
 ```{r setup, include=FALSE}
 library(asp20boost)
@@ -86,10 +77,10 @@ curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 In Figure 1 above, heteroskedasticity is clearly indicated by the funnel shape of the point cloud.
 Estimating such a model naively by means of OLS would lead to false variance estimates and hence invalid hypotheses tests and confidence intervals.
 Modeling the location part is done by a conventional linear model. 
-The expectation of an observation $y_i$ is modeled as a linear combination of a vector of predictors $x_i$:
+The expectation of an observation $y_i$ is modeled as a linear combination of a vector of predictors $\bm{x_i}$:
 
 \begin{equation}
-E(Y_i) = \eta_{\mu} = x_i’\beta
+E(y_i) = \eta_{\mu_i} = \bm{x_i}'\bm{\beta}
 \end{equation}
 
 Modeling the scale involves an additional concern: the modeled standard deviations $sd(y_i)$ should be non-negative.
@@ -97,18 +88,18 @@ This is ensured by the response function $h(\eta) = \exp(\eta)$.
 Hence the standard deviations depend on transformed linear predictors:
 
 \begin{equation}
-sd(Y_i) = \exp(Z_i‘ \gamma)
+sd(y_i) = \exp(\bm{z_i}'\bm{\gamma})
 \end{equation}
 
 This means that the unit-specific standard deviations $sd(y_i)$ are not modeled linearly.
 Transforming them using the link function $g(\sigma_i) = \log(\sigma_i)$, which is the inverse of the response function, allows for linearly regressing on the scale predictor
 
 \begin{equation}
-\log-sd(y_i) = \eta_{\sigma} = z_i‘ \gamma
+\log sd(y_i) = \eta_{\sigma_i} = \bm{z_i}' \bm{\gamma}
 \end{equation}
 
-The goal of estimating a location-scale regression model is to attain estimates for $\beta$ and $\gamma$.
-Gradient boosting is able to address this heteroskedasticity yielding correct variance estimates i.e. unbiased $\gamma$ estimates.
+The goal of estimating a location-scale regression model is to attain estimates for $\bm{\beta}$ and $\bm{\gamma}$.
+Gradient boosting is able to address this heteroskedasticity yielding correct variance estimates i.e. unbiased $\bm{\gamma}$ estimates.
 
 ## Boosting
 
@@ -122,40 +113,42 @@ It is an extension of the boosting concept, which enables variable selection.
 ### Residual Boosting
 
 The general concept of boosting relies on the idea of iteratively estimating so called *base-learners* and aggregating them into an overall estimate.
-In residual boosting, the focus lies on the residuals. Initial parameter estimates $\hat{\beta}$, which may be far from optimal, are needed to calculate residuals. 
+In residual boosting, the focus lies on the residuals. Initial parameter estimates $\hat{\bm{\beta}}$, which may be far from optimal, are needed to calculate residuals.
 
 \begin{equation}
  \begin{gathered}
-u = y - X \hat{\beta}^{(t-1)} \\
-\text{residual calculation step}
+ \bm{u} = \bm{y} - \bm{X} \hat{\bm{\beta}}^{(t-1)} \\
+ \text{residual calculation step}
  \end{gathered}
 \end{equation}
 
-The effect of the location regressors on these residuals, summarized in the design matrix $X$, is estimated using least squares resulting in the residual-estimate, or base-learner, $\hat{\beta}$
+The effect of the location regressors on these residuals, summarized in the design matrix $\bm{X}$, is estimated using least squares resulting in the residual-estimate, or base-learner, $\hat{\bm{\beta}}$
 
 
 \begin{equation}
  \begin{gathered}
-\hat{b} = (X'X)^{-1} X' u  \\
+\hat{\bm{b}} = (\bm{X}'\bm{X})^{-1} \bm{X}'\bm{u}  \\
 \text{residual estimation step}
  \end{gathered}
 \end{equation}
 
-$\hat{\beta}$ is added to the location-estimate $\beta$, adjusted by some learning rate $\nu$. 
+$\hat{\bm{b}}$ is added to the location-estimate $\bm{\hat{\beta}}$, adjusted by some learning rate $\nu$. 
 
 \begin{equation}
  \begin{gathered}
-\beta^{(t)} = \beta^{(t-1)} + \nu \hat{b} \\
+\bm{\hat{\beta}}^{(t)} = \bm{\hat{\beta}}^{(t-1)} + \nu \hat{\bm{b}} \\
 \text{parameter Updating Step}
  \end{gathered}
 \end{equation}
 
 
 This yields an updated parameter estimate and the procedure is repeated thereafter.
-With each update, the fit of the model improves leading to smaller residuals and hence smaller base-learners $\hat{b}$.
-This means than with each iteration the overall change in parameter $\beta$ decreases thus allowing the boosting algorithm to converge towards the OLS estimate which is, in fact, the true value of $\beta$.
+With each update, the fit of the model improves leading to smaller residuals and hence smaller base-learners $\hat{\bm{b}}$.
+This means than with each iteration the overall change in parameter $\bm{\hat{\beta}}$ decreases thus allowing the boosting algorithm to converge towards the OLS estimate which is, in fact, the true value of $\bm{\hat{\beta}}$.
 
-Boosting seems to be rather cumbersome for estimating location parameters alone, as it yields no advantage over OLS.  However, for models with varying scale, OLS is no reliable estimation method. This is where gradient boosting plays its role. It is able to address location-scale regression settings extending the idea of boosting by shifting the focus from residuals to gradients.
+Boosting seems to be rather cumbersome for estimating location parameters alone, as it yields no advantage over OLS.
+However, for models with varying scale, OLS is no reliable estimation method. This is where gradient boosting plays its role.
+It is able to address location-scale regression settings extending the idea of boosting by shifting the focus from residuals to gradients.
 
 
 ### Gradient Boosting
@@ -168,16 +161,16 @@ This enables gradient boosting to address various kinds of situations.
 For location-scale regression, the negative log likelihood of the observed response is convenient.  
 
 \begin{equation}
-\text{loss} = -ll = -\frac{1}{2\pi\exp(Z\gamma)^2}\times\exp(-\frac{u^2}{2\exp(Z\gamma)^2})
+\text{loss} = -ll = -\frac{1}{2\pi\exp(\bm{Z}\bm{\gamma})^2}\times\exp(-\frac{\bm{u}^2}{2\exp(\bm{Z}\bm{\gamma})^2})
 \end{equation}
 
 The unit-wise gradients of this loss function play a key role. These are different from the gradients supplied in the `asp20model package`. 
-The relevant gradients for boosting are attained by partially deriving the loss function by the unit-specific linear predictors $\eta_{\mu}$ and by $\eta_{\sigma}$ as in *insert the number of the equations* respectively:
+The relevant gradients for boosting are attained by partially deriving the loss function by the unit-specific linear predictors $\eta_{\mu_i}$ and by $\eta_{\sigma_i}$ as in *insert the number of the equations* respectively:
 
 \begin{equation}
  \begin{gathered}
-\eta_{\mu} = x_i’\beta = E(Y_i) \\
-\eta_{\sigma} = z_i’\gamma = \log-sd(Y_i) \\
+\eta_{\mu_i} = \bm{x_i}'\bm{\hat{\beta}} = E(y_i) \\
+\eta_{\sigma_i} = \bm{z_i}'\bm{\hat{\gamma}} = \log sd(y_i) \\
  \end{gathered}
 \end{equation}
 
@@ -201,8 +194,8 @@ They are estimated by regressing them on the model covariates $x_i$ and $z_i$ re
 
 \begin{equation}
  \begin{gathered}
-\hat{B} = X’X^{-1} X‘ u_{\mu} \\
-\hat{G} = Z’Z^{-1} Z’ u_{\sigma} \\
+\hat{\bm{b}} = \bm{X}'\bm{X}^{-1} \bm{X}' \bm{u}_{\mu} \\
+\hat{\bm{g}} = \bm{Z}'\bm{Z}^{-1} \bm{Z}' \bm{u}_{\sigma} \\
 \text{gradient estimation step}
  \end{gathered}
 \end{equation}
@@ -210,13 +203,13 @@ They are estimated by regressing them on the model covariates $x_i$ and $z_i$ re
 This results in two separate gradient estimates or base-learners. 
 The base learning procedure in our case is again the least squares estimate. 
 Another possible way of generalizing gradient boosting even further is to chose different kinds of base learning procedures, such as splines or regression trees.
-The gradient estimates $\hat{b_j}$ and $\hat{g_j}$ are used to update the overall parameter estimates $\beta$ and $\gamma$, again adjusted by some learning rate $\nu$.
+The gradient estimates $\hat{\bm{b}}$ and $\hat{\bm{g}}$ are used to update the overall parameter estimates $\bm{\beta}$ and $\gamma$, again adjusted by some learning rate $\nu$.
 
 
 \begin{equation}
  \begin{gathered}
-\beta^{(t)} = \beta^{(0)} + \nu \hat{b} \\
-\gamma^{(t)} = \gamma^{(t-1)} + \nu \hat{g} \\
+\hat{\bm{\beta}}^{(t)} = \hat{\bm{\beta}}^{(0)} + \nu \hat{\bm{b}} \\
+\hat{\bm{\gamma}}^{(t)} = \hat{\bm{\gamma}}^{(t-1)} + \nu \hat{\bm{g}} \\
 \text{parameter updating step}
  \end{gathered}
 \end{equation}
@@ -226,23 +219,10 @@ The next iteration may be performed *(for what/to achieve what / until what is a
 Parameter estimates in the gradient boosting algorithm also converge towards the true parameter values of the location-scale regression model. 
 
 
-
-### Scale-Booster OLD
-
-A boosting algorithm for scale parameters $\gamma$ consists in the same two repeating steps of first estimating a term, and second updating $\gamma$ by adding the estimated effect - adjusted by a learning rate. 
-The term in the estimating step is, however, not the residual.
-For boosting $\gamma$ this term equals the score function of the model i.e  the derivative of the log likelihood of the normal distribution.
-
-\begin{equation}
-ll = \frac{1}{2\pi\exp(Z\gamma)^2}\times\exp(-\frac{u^2}{2\exp(Z\gamma)^2})
-\end{equation}
-
-
-
 ### Componentwise boosting 
 
 Moreover, asp20boost implements componentwise boosting, which is an extension of the boosting algorithm.
-It provides variable selection for designs, where many explaining variables are available including settings where number of regressors $p$ exceed the number of observations $n$. 
+It provides variable selection for designs where many explaining variables are available, including settings where the number of regressors $p$ exceed the number of observations $n$. 
 The idea is to fit multiple base learners in each step and choosing the one that improves the loss function the most.
 Again, three steps are performed in each iteration:
 
@@ -256,8 +236,8 @@ The gradients are regressed on each covariate  or component  respectively, resul
 
 \begin{equation}
  \begin{gathered}
-\hat{B_j} = x’x^{-1}x’u_{\mu} \\
-\hat{G_j} = z’z^{-1}z’u_{\sigma}
+\hat{b_j} = (\bm{x}'\bm{x})^{-1}\bm{x}'\bm{u}_{\mu} \\
+\hat{g_j} = (\bm{x}'\bm{x})^{-1}\bm{x}'\bm{u}_{\sigma}
  \end{gathered}
 \end{equation}
 
@@ -266,22 +246,21 @@ The gradients are regressed on each covariate  or component  respectively, resul
 
 \begin{equation}
  \begin{gathered}
-j^{*} = \text{argmin} \sum(u_{\mu}- x_{ij} \hat{b}_j)^2 \\
-k^{*} = \text{argmin} \sum(u_{\sigma}- z_{ij} \hat{g}_j)^2
+j^{*} = \text{argmin} \sum(\bm{u}_{\mu}- x_{ij} \hat{\bm{b}}_j)^2 \\
+k^{*} = \text{argmin} \sum(\bm{u}_{\sigma}- z_{ij} \hat{\bm{g}}_j)^2
  \end{gathered}
 \end{equation}
 
 The parameter vectors are then updated as well in a componentwise manner.
-This means that only one component of each parameter vector $\beta$ and $\gamma$ changes, while $ p-1$ components remain unaffected by the updating step:
+This means that only one component of each parameter vector $\bm{\beta}$ and $\bm{\gamma}$ changes, while $p-1$ components remain unaffected by the updating step:
 
-\begin{equation}
- \begin{gathered}
-\beta^{(t)}_{j^*} = \beta^{(t-1)}_{j^*} + \nu  \hat{b_{j^*}} \\
-\beta^{(t)}_j = \beta^{(t-1)}_j \text{, } j \neq j^* \\
-\gamma^{(t)}_{k^*} = \gamma^{(t-1)}_{k^*} + \nu  \hat{g_{k^*}} \\
-\gamma^{(t)}_k = \gamma^{(t-1)}_k \text{, }   k \neq k^* \\
- \text{[…]}
- \end{gathered}
+\begin{equation} 
+\begin{aligned}
+\hat{\bm{\beta}}_{j^*}^{(t)}  = \hat{\bm{\beta}}_{j^*}^{(t-1)}+ \nu\hat{b}_{j^*} \\
+\hat{\bm{\beta}}_{j}^{(t)}  = \hat{\bm{\beta}}_{j}^{(t-1)}\text{, } j\neq j^* \\
+\hat{\bm{\gamma}}_{j^*}^{(t)}  = \hat{\bm{\gamma}}_{j^*}^{(t-1)}+ \nu\hat{b}_{j^*} \\
+\hat{\bm{\gamma}}_{j}^{(t)}  = \hat{\bm{\gamma}}_{j}^{(t-1)}\text{, } j\neq j^*
+\end{aligned}
 \end{equation}
 
 
@@ -294,130 +273,9 @@ In this way i.e. by having parameter update restrictions combined with early sto
 
 
 
-## Componentwise Boosting OLD
-
-*Note to self: Add rationale of CWB and motivation for preferring it over simple B*
-
-A useful extension of our simple boosting algorithm regards *componentwise boosting*. 
-The key idea here is to not update a whole parameter vector, but only one entry of it.
-The entry chosen for the update at this juncture is the one yielding the best improvement in terms of minimization of the loss function.
-The loss function in our case is the deviance calculated using $\gamma$ and our $\beta$.
-
-Hence, in each iteration only one component of the location- and one component of the scale-parameters are updated.
-
-
-### 1. Initialize the regression coefficients
-
-\begin{equation} 
-\begin{aligned}
-\beta_{j}^{(0)} = 0, \text{ for} j = 1,..,k. \\
-\gamma_{j}^{(0)} = 0, \text{ for} j = 1,..,k. \\
-\end{aligned}
-\end{equation}
-
-### 2. Compute the negative gradients
-
-Beta
-\begin{equation} 
-\begin{aligned}
-u_i = y - X\hat{\beta}^{(t-1)} \\
-\hat{b}_j = ((\vec{x}^j)^T \space\vec{x}^j)^{-1}((\vec{x}^j)^T \vec{u} \\
-\end{aligned}
-\end{equation}
-
-Gamma
-\begin{equation} 
-\begin{aligned}
-u = y - X\hat{\beta}^{(t-1)} \\
-u_i = X\hat{\beta}^{(t-1)}/Z\hat{\gamma}^{(t-1)} \\
-\hat{b}_j = u^2(\vec{z}^j)^Te^{-2(Z\hat{\gamma}^{(t-1)})} \\
-\end{aligned}
-\end{equation} 
-
-### 3. Fit separate models for all covariates 
-
-Beta
-\begin{equation} 
-\hat{b}_j = ((\vec{x}^j)^T \space\vec{x}^j)^{-1}((\vec{x}^j)^T \vec{u}, \text{for} \space j = 1,..,k. 
-\end{equation}
-
-Gamma
-\begin{equation} 
-\hat{b}_j = ((\vec{z}^j)^T \space\vec{z}^j)^{-1}((\vec{z}^j)^T \vec{u}, \text{ for} \space j = 1,..,k. 
-\end{equation}
-
-And determine the best fitting variable via:
-
-Beta
-\begin{equation} 
-\begin{aligned}
-u_i = y-X\hat{\beta}^{(t-1)} \\
-j^* = \arg\min_{j = 0,..,k} \sum_{i=1}^{n}(u_i-x_{ij}\hat{b}_j)^2\\
-\end{aligned}
-\end{equation}
-
-Gamma
-\begin{equation} 
-\begin{aligned}
-u_i = X\hat{\beta}^{(t-1)}/Z\hat{\gamma}^{(t-1)} \\
-j^* = \arg\min_{j = 0,..,k} \sum_{i=1}^{n}(u_i-x_{ij}\hat{b}_j)^2
-\end{aligned}
-\end{equation}
-
-### 4. Update Coefficients. 
-
-Beta
-\begin{equation} 
-\begin{aligned}
-\hat{\beta}_{j^*}^{(t)}  = \hat{\beta}_{j^*}^{(t-1)}+ \nu\hat{b}_{j^*} \\
-\hat{\beta}_{j}^{(t)}  = \hat{\beta}_{j}^{(t-1)}, j\neq j^*.
-\end{aligned}
-\end{equation}
-
-Gamma
-\begin{equation} 
-\begin{aligned}
-\hat{\gamma}_{j^*}^{(t)}  = \hat{\gamma}_{j^*}^{(t-1)}+ \nu\hat{b}_{j^*} \\
-\hat{\gamma}_{j}^{(t)}  = \hat{\gamma}_{j}^{(t-1)}, j\neq j^*.
-\end{aligned}
-\end{equation} 
-
-We implement this in our package by extending the `LocationScaleRegression` class to include the two active fields `bestFittingVariableBeta` and `bestFittingVariableGamma`. 
-
-These functions partition the design matrix $X$- respectively $Z$ - into its single columns and then estimate the residuals - respectively the scores - separately for each component, and determine loss functions for a hypothetical update with the respective component. 
-Respective to the old loss function value, the highest loss-improvement is determined and the respective component is used to update the parameter-vector.
-
 # 3. Software Implementation
 
-*Note to self: I pooled all statements of report 1 regarding implementation on this section. There is thus not coherent argument. Most of it is superfluous. Needs to be updated.*
 
-To implement a boosting algorithm we constructed the function `gradient_boost` as a part of our R6-Class `LocationScaleRegressionBoost`, which  directly builds upon the `LocationScaleRegression` R6 class of the `asp20model`package set at our disposal for this course and this purpose specifically [@R-asp20model].   
-
-In the current version of the `asp20boost`-package, the boosting algorithm is already implemented in order to allow for componentwise boosting, which will be explained in part 4. 
-
-To further provide clarity, accountability and understanding during to our development process we describe briefly our first implementation of an ordinary boosting algorithm.
-This isn't visible in our code anymore.
-
-A simple booster for the location parameters $\beta$ works without extending the `asp20model`'s `LocationScaleRegression` class. 
-The current residuals may be extracted with the `resid()` command and then estimated.
-The location parameter is updated. 
-This causes the `LocationScaleRegression` class to calculate updated state-dependent objects, such as the log likelihood, the gradients and the residuals. 
-These objects are again used to repeatedly  estimate residuals and update the location parameter $\beta$.
-
-The simple booster for the scale parameters $\gamma$, as already mentioned, consists in repeating the same two steps of first estimating a term and then updating the scale parameters $\gamma$ by adding the estimated effect - adjusted by the learning rate $\nu$. 
-The estimated term here is the derivative of the log likelihood of the normal distribution.
-To calculate this, our code makes use of the `resid()`-function, but this time passing the argument "deviance", which results in residuals adjusted by the fitted scale estimates.
-
-This simple implementation of a boosting algorithm for location and scale served the code-basis or "skeleton" for our package and can be thought of as the first milestone of this project. 
-
-We are in the process of reconsidering the design of this implementation.
-Other design possibilities are the following:
-
-* Create public fields for the heavily used score-function values.
-* Move the calculation of componentwise losses to an external function.
-* Harmonize boosting and componentwise boosting into one external function, determining the mode of operation by an argument `componentwise = TRUE`.
-
-Another conceptual questions that comes up is if the best loss-improvement may be indicated by the already existing gradients, and hence there is no need for extra calculation.
 
 
 # 4. Simulation Studies
@@ -429,5 +287,62 @@ Another conceptual questions that comes up is if the best loss-improvement may b
 # 5. Discussion/Outlook. 
 
 
-
 # 6. References
+
+<div id="refs"></div>
+
+# 7. Appendix
+
+\begin{equation}
+ \begin{gathered}
+ \text{loss}(\bm{y}) = -LL(\bm{y}) \\
+ = -\log \left (\prod_{i = 1}^{n} f\left( y_i|\bm{x_i} \right) \right) \\
+  \text{with  } f\left( y_i|\bm{x_i} \right) = \frac{1}{\sigma_i \sqrt{2\pi}} \exp \Bigg\{ { -\frac{1}{2} \left( \frac{y_i - \mu_i}{\sigma_i} \right)^2} \Bigg\} \\
+  = - \sum \log  f\left( y_i|\bm{x_i} \right) \\
+  = - \sum \left( \log \frac{1}{\sigma_i \sqrt{2\pi}} + \log \exp \Bigg\{ { -\frac{1}{2} \left( \frac{y_i - \mu_i}{\sigma_i} \right)^2} \Bigg\}   \right) \\
+  \end{gathered}
+\end{equation}
+
+This is the loss function: 
+ \begin{equation}
+ \begin{gathered} 
+  = \sum\log\sigma_i + \frac{1}{2} \sum \log 2\pi + \frac{1}{2}\sum\frac{y_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{\mu_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{-2y_i\mu_i}{\sigma_i^2} \\
+ \end{gathered}
+\end{equation}
+
+For deriving the loss function we transform it to the following 
+\begin{equation}
+ \begin{gathered} 
+\sum \eta_{\sigma_i} + \frac{n}{2}\log 2\pi + \frac{1}{2} \sum y_i^2 \exp(\eta_{\sigma_i})^{-2} + \frac{1}{2} \sum \eta_{\mu_i}^2 \exp(\eta_{\sigma_i})^{-2} + \frac{1}{2} \sum -2 \times y_i \times \eta_{\mu_i} \times \exp(\eta_{\sigma_i})^{-2}
+  \end{gathered}
+\end{equation}
+
+
+Then, we derive $\text{loss}(\bm{y})$ towards $\eta_{\mu_i}$
+
+
+\begin{equation}
+ \begin{gathered}
+ \frac{\partial \text{loss}(\bm{y})}{\partial \eta_{\mu_i}} = 0+0+0 + \frac{1}{2} \exp(\eta_{\sigma_i})^{-2} \times 2\eta_{\mu_i} + \frac{1}{2}(-2)y_i \exp(\eta_{\sigma_i})^{-2} \times 1 \\
+ = \mu_i \times \frac{1}{\sigma_i^2} - y_i \times \frac{1}{\sigma_i^2} = - \frac{y_i - \mu_i}{\sigma_i^2} = - \frac{\epsilon_i}{\sigma_i^2}
+  \end{gathered}
+\end{equation}
+ 
+And then the derivative of the  $\text{loss}(\bm{y})$ towards $\eta_{\sigma_i}$
+
+\begin{equation}
+ \begin{gathered}
+\frac{\partial \exp(\eta_{\sigma_i})^{-2}}{\partial \eta_{\sigma_i}} = -2 \exp(\eta_{\sigma_i})^{-3} \times \exp(\eta_{\sigma_i}) = -2 \exp \eta_{\sigma_i}^{-2}
+ \end{gathered}
+\end{equation}
+ 
+\begin{equation}
+ \begin{gathered}
+  \frac{\partial \text{loss}(\bm{y})}{\partial \eta_{\sigma_i}} = 1+0 + \frac{1}{2}y_i^2 (-2) \exp(\eta_{\sigma_i})^{-2} + \frac{1}{2}\eta_{\mu_i}^2 (-2) +  \frac{1}{2}(-2) y_i \eta_{\mu_i}(-2) \exp(\eta_{\sigma_i})^{-2}\\
+=  1 - \frac{y_i^2}{\sigma_i^2} - \frac{\mu_i^2}{\sigma_i^2} + \frac{2y_i\mu_i}{\sigma_i^2} \\
+=  - \frac{(y_i - \mu_i)^2}{\sigma_i^1} + 1 \\
+=  - \frac{\epsilon_i^2}{\sigma_i^2} +1
+ \end{gathered}
+\end{equation}
+
+
