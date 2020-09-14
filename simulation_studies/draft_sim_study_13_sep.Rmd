@@ -1,0 +1,229 @@
+---
+title: "Simulation Study"
+output: html_notebook
+---
+
+
+In this part we design and perform a simulation study in order to demonstrate functionality of the implemented boosting algorithm. For this, we first employ small models with two location and scale parameters each and ensure basic functionality. Second, validity of the variabel selection features is demonstrated.
+
+```{r}
+# setting the stage
+rm(list=ls())
+options(scipen=999)
+source("helper_plot_model.R")
+source("helper_init_model.R")
+source("helper_calc_mse.R")
+source("helper_init_large_model.R")
+library(asp20boost)
+library(gamboostLSS)
+```
+
+Helper functions for model initialization, plotting, etc. are called, as well as the asp20boost package itself and the package gamboostLSS containing comparison functions.
+
+## ToDo
+* add labels to beta gamma output
+* befor every subchapter "Evaluation Config.*", put a formula with the current parameter configuration that is being evaluated.
+* add substantial effect in large model to make clear how effect is visible
+
+## Small Model - 4 Parameter Case
+    
+The goal here is to demonstrate, that the algorithm finds correct estimates for sensible choices of /beta and /gamma. By evaluating different parameter configurations it becomes clear what model properties they represent. We use the following four different parameter configurations to explore location-scale regression model characteristics:
+
+```{r}
+# config 1 ----------------------
+beta_1 <- c(0,1)
+gamma_1 <- c(-3,2)
+
+# config 2 ----------------------
+beta_2 <- c(2,2)
+gamma_2 <- c(2,2)
+
+# config 3 ----------------------
+beta_3 <- c(0,7)
+gamma_3 <- c(-3,3)
+
+# config 4 ----------------------
+beta_4 <- c(0,1)
+gamma_4 <- c(3,-3)
+
+# config 5 ----------------------
+beta_5 <- c(0,7)
+gamma_5 <- c(1,-1)
+```
+
+
+
+### Evaluation Configuration 1
+
+We call the helper-function to create a model object of 1000 observations and plot it with a second helper function.
+
+```{r}
+mod_1 <- init_model(beta_1, gamma_1, 1000)
+plot_model(beta_1, gamma_1, 1000)
+```
+
+
+
+We have already seen the basic plot structure, visualizing a location-scale regression model. What’s added is the depiction of two important quantities: Indicated by the blue arrow, one is the location slope /beta_1. The red arrow, in contrasts, indicates [modeled?] standard deviation of the observed responses at the point x=1. The ratio of those two quantities is essential for possibility of estimation. Here, we have a good signal-noise ratio, which enables the gradient_boost() function to estimate it.
+
+```{r}
+gradient_boost(mod_1)
+round(mod_1$beta, 3)
+round(mod_1$gamma, 3)
+```
+
+We see that the estimates are close to the true model parameters.
+
+
+#### Evaluation Configuration 2
+
+With all parameters set to 2, the algorithm yields NaNs.
+
+```{r}
+mod_2 <- init_model(beta_2, gamma_2, 1000)
+gradient_boost(mod_2)
+calc_MSE(beta_2, gamma_2, mod_2$beta, mod_2$gamma)
+```
+
+To understand the model characteristics of parameter configuration 2-2-2-2, we look at the model plot.
+
+```{r}
+plot_model(beta_2, gamma_2, 1000)
+```
+
+Here, the red arrow is large, while the blue arrow is hardly visible. This represents the fact, that gamma parameters lead to SD being immensly high at x=1 and hence Untergehen of location effect. The model is not estimable. This is due to the fact that sd(x=1) = exp(gamma_0 + gamma_1 * 1) = exp(4) = 54.60. The location slope is 2. It is impossible to estimate an effect of 2 (change of two unit if x increases by one), if the random noise of the response is already very likely to be +/- 55 at the point x=1. Non-linearity of SDs makes this comparison hard to do intuitively. However, with the exponential function in mind one can abschätzen where sds may lie given parameter configuration. 
+In contrast, location predictions are easily imagined by simply seeing beta_0 and beta_1. For x=0 the vlue is equal to the intercept, for x=1 the value is the sum of both betas. X values restricted to 0,1-range make it even easier to imagine preditors since the highest SD of interest is at x=1, where the predictor may be easily calculated by adding gamma_0 and gamma_1. 
+
+
+
+#### Evaluation Configuration 3
+
+```{r}
+mod_3 <- init_model(beta_3, gamma_3, 1000)
+plot_model(beta_3, gamma_3, 1000)
+```
+
+Configuration 3 yields a good signal-noise ratio.
+
+```{r}
+gradient_boost(mod_3)
+round(mod_3$beta, 3)
+round(mod_3$gamma, 3)
+```
+
+The algorithm performs well with estimates close to true parameters.To quantify how close estimates are to true parameters, we quantify this distance employing the mean squared error.
+
+```{r}
+calc_MSE(beta_3, gamma_3, mod_3$beta, mod_3$gamma)
+```
+
+
+
+#### Evaluation Configuration 4
+
+```{r}
+mod_4 <- init_model(beta_4, gamma_4, 1000)
+plot_model(beta_4, gamma_4, 1000)
+```
+
+Configuration 4 involves a declining SD, which leads to the other end of the extreme - extremely low sd, leading to NaN problems (numerical underflow).
+
+
+```{r}
+gradient_boost(mod_4)
+round(mod_4$beta, 3)
+round(mod_4$gamma, 3)
+```
+
+The alogirthm also yields NaNs.
+
+
+
+
+
+
+#### Evaluation Configuration 5
+
+```{r}
+mod_5 <- init_model(beta_5, gamma_5, 1000)
+plot_model(beta_5, gamma_5, 1000)
+```
+
+Configuration 5 involves a declining SD.
+
+
+```{r}
+gradient_boost(mod_5)
+round(mod_5$beta, 3)
+round(mod_5$gamma, 3)
+```
+
+This time, the algorithm behaves poorly. The estimates are rather far from the true parameters. This, in turn, leads to high MSE.
+
+```{r}
+calc_MSE(beta_5, gamma_5, mod_5$beta, mod_5$gamma)
+```
+
+
+
+
+
+
+
+### Conclusions
+
+* The specified model must have a signal-noise ratio, that permits estimation.
+* Gamma-slope has to be positive. (Here, the package may be further developed.)
+
+## Large Model - Variable Selection
+
+[...]
+
+```{r}
+# initialize model-----------------------------------------------
+result <- init_large_model()
+mod_1 <- result$model
+X <- result$design
+y <- result$response
+fitted_loc <- result$fitted_response
+fitted_scale <- result$fitted_sd
+
+# check model via plotting --------------------------------------
+par(mfrow = c(4,3))
+for(i in 1:11) plot(X[,i], y, ylim = c(0,200))
+
+```
+
+No effect becomes clearly visible, since each individually is too small to have a substantial effect on the response.
+
+```{r}
+# check model via linear predictors ---------------------------------------------------------
+fitted_loc
+fitted_scale
+
+```
+
+Model estimation currently does not work.
+
+```{r}
+gradient_boost(mod_1, maxit = 1000, componentwise = TRUE, verbose = F)
+
+```
+Resulting parameter estimates are wrong. Almost no component become updated.
+```{r}
+mod_1$beta
+mod_1$gamma
+```
+
+
+[...]
+
+
+
+## Benchmark gamboostLSS
+
+[...]
+
+[...]
+
+[...]

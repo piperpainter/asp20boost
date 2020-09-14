@@ -2,13 +2,24 @@
 % Please edit documentation in R/model.R
 \name{LocationScaleRegressionBoost}
 \alias{LocationScaleRegressionBoost}
-\title{R6 class for performing either simple or generic componentwise
-boosting (CWB) on location-scale regression models.}
+\title{R6 Class for Specifying Location-Scale Regression Models}
+\usage{
+example_model <- LocationScaleRegression$new(formula, ...)
+}
 \description{
+Model obejcts created by this class may be estimated by the \code{gradient_boost} function.
 This model class builds upon and thus inherits the basic structure
 from the \code{LocationScaleRegression} model class of the \code{asp20model} package.
+Consequently, it shares similar syntax and structure. (Please  see the help
+page of that class \emph{Note: It would be nice to just link the vignette})
+}
+\details{
+It assumes a normally distributed response variable with
+one linear predictor eta_mu for the location (i.e. the mean) and one linear predictor
+eta_sigma for scale (i.e. the standard deviation). Scale is modeled by a log-link.
+}
+\examples{
 
-<<<<<<< HEAD
 ## ------------------------------------------------
 ## Method `LocationScaleRegressionBoost$gradients_loglik_mu`
 ## ------------------------------------------------
@@ -17,23 +28,13 @@ y <- rnorm(30)
 model <- LocationScaleRegression$new(y ~ 1)
 model$gradients_loglik_mu()
 a function using the gradient estimators to update parameters beta and gamma
-=======
-Consequently, it shares a similar syntax and structure with the former#' #'
-It assumes a normally distributed response variable with
-one linear predictor for the location (i.e. the mean) and one for the
-scale (i.e. the standard deviation). The linear predictors for the
-location and the scale are called Xβ and Zγ respectively. The scale
-uses a log link.
->>>>>>> c7d398a16300219106ec8c4c439860608afb3230
 }
-\keyword{internal}
 \section{Super class}{
 \code{\link[asp20model:LocationScaleRegression]{asp20model::LocationScaleRegression}} -> \code{LocationScaleRegressionBoost}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-<<<<<<< HEAD
 \item{\code{gradients_loglik_mu}}{Caclulates the unit-wise gradients of the loss-functions,
 which is the negative loglikelihood.}
 
@@ -47,24 +48,12 @@ which is the negative loglikelihood.}
 \item{\code{par_log}}{eee}
 
 \item{\code{plot}}{fff}
-=======
-\item{\code{`componentwiseLossGamma`}}{Calculates loss function for
-every component in scale-dimension \code{gamma} in case of CWB}
-
-\item{\code{`componentwiseLossBeta`}}{Calculates loss function for
-every component in location-dimension \code{beta} in case of CWB.}
-
-\item{\code{`bestFittingVariableGamma`}}{Calculates the actual update for \code{gamma}}
-
-\item{\code{`bestFittingVariableBeta`}}{Calculates the actual update for \code{beta}}
->>>>>>> c7d398a16300219106ec8c4c439860608afb3230
 }
 \if{html}{\out{</div>}}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
-<<<<<<< HEAD
 \item{\code{gradients_loglik_mu}}{Caclulates the unit-wise gradients of the loss-functions,
 which is the negative loglikelihood.}
 
@@ -72,24 +61,16 @@ which is the negative loglikelihood.}
 which is the negative loglikelihood.}
 
 \item{\code{update_parameters_conventional}}{ccc}
-=======
-\item{\code{`componentwiseLossGamma`}}{Calculates loss function for
-every component in scale-dimension \code{gamma} in case of CWB}
 
-\item{\code{`componentwiseLossBeta`}}{Calculates loss function for
-every component in location-dimension \code{beta} in case of CWB.}
+\item{\code{update_parameters_compwise}}{ddd}
 
-\item{\code{`bestFittingVariableGamma`}}{Calculates the actual update for \code{gamma}}
->>>>>>> c7d398a16300219106ec8c4c439860608afb3230
-
-\item{\code{`bestFittingVariableBeta`}}{Calculates the actual update for \code{beta}}
+\item{\code{plot}}{fff}
 }
 \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-<<<<<<< HEAD
 \item \href{#method-eta_mu}{\code{LocationScaleRegressionBoost$eta_mu()}}
 \item \href{#method-eta_sigma}{\code{LocationScaleRegressionBoost$eta_sigma()}}
 \item \href{#method-gradients_loglik_mu}{\code{LocationScaleRegressionBoost$gradients_loglik_mu()}}
@@ -97,42 +78,52 @@ every component in location-dimension \code{beta} in case of CWB.}
 \item \href{#method-update_parameters_conventional}{\code{LocationScaleRegressionBoost$update_parameters_conventional()}}
 \item \href{#method-update_parameters_compwise}{\code{LocationScaleRegressionBoost$update_parameters_compwise()}}
 \item \href{#method-plot}{\code{LocationScaleRegressionBoost$plot()}}
-=======
-\item \href{#method-new}{\code{LocationScaleRegressionBoost$new()}}
-\item \href{#method-setComponentwiseBoosting}{\code{LocationScaleRegressionBoost$setComponentwiseBoosting()}}
-\item \href{#method-coefficentUpdateBeta}{\code{LocationScaleRegressionBoost$coefficentUpdateBeta()}}
-\item \href{#method-coefficentUpdateGamma}{\code{LocationScaleRegressionBoost$coefficentUpdateGamma()}}
->>>>>>> c7d398a16300219106ec8c4c439860608afb3230
 \item \href{#method-clone}{\code{LocationScaleRegressionBoost$clone()}}
 }
 }
 \if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
+\out{<details ><summary>Inherited methods</summary>}
 \itemize{
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="grad_beta">}\href{../../asp20model/html/LocationScaleRegression.html#method-grad_beta}{\code{asp20model::LocationScaleRegression$grad_beta()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="grad_gamma">}\href{../../asp20model/html/LocationScaleRegression.html#method-grad_gamma}{\code{asp20model::LocationScaleRegression$grad_gamma()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="hess_beta">}\href{../../asp20model/html/LocationScaleRegression.html#method-hess_beta}{\code{asp20model::LocationScaleRegression$hess_beta()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="hess_gamma">}\href{../../asp20model/html/LocationScaleRegression.html#method-hess_gamma}{\code{asp20model::LocationScaleRegression$hess_gamma()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="initialize">}\href{../../asp20model/html/LocationScaleRegression.html#method-initialize}{\code{asp20model::LocationScaleRegression$initialize()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="loglik">}\href{../../asp20model/html/LocationScaleRegression.html#method-loglik}{\code{asp20model::LocationScaleRegression$loglik()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="resid">}\href{../../asp20model/html/LocationScaleRegression.html#method-resid}{\code{asp20model::LocationScaleRegression$resid()}}\out{</span>}
 }
 \out{</details>}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
+\if{html}{\out{<a id="method-eta_mu"></a>}}
+\if{latex}{\out{\hypertarget{method-eta_mu}{}}}
+\subsection{Method \code{eta_mu()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$new(
-  location,
-  scale = ~1,
-  data = environment(location),
-  ...
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$eta_mu()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-eta_sigma"></a>}}
+\if{latex}{\out{\hypertarget{method-eta_sigma}{}}}
+\subsection{Method \code{eta_sigma()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$eta_sigma()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-gradients_loglik_mu"></a>}}
+\if{latex}{\out{\hypertarget{method-gradients_loglik_mu}{}}}
+\subsection{Method \code{gradients_loglik_mu()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$gradients_loglik_mu()}\if{html}{\out{</div>}}
 }
 
 \subsection{Details}{
-Returns the loss - squared error of the partial deviance for each covariate of Beta
+Returns the unit-wise gradients of the loss function, which is the negative loglikelihood.
+}
 
-<<<<<<< HEAD
 \subsection{Returns}{
 a numeric vector nx1
 }
@@ -154,65 +145,44 @@ a function using the gradient estimators to update parameters beta and gamma
 \subsection{Method \code{gradients_loglik_sigma()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$gradients_loglik_sigma()}\if{html}{\out{</div>}}
-=======
-
-Returns the loss - squared error of the partial deviance for each
-covariate of Gamma
-}
-
-\subsection{Returns}{
-Vector of sum of squared errors for each covariate
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setComponentwiseBoosting"></a>}}
-\if{latex}{\out{\hypertarget{method-setComponentwiseBoosting}{}}}
-\subsection{Method \code{setComponentwiseBoosting()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$setComponentwiseBoosting(value)}\if{html}{\out{</div>}}
->>>>>>> c7d398a16300219106ec8c4c439860608afb3230
 }
 
 }
 \if{html}{\out{<hr>}}
-<<<<<<< HEAD
 \if{html}{\out{<a id="method-update_parameters_conventional"></a>}}
 \if{latex}{\out{\hypertarget{method-update_parameters_conventional}{}}}
 \subsection{Method \code{update_parameters_conventional()}}{
-=======
-\if{html}{\out{<a id="method-coefficentUpdateBeta"></a>}}
-\if{latex}{\out{\hypertarget{method-coefficentUpdateBeta}{}}}
-\subsection{Method \code{coefficentUpdateBeta()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$coefficentUpdateBeta()}\if{html}{\out{</div>}}
-}
-
-\subsection{Details}{
-Determines and returns the best variable for \code{beta} for
-componentwise boosting
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$update_parameters_conventional()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-A vector for \code{beta} with updated values on the best fitted covariate
+a numeric vector nx1
+a function using the gradient estimators to update parameters beta and gamma
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-coefficentUpdateGamma"></a>}}
-\if{latex}{\out{\hypertarget{method-coefficentUpdateGamma}{}}}
-\subsection{Method \code{coefficentUpdateGamma()}}{
->>>>>>> c7d398a16300219106ec8c4c439860608afb3230
+\if{html}{\out{<a id="method-update_parameters_compwise"></a>}}
+\if{latex}{\out{\hypertarget{method-update_parameters_compwise}{}}}
+\subsection{Method \code{update_parameters_compwise()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$coefficentUpdateGamma()}\if{html}{\out{</div>}}
-}
-
-\subsection{Details}{
-Determines and returns the best variable for \code{gamma} for
-componentwise boosting.
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$update_parameters_compwise()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-A vector for \code{gamma} with updated values on the best fitted covariate
+a numeric vector nx1
+enables plotting
+enables plotting
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plot"></a>}}
+\if{latex}{\out{\hypertarget{method-plot}{}}}
+\subsection{Method \code{plot()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$plot()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
