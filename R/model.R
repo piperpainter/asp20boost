@@ -8,7 +8,7 @@
 #' page of that class *Note: It would be nice to just link the vignette*)
 #'
 #' @usage
-#' example_model <- LocationScaleRegression$new(formula, ...)
+#' example_model <- LocationScaleRegressionBoost$new(formula, ...)
 #'
 #' @details
 #' It assumes a normally distributed response variable with
@@ -132,7 +132,7 @@ LocationScaleRegressionBoost <- R6Class(
     #' @return a numeric vector nx1
     #' @examples
     #' y <- rnorm(30)
-    #' model <- LocationScaleRegression$new(y ~ 1)
+    #' model <- LocationScaleRegressionBoost$new(y ~ 1)
     #' model$gradients_loglik_mu()
 
     gradients_loglik_mu = function() {
@@ -150,13 +150,13 @@ LocationScaleRegressionBoost <- R6Class(
 
 
     # helper functions for boosting conventional <-> compwise ----------------------------------
-    #' a function using the gradient estimators to update parameters beta and gamma
+    # a function using the gradient estimators to update parameters beta and gamma
     #' @return a numeric vector nx1
     update_parameters_conventional = function() {
       self$beta <- self$beta + self$stepsize_beta * private$gradient_estimators_mu()
       self$gamma <- self$gamma + self$stepsize_gamma * private$gradient_estimators_sigma()
     }, #possible naming: update parameters conventional
-    #' a function using the gradient estimators to update parameters beta and gamma
+    # a function using the gradient estimators to update parameters beta and gamma
     #' @return a numeric vector nx1
     update_parameters_compwise = function() {
 

@@ -5,8 +5,8 @@
 \alias{asp20boost}
 \title{Gradient Boosting for Location-Scale Regression Models}
 \usage{
-example_model <- LocationScaleRegressionBoost(formula, ...)
-gradient_boost(example_model, ...)
+model <- LocationScaleRegressionBoost(formula, ...)
+gradient_boost(model, ...)
 }
 \description{
 The package provides an R6-class \code{LocationScaleRegressionBoost} for model

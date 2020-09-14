@@ -4,8 +4,8 @@
 #' specification, and a function `gradient_boost` for boosting the specified model object.
 #'
 #' @usage
-#' example_model <- LocationScaleRegressionBoost(formula, ...)
-#' gradient_boost(example_model, ...)
+#' model <- LocationScaleRegressionBoost(formula, ...)
+#' gradient_boost(model, ...)
 #'
 #' @details
 #' This package resulted from a series of student projects. Thus, it is part of a
