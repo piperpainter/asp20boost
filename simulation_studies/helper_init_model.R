@@ -10,6 +10,14 @@ init_model <- function(beta, gamma, n) {
   y <- eta_mu(x) + rnorm(n, sd = exp(eta_sigma(x)))
 
   # create model object ---------------------------------------------
-  LocationScaleRegressionBoost$new(y ~ x, ~ x)
+  model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+
+  result_list <- list()
+  result_list$model <- model
+  result_list$covariate <- x
+  result_list$response <- y
+  result_list$fitted_response <- eta_mu
+  #result_list$fitted_sd <- exp(eta_sigma)
+  return(result_list)
 
 }
