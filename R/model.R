@@ -35,22 +35,33 @@ LocationScaleRegressionBoost <- R6Class(
 
   private = list(
 
+    X_HAT = numeric(),
+    X_HAT_componentwise = numeric(),
+    X_number_of_columns = numeric(),
+
+    Z_HAT = numeric(),
+    Z_HAT_componentwise = numeric(),
+    Z_number_of_columns = numeric(),
+
+
     # estimators (bj_hat) for location and scale,
     # conventional <-> componentwise --------------------------------------------------------
 
     gradient_estimators_mu = function() {
-      chol2inv(chol(crossprod(private$X, private$X))) %*% crossprod(private$X, self$gradients_loglik_mu())
+      private$X_HAT %*% crossprod(private$X, self$gradients_loglik_mu())
     },
     gradient_estimators_sigma = function() {
-      chol2inv(chol(crossprod(private$Z, private$Z))) %*% crossprod(private$Z, self$gradients_loglik_sigma())
+      private$Z_HAT %*% crossprod(private$Z, self$gradients_loglik_sigma())
     },
 
     gradient_estimators_mu_compwise = function() {
       number_of_cols <- ncol(private$X)
       result_list <- rep(NA, number_of_cols)
       for(i in 1:number_of_cols){
-        result_list[i] <- chol2inv(chol(crossprod(private$X[, i], private$X[, i]))) %*% crossprod(private$X[, i], self$gradients_loglik_mu())
-      }
+        #result_list[i] <- chol2inv(chol(crossprod(private$X[, i], private$X[, i]))) %*% crossprod(private$X[, i], self$gradients_loglik_mu())
+        result_list[i] <- private$X_HAT_componentwise[i] %*% crossprod(private$X[, i], self$gradients_loglik_mu())
+
+       }
       return(result_list)
     },
 
@@ -58,7 +69,9 @@ LocationScaleRegressionBoost <- R6Class(
       number_of_cols <- ncol(private$Z)
       result_list <- rep(NA, number_of_cols)
       for(i in 1:number_of_cols){
-        result_list[i] <- chol2inv(chol(crossprod(private$Z[, i], private$Z[, i]))) %*% crossprod(private$Z[, i], self$gradients_loglik_sigma())
+        #result_list[i] <- chol2inv(chol(crossprod(private$Z[, i], private$Z[, i]))) %*% crossprod(private$Z[, i], self$gradients_loglik_sigma())
+        result_list[i] <- private$Z_HAT_componentwise[i] %*% crossprod(private$Z[, i], self$gradients_loglik_sigma())
+
       }
       return(result_list)
     }
@@ -69,6 +82,41 @@ LocationScaleRegressionBoost <- R6Class(
   ),
 
   public = list(
+
+    #stepsize for boosting
+    stepsize_beta = numeric(),
+    stepsize_gamma = numeric(),
+
+    initialize = function(location,
+                          scale = ~1,
+                          data = environment(location),
+                          ...) {
+      #first init super class LocationScaleRegression
+      super$initialize(location, scale,data)
+
+      private$X_number_of_columns <- dim(private$X)[2]
+      private$Z_number_of_columns <- dim(private$Z)[2]
+
+
+      private$X_HAT <- chol2inv(chol(crossprod(private$X, private$X)))
+      private$Z_HAT <- chol2inv(chol(crossprod(private$Z, private$Z)))
+
+
+      #init componentwise Hat Matrix to improve computation time for X
+      for(n in 1:private$X_number_of_columns) {
+        predictor_colwise <- private$X[,n]
+        private$X_HAT_componentwise[n] <- chol2inv(chol(crossprod(predictor_colwise, predictor_colwise)))
+      }
+      #init componentwise Hat Matrix to improve computation time for Z
+      for(n in 1:private$Z_number_of_columns) {
+        predictor_colwise <- private$Z[,n]
+        private$Z_HAT_componentwise[n] <- chol2inv(chol(crossprod(predictor_colwise, predictor_colwise)))
+      }
+
+    },
+
+
+
 
     #for unit testing purposes
     eta_mu = function(){
@@ -105,8 +153,8 @@ LocationScaleRegressionBoost <- R6Class(
     #' a function using the gradient estimators to update parameters beta and gamma
     #' @return a numeric vector nx1
     update_parameters_conventional = function() {
-      self$beta <- self$beta + 0.01 * private$gradient_estimators_mu()
-      self$gamma <- self$gamma + 0.1 * private$gradient_estimators_sigma()
+      self$beta <- self$beta + self$stepsize_beta * private$gradient_estimators_mu()
+      self$gamma <- self$gamma + self$stepsize_gamma * private$gradient_estimators_sigma()
     }, #possible naming: update parameters conventional
     #' a function using the gradient estimators to update parameters beta and gamma
     #' @return a numeric vector nx1
@@ -134,8 +182,8 @@ LocationScaleRegressionBoost <- R6Class(
       update_vector_gamma <- rep(0, number_of_cols_Z)
       update_vector_gamma[least_loss_index_sigma] <-  private$gradient_estimators_sigma_compwise()[least_loss_index_sigma]
 
-      self$beta <- self$beta + 0.01 * update_vector_beta
-      self$gamma <- self$gamma + 0.1 * update_vector_gamma
+      self$beta <- self$beta + self$stepsize_beta * update_vector_beta
+      self$gamma <- self$gamma + self$stepsize_gamma * update_vector_gamma
     },
 
 
@@ -195,14 +243,25 @@ gradient_boost = function(model,
                           plot = FALSE) {
 
   model$par_log <- list()
+
+  #Init step size of model
+  model$stepsize_beta <- stepsize[1]
+  if(length(stepsize)>1)
+    model$stepsize_gamma <- stepsize[2]
+  else
+    model$stepsize_gamma <- stepsize[1]
+
   for(iter in 1:maxit) {
 
     if(componentwise == T) model$update_parameters_compwise()
     if(componentwise == F) model$update_parameters_conventional()
 
 
-    model$par_log[[iter]]<-c(model$beta, model$gamma)
-    if(plot == T) model$plot()
+    if(plot == T)
+      {
+      #Log parameters for plotting
+      model$par_log[[iter]]<-c(model$beta, model$gamma)
+      }
 
     if(verbose == T) {
       par_msg <- c(model$beta, model$gamma)
@@ -222,13 +281,14 @@ gradient_boost = function(model,
     }
 
   }
+  if(plot == T)
+  {
+    #plot logged parameters
+    model$plot()
+  }
 
   invisible(model)
 
 }
-
-
-
-
 
 
