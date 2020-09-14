@@ -161,7 +161,9 @@ This enables gradient boosting to address various kinds of situations.
 For location-scale regression, the negative log likelihood of the observed response is convenient.  
 
 \begin{equation}
-\text{loss} = -ll = -\frac{1}{2\pi\exp(\bm{Z}\bm{\gamma})^2}\times\exp(-\frac{\bm{u}^2}{2\exp(\bm{Z}\bm{\gamma})^2})
+ \begin{gathered} 
+  = \sum\log\sigma_i + \frac{1}{2} \sum \log 2\pi + \frac{1}{2}\sum\frac{y_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{\mu_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{-2y_i\mu_i}{\sigma_i^2} \\
+ \end{gathered}
 \end{equation}
 
 The unit-wise gradients of this loss function play a key role. These are different from the gradients supplied in the `asp20model package`. 
@@ -176,13 +178,6 @@ The relevant gradients for boosting are attained by partially deriving the loss 
 
 
 Deriving the negative log likelihood of the gaussian distribution by $\eta_{\mu_i}$ and $\eta_{\sigma_i}$ respectively yields the following gradients:
-
-\begin{equation}
- \begin{gathered}
-\text(BIG EQUATION HERE) \\
-\text(gradient calculation step)
- \end{gathered}
-\end{equation}
 
 
 Here we see, as mentioned above, that location gradients are equivalent to the variance adjusted residuals.
@@ -275,7 +270,73 @@ In this way i.e. by having parameter update restrictions combined with early sto
 
 # 3. Software Implementation
 
+## Asp20boost package
+The code of the `asp20boost` package consists of two major parts.
+The first is the R6 class `LocationScaleRegressionBoost`, which represents the location-scale regression model and includes some quantities (e.g. gradients) necessary for executing the boosting algorithm.
+The second part is `gradient_boost()`, a function specifically conceived  to execute the gradient boost algorithm upon a `LocationScaleRegressionBoost` object.
 
+It is important to emphasize that this package allows for the practical application of the concepts described in the „gradient boosting“and „componentwise boosting“ sections presented above. The concept of "residual boosting“ fulfilled an explanatory purpose and is not implemented implemented in the package.
+
+## `gradient_boost()` function
+
+It is easier to comprehend our code by considering first the  `gradient_boost()` function.
+It uses the quantities of the model class in order to perform the boosting algorithm.
+The principal argument is the `model` object followed by several optional specifiers.
+In each iteration of the algorithm, the function directly applies the third step of parameter updating by calling the public method update_parameters_*() of the model class. 
+Steps one and two, i.e.  gradient calculation and estimation, are performed by the model class object and explained in the next subsection.
+
+This function performs a prespecified number of 1000 iterations unless another quantity was specified by means of the `maxit`  argument in the `gradient_boost()` function. 
+After iterating, a  modified model object is returned instead of mere parameter values. 
+This includes, for example, the model formula, the log likelihood value and the desired parameter configuration after the execution of the algorithm.
+In each iteration $\bm{\beta}$ gets updated first followed by $\bm{\gamma}$.
+If `componentwise` is set to `TRUE`, the algorithm employs the public method `update_parameters_compwise()`, which performs additional calculations that `update_parameters_conventional()` does not.
+The functioning of these methods is explained in the following subsection where the `LocationScaleRegressionBoost` class is described.
+
+
+## `LocationScaleRegressionBoost` R6-Class
+
+The class builds upon the `LocationScaleRegression` class of the `asp20model` package [@R-asp20model].
+As already mentioned, this is the case due to the fact that `asp20boost` arose as a series of student projects aiming to solve a common problem building an implementation upon the `asp20model` package, specifically its `LocationScaleRegression` class. 
+
+We accomplish this by adding  a total of eight additional methods:
+    * `gradients_loglik_mu`
+    * `gradients_loglik_sigma`
+    * `gradient_estimators_mu`
+    * `gradient_estimators_sigma`
+    * `gradient_estimators_mu_compwise`
+    * `gradient_estimators_sigma_compwise`
+    * `update_parameters_conventional`
+    * `update_parameters_compwise`
+
+Two of the public methods are easy to comprehend: `gradients_loglik_mu()` and `gradients_loglik_sigma()` perform simply the first gradient-calculation step of each iteration by employing the gradient formulas derived theoretically in the last part. 
+
+*LEVIN: Confess our mistakes!*
+
+These two functions use residuals obtained from the `resid()` method and the estimates of the standard deviation obtained from  the  public field `fitted_scale`. 
+Both of these fields are inherited from the parental class `LocationScaleRegression`.
+As the calculated gradients may be possibly of interest, we allowed for external access by setting `gradients_loglik_mu()` and `gradients_loglik_sigma()`as a public methods.
+
+The four gradient estimator functions `gradient_estimators_*()`, in contrast, are private and can not be accessed via class-external functions, such as `gradient_boost()`.
+However, they are used in the calculations performed by two public methods `update_parameters_*()`.
+
+*LEVIN: update!*
+
+The private functions are called `gradient_estimators_*()` and perform the second step of gradient estimation.
+The functions with the suffix  *conventional* simply regress the location gradients on  location covariates and the scale gradients on scale covariates respectively. 
+The functions suffixed with *componentwise* return a list of gradient estimators  obtained by regressing the gradients on one particular component $\bm{x_j}$ or $\bm{z_k}$ of the respective design matrix $\bm{X}$ or $\bm{Z}$.
+
+The centerpiece of the boosting implementation is the update methods `update_parameters_conventional` and `update_parameters_compwise`.
+The *conventional* version merely adds the gradients estimators to the active fields $\bm{\beta}$ and $\bm{\gamma}$  adjusted by a learning rate of 0.1 for $\bm{\beta}$, and 0.01 for $\bm{\gamma}$.
+Additionally to this, the componentwise version further performs first the loss improvement calculation and then builds an update vector  consisting of zeros with exception of the best fitting component.
+Finally,  `update_parameters_compwise` performs the update.
+In both of its versions, the update method finally assigns new values to $\bm{\beta}$ and $\bm{\gamma}$. 
+
+These active fields are inherited from the `LocationScaleRegression` class of the `asp20model` package.
+Changing them induces a new model state of the `LocationScaleRegressionBoost` object.
+Hence, various fields become new values assigned.
+Among them are the fields `.resid`, `fitted_location` and `fitted_scale`, which are used to calculate residuals and finally gradients. 
+As a consequence, the public methods `gradients_loglik_mu` and `gradient_estimators_mu` of our `LocationScaleRegressionBoost` class also yield different values if called as well as their counterparts for $\sigma$ and componentwise estimation.
+This enables proceeding to the next iteration.
 
 
 # 4. Simulation Studies
