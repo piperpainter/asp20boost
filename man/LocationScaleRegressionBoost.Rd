@@ -4,7 +4,7 @@
 \alias{LocationScaleRegressionBoost}
 \title{R6 Class for Specifying Location-Scale Regression Models}
 \usage{
-example_model <- LocationScaleRegression$new(formula, ...)
+example_model <- LocationScaleRegressionBoost$new(formula, ...)
 }
 \description{
 Model obejcts created by this class may be estimated by the \code{gradient_boost} function.
@@ -25,9 +25,8 @@ eta_sigma for scale (i.e. the standard deviation). Scale is modeled by a log-lin
 ## ------------------------------------------------
 
 y <- rnorm(30)
-model <- LocationScaleRegression$new(y ~ 1)
+model <- LocationScaleRegressionBoost$new(y ~ 1)
 model$gradients_loglik_mu()
-a function using the gradient estimators to update parameters beta and gamma
 }
 \section{Super class}{
 \code{\link[asp20model:LocationScaleRegression]{asp20model::LocationScaleRegression}} -> \code{LocationScaleRegressionBoost}
@@ -71,6 +70,7 @@ which is the negative loglikelihood.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
+\item \href{#method-new}{\code{LocationScaleRegressionBoost$new()}}
 \item \href{#method-eta_mu}{\code{LocationScaleRegressionBoost$eta_mu()}}
 \item \href{#method-eta_sigma}{\code{LocationScaleRegressionBoost$eta_sigma()}}
 \item \href{#method-gradients_loglik_mu}{\code{LocationScaleRegressionBoost$gradients_loglik_mu()}}
@@ -82,17 +82,28 @@ which is the negative loglikelihood.}
 }
 }
 \if{html}{
-\out{<details ><summary>Inherited methods</summary>}
+\out{<details open ><summary>Inherited methods</summary>}
 \itemize{
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="grad_beta">}\href{../../asp20model/html/LocationScaleRegression.html#method-grad_beta}{\code{asp20model::LocationScaleRegression$grad_beta()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="grad_gamma">}\href{../../asp20model/html/LocationScaleRegression.html#method-grad_gamma}{\code{asp20model::LocationScaleRegression$grad_gamma()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="hess_beta">}\href{../../asp20model/html/LocationScaleRegression.html#method-hess_beta}{\code{asp20model::LocationScaleRegression$hess_beta()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="hess_gamma">}\href{../../asp20model/html/LocationScaleRegression.html#method-hess_gamma}{\code{asp20model::LocationScaleRegression$hess_gamma()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="initialize">}\href{../../asp20model/html/LocationScaleRegression.html#method-initialize}{\code{asp20model::LocationScaleRegression$initialize()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="loglik">}\href{../../asp20model/html/LocationScaleRegression.html#method-loglik}{\code{asp20model::LocationScaleRegression$loglik()}}\out{</span>}
 \item \out{<span class="pkg-link" data-pkg="asp20model" data-topic="LocationScaleRegression" data-id="resid">}\href{../../asp20model/html/LocationScaleRegression.html#method-resid}{\code{asp20model::LocationScaleRegression$resid()}}\out{</span>}
 }
 \out{</details>}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
+\subsection{Method \code{new()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$new(
+  location,
+  scale = ~1,
+  data = environment(location),
+  ...
+)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-eta_mu"></a>}}
@@ -130,9 +141,8 @@ a numeric vector nx1
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{y <- rnorm(30)
-model <- LocationScaleRegression$new(y ~ 1)
+model <- LocationScaleRegressionBoost$new(y ~ 1)
 model$gradients_loglik_mu()
-a function using the gradient estimators to update parameters beta and gamma
 }
 \if{html}{\out{</div>}}
 
@@ -158,7 +168,6 @@ a function using the gradient estimators to update parameters beta and gamma
 
 \subsection{Returns}{
 a numeric vector nx1
-a function using the gradient estimators to update parameters beta and gamma
 }
 }
 \if{html}{\out{<hr>}}

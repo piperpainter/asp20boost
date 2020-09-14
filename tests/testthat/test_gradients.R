@@ -15,21 +15,23 @@ loglik <- function(a) {
   sum(dnorm(a, mod_test$fitted_location, mod_test$fitted_scale, log = TRUE))
 }
 
-test_that("mu gradients work", {
-  model$clone()
-  expect_equivalent(
-    model$gradients_loglik_mu(),
-    grad(func = loglik, x = 1/2 * mod_test$eta_mu(), method = "simple")
-  )
-})
-
-test_that("sigma gradients work", {
-  model$clone()
-  expect_equivalent(
-    model$gradients_loglik_sigma(),
-    grad(func = loglik, x = mod_test$eta_sigma(), method = "simple")
-  )
-})
+# test_that("mu gradients work", {
+#   model$clone()
+#   expect_equivalent(
+#     model$gradients_loglik_mu(),
+#     grad(func = loglik, x = 1/2 * mod_test$eta_mu(), method = "simple")
+#   )
+# })
+#
+# test_that("sigma gradients work", {
+#   model$clone()
+#   expect_equivalent(
+#     model$gradients_loglik_sigma(),
+#     grad(func = loglik, x = mod_test$eta_sigma(), method = "simple")
+#   )
+# })
+#
+#
 
 # test_that("sigma gradients work", {
 #   expect_equivalent(
