@@ -2,4 +2,6 @@
 .Rhistory
 README.md
 seb_play.R
+.icloud
+.DS_Store
 inst/doc
