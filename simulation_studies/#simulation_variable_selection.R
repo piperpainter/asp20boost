@@ -41,7 +41,7 @@ y <- beta_vec[1] + beta_vec[2] * X[, 1] + beta_vec[3] * X[, 2] +  beta_vec[4] * 
 model <- LocationScaleRegressionBoost$new(
   y ~ X[, 1] + X[, 2] + X[, 3] + X[, 4] + X[, 5],
   ~ X[, 1] + X[, 2] + X[, 3] + X[, 4] + X[, 5])
-gradient_boost(model, stepsize = 0.001, maxit = 15000, abstol = 0.0001, verbose = FALSE)
+gradient_boost(model, stepsize = 0.001, maxit = 1000, abstol = 0.0001, verbose = FALSE)
 
 
 model$beta

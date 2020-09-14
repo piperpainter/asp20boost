@@ -10,16 +10,16 @@ gamma_1 <- c(-3,2)
 beta_2 <- c(0,1)
 gamma_2 <- c(-0.5,0)
 beta_3 <- c(0,1)
-gamma_3 <- c(-3,3)
+gamma_3 <- c(-0.3,0.3)
 beta_4 <- c(0,1)
-gamma_4 <- c(3,-3)
+gamma_4 <- c(0.3,-0.3)
 
 
-
-mod_1 <- init_model(beta_1, gamma_1, 1000)
-plot_model(beta_1, gamma_1, 1000)
-gradient_boost(mod_1)
-calc_MSE(beta_1, gamma_1, mod_1$beta, mod_1$gamma)
+#
+# mod_1 <- init_model(beta_1, gamma_1, 1000)
+# plot_model(beta_1, gamma_1, 1000)
+# gradient_boost(mod_1)
+# calc_MSE(beta_1, gamma_1, mod_1$beta, mod_1$gamma)
 
 
 # mod_2 <- init_model(beta_2, gamma_2, 1000)
@@ -35,11 +35,11 @@ calc_MSE(beta_1, gamma_1, mod_1$beta, mod_1$gamma)
 # mod_3$gamma
 
 
-# mod_4 <- init_model(beta_4, gamma_4, 1000)
-# plot_model(beta_4, gamma_4, 1000)
-# gradient_boost(mod_4)
-# mod_4$beta
-# mod_4$gamma
+mod_4 <- init_model(beta_4, gamma_4, 1000)$model
+plot_model(beta_4, gamma_4, 1000)
+gradient_boost(mod_4)
+mod_4$beta
+mod_4$gamma
 
 
 

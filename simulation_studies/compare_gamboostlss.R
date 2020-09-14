@@ -1,4 +1,5 @@
 library(asp20boost)
+library(gamboostLSS)
 
 # set true model parameters
 beta_0  <- 0
@@ -22,7 +23,7 @@ head(xy_df)
 
 # estimate data by boosting ------------
 mod_1 <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
-gradient_boost(model, maxit = 1000)
+gradient_boost(mod_1, maxit = 1000)
 
 
 # estimate with external package --------
