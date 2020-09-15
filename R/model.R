@@ -19,10 +19,10 @@
 #' which is the negative loglikelihood.
 #' @field gradients_loglik_sigma Caclulates the unit-wise gradients of the loss-functions,
 #' which is the negative loglikelihood.
- #' @field update_parameters_conventional ccc
-#' @field update_parameters_compwise ddd
-#' @field par_log eee
-#' @field plot fff
+#' @field update_parameters_conventional Adds the gradients estimators to the active fields $\bm{\beta}$ and $\bm{\gamma}$ multiplied by the defined stepsize for $\bm{\beta} $and $\bm{\gamma}$.
+#' @field update_parameters_compwise Adds update vector to the active fields $\bm{\beta}$ and $\bm{\gamma by first performing the loss improvement calculation and then building an update vector  consisting of zeros with exception of the best fitting component gradient multiplied by the defined stepsize.
+#' @field par_log Stores parameter values for each iteration to use it in the plotting function
+#' @field plot Plots the stored parameter values of each iteration by accessing the par_log public field
 #'
 # #' @inheritSection asp20model::LocationScaleRegression Section description
 #'
