@@ -1,22 +1,29 @@
 ---
 title: "ASP20 Boost"
-date: "`r format(Sys.time(), '%d %B %Y')`"
-output:
-  pdf_document:
-    keep_tex: true
-    template: null
-    toc: false
-    toc_depth: 2
-    includes:
-      in_header: preamble.tex
-      before_body: frontpage.tex
-documentclass: report
-geometry: left=4cm, right=3cm, top=2.5cm, bottom=2.5cm
-lof: false
-lot: false
 bibliography:
 - citavi.bib
 - packages.bib
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: no
+    toc_depth: '2'
+  pdf_document:
+    includes:
+      before_body: frontpage.tex
+      in_header: preamble.tex
+    keep_tex: yes
+    template: null
+    toc: no
+    toc_depth: 2
+  word_document:
+    toc: no
+    toc_depth: '2'
+geometry: left=4cm, right=3cm, top=2.5cm, bottom=2.5cm
+lof: no
+lot: no
+documentclass: report
 biblio-style: apalike
 vignette: |
   %\VignetteIndexEntry{ASP20 Boost} %\VignetteEngine{knitr::rmarkdown} %\VignetteEncoding{UTF-8}
@@ -261,9 +268,9 @@ This means that only one component of each parameter vector $\bm{\beta}$ and $\b
 
 With this update restriction some components may become updated quite late in the progression of the algorithm.
 This is the case when the particular component does not yield high improvements of model fit, which in turn reflects that this component, or the predictive variable,  has a rather small effect on the response.
-The algorithm is not executed until convergence of all parameter components but stopped after a predefined number of iterations `maxit`.
+The algorithm is not executed until convergence of all parameter components, but stopped after a predefined number of iterations `maxit`.
 Hence it could be the case, that covariates with small effect sizes do not become updated at all and remain zero after the componentwise gradient-boost algorithm runs completely.
-If this is the case, such variables will be drop out of the model.
+If this is the case, such variables will be droped out of the model.
 In this way i.e. by having parameter update restrictions combined with early stopping  implicit variable selection is achieved.
 
 
@@ -275,13 +282,13 @@ The code of the `asp20boost` package consists of two major parts.
 The first is the R6 class `LocationScaleRegressionBoost`, which represents the location-scale regression model and includes some quantities (e.g. gradients) necessary for executing the boosting algorithm.
 The second part is `gradient_boost()`, a function specifically conceived  to execute the gradient boost algorithm upon a `LocationScaleRegressionBoost` object.
 
-It is important to emphasize that this package allows for the practical application of the concepts described in the „gradient boosting“and „componentwise boosting“ sections presented above. The concept of "residual boosting“ fulfilled an explanatory purpose and is not implemented implemented in the package.
+It is important to emphasize that this package allows for the practical application of the concepts described in the „gradient boosting“and „componentwise boosting“ sections presented above. The concept of "residual boosting“ fulfilled an explanatory purpose and is not implemented in the package.
 
 ## `gradient_boost()` function
 
 It is easier to comprehend our code by considering first the  `gradient_boost()` function.
 It uses the quantities of the model class in order to perform the boosting algorithm.
-The principal argument is the `model` object followed by several optional specifiers.
+The principal argument is the `model` `LocationScaleRegressionBoost` object followed by several optional specifiers.
 In each iteration of the algorithm, the function directly applies the third step of parameter updating by calling the public method update_parameters_*() of the model class. 
 Steps one and two, i.e.  gradient calculation and estimation, are performed by the model class object and explained in the next subsection.
 
@@ -295,7 +302,7 @@ The functioning of these methods is explained in the following subsection where 
 
 ## `LocationScaleRegressionBoost` R6-Class
 
-The class builds upon the `LocationScaleRegression` class of the `asp20model` package [@R-asp20model].
+The class extends the `LocationScaleRegression` class of the `asp20model` package [@R-asp20model].
 As already mentioned, this is the case due to the fact that `asp20boost` arose as a series of student projects aiming to solve a common problem building an implementation upon the `asp20model` package, specifically its `LocationScaleRegression` class. 
 
 We accomplish this by adding  a total of eight additional methods:
@@ -327,7 +334,7 @@ The functions with the suffix  *conventional* simply regress the location gradie
 The functions suffixed with *componentwise* return a list of gradient estimators  obtained by regressing the gradients on one particular component $\bm{x_j}$ or $\bm{z_k}$ of the respective design matrix $\bm{X}$ or $\bm{Z}$.
 
 The centerpiece of the boosting implementation is the update methods `update_parameters_conventional` and `update_parameters_compwise`.
-The *conventional* version merely adds the gradients estimators to the active fields $\bm{\beta}$ and $\bm{\gamma}$  adjusted by a learning rate of 0.1 for $\bm{\beta}$, and 0.01 for $\bm{\gamma}$.
+The *conventional* version merely adds the gradients estimators to the active fields $\bm{\beta}$ and $\bm{\gamma}$  multiplied by the defined stepsize for $\bm{\beta}$, and for $\bm{\gamma}$. The `stepsize` parameter is set by default to 0.01 for $\bm{\beta}$, and 0.1 for $\bm{\gamma}$.
 Additionally to this, the componentwise version further performs first the loss improvement calculation and then builds an update vector  consisting of zeros with exception of the best fitting component.
 Finally,  `update_parameters_compwise` performs the update.
 In both of its versions, the update method finally assigns new values to $\bm{\beta}$ and $\bm{\gamma}$. 
@@ -339,21 +346,9 @@ Among them are the fields `.resid`, `fitted_location` and `fitted_scale`, which 
 As a consequence, the public methods `gradients_loglik_mu` and `gradient_estimators_mu` of our `LocationScaleRegressionBoost` class also yield different values if called as well as their counterparts for $\sigma$ and componentwise estimation.
 This enables proceeding to the next iteration.
 
-
-
-*Does this relates to the last paragraph?*
-This leads to the final implementation which consists of three main functions: `gradient_boost`, `update_parameters_compwise`, `update_parameters_conventional`.
-
-  * `gradient_boost` - provides the boosting functionality for the model by doing `stepwise` calculations of the update parameters. Depending on the selected boosting method, the `update_parameters_compwise` or `update_parameters_conventional` function is called.
-  
-  * `update_parameters_compwise` - updates the beta and gamma parameter which yields to the highest improvements of the model fit, reference to ´Componentwise boosting ´ section for more information
-  
-  * `update_parameters_conventional` - updates the beta and gamma parameters by the gradient estimators with respect to the predefined `stepsize`
-
-
 ## User Interface by example
 
-First define the model by generating sample data and defining explanatory variables for the standard deviation of the response variable. After the definition `gradient_boost` will iterate over the model and update the parameters at each step depending on the selected method. The function parameter componentwise will instruct the model to use componentwise boosting if set to TRUE. Depending on the sample data a custom `stepsize` for beta and gamma might be useful, which can be set using the `stepsize` parameter by using a vector containing the `stepsize` ($\bm{beta}$, $\bm{\gamma}$).
+First we define the model by generating sample data and defining explanatory variables for the standard deviation of the response variable. After the definition `gradient_boost` will iterate over the model and update the parameters at each step, depending on the selected method. The function parameter componentwise will instruct the model to use componentwise boosting if set to TRUE. Depending on the sample data a custom `stepsize` for beta and gamma might be useful, which can be set using the `stepsize` parameter by using a vector containing the `stepsize` for $\bm{\beta}$ and $\bm{\gamma}$.
 
 ```{r, cache = TRUE}
 set.seed(12345)
@@ -367,7 +362,7 @@ gradient_boost(model,
                componentwise = TRUE)
 
 ```
-To evaluate the parameter changes throughout the iterations, enable plotting by setting the parameter `plot=TRUE`.
+To evaluate the parameter changes throughout the iterations, plotting of the parameter changes can be enabled by setting the parameter `plot` on TRUE.
 
 ```{r, cache = TRUE}
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
@@ -404,8 +399,19 @@ message("Gamma parameters:")
 model$gamma
 ```
 
+The verbose mode for further details on each iteration can be enabled by setting the `verbose` parameter to TRUE:
+```{r}
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model, maxit = 3, verbose = TRUE)
+```
 
-
+In order to run the model with the conventional boosting algorithm set the `componentwise` parameter to FALSE, which will result in an update of all parameters at once as outlined in the _gradient boosting_ section.
+```{r}
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model,
+               stepsize = c(0.01, 0.1), 
+               componentwise = FALSE, maxit = 100, plot = TRUE)
+```
 
 
 
