@@ -394,7 +394,7 @@ Respective to the old loss function value, the highest loss-improvement is deter
 
 To implement a boosting algorithm we constructed the function `gradient_boost` as a part of our R6-Class `LocationScaleRegressionBoost`, which  directly builds upon the `LocationScaleRegression` R6 class of the `asp20model`package set at our disposal for this course and this purpose specifically [@R-asp20model].   
 
-In the current version of the `asp20boost`-package, the boosting algorithm is already implemented in order to allow for componentwise boosting, which will be explained in part 4. 
+The current version of the `asp20boost`-package, the boosting algorithm is implemented in order to allow for simple and componentwise boosting, which will be explained in part 4. 
 
 To further provide clarity, accountability and understanding during to our development process we describe briefly our first implementation of an ordinary boosting algorithm.
 This isn't visible in our code anymore.
@@ -411,14 +411,68 @@ To calculate this, our code makes use of the `resid()`-function, but this time p
 
 This simple implementation of a boosting algorithm for location and scale served the code-basis or "skeleton" for our package and can be thought of as the first milestone of this project. 
 
-We are in the process of reconsidering the design of this implementation.
-Other design possibilities are the following:
+This lead to the final implemtation which consists of three main functions: `gradient_boost`, `update_parameters_compwise`, `update_parameters_conventional`.
 
-* Create public fields for the heavily used score-function values.
-* Move the calculation of componentwise losses to an external function.
-* Harmonize boosting and componentwise boosting into one external function, determining the mode of operation by an argument `componentwise = TRUE`.
+  * `gradient_boost` - provides the boosting functionality for the model by doing stepwise calculations of the update parmeters. Depending on the selected boosting method, the `update_parameters_compwise` or `update_parameters_conventional` function is called.
+  
+  * `update_parameters_compwise` - updates the beta and gamma parameter which yields to the highest improvements of the model fit, reference to ´Componentwise boosting ´ section for more information
+  
+  * `update_parameters_conventional` - updates the beta and gamma parameters by the gradient estimators with resprect to the predefined stepsize
 
-Another conceptual questions that comes up is if the best loss-improvement may be indicated by the already existing gradients, and hence there is no need for extra calculation.
+
+## User Interface by example
+First define the model by generating sample data and defining explanatory variables for the standard deviation of the response variable. After the definition `gradient_boost` will iterate over the model and update the parameters at each step depending on the selected method. The function parameter componentwise will instruct the model to use componentwise boosting if set to TRUE. Depending on the sample data a custom stepsize for beta and gamma might be usefull, which can be set using the stepsize parmeter by using a vector containing the stepsize (beta, gamma).
+
+```{r}
+set.seed(12345)
+n <- 500
+x <- runif(n)
+y <- x + rnorm(n, sd = exp(-3 + 2 * x))
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model,
+               stepsize = c(0.01, 0.1), 
+               maxit = 1000, 
+               componentwise = TRUE)
+
+```
+To evaluate the parameter changes throughout the iterations, enable plotting by setting the parameter plot=TRUE.
+
+```{r}
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model,
+               stepsize = c(0.01, 0.1), 
+               componentwise = TRUE, plot = TRUE)
+```
+The number of iterations can be limited by specifing the maxit parameter
+```{r}
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model,
+               stepsize = c(0.01, 0.1), 
+               componentwise = TRUE, maxit = 100, plot = TRUE)
+```
+
+
+
+
+Parameter vectors of gamma and beta can be obtained by accessing the $\beta$ and $\gamma$ fields
+```{r}
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+message("Initial Beta parameters:")
+model$beta
+message("Initial Gamma parameters:")
+model$gamma
+gradient_boost(model,
+               stepsize = c(0.01, 0.1), 
+               maxit = 1000, 
+               componentwise = TRUE, plot = FALSE)
+message("Beta parameters:")
+model$beta
+message("Gamma parameters:")
+model$gamma
+```
+
+
+
 
 
 # 4. Simulation Studies
