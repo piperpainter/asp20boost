@@ -25,20 +25,21 @@ lof: no
 lot: no
 documentclass: report
 biblio-style: apalike
-vignette: |
-  %\VignetteIndexEntry{ASP20 Boost} %\VignetteEngine{knitr::rmarkdown} %\VignetteEncoding{UTF-8}
+vignette: >
+  %\VignetteIndexEntry{ASP20 Boost}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown} 
 ---
 
 ```{r setup, include=FALSE}
 library(asp20boost)
 knitr::opts_chunk$set(echo = TRUE)
-
 ``` 
 
 ```{r pack tex, include=FALSE}
 # automatically create a bib database for R packages
 knitr::write_bib(c(
-  .packages(), 'R6', 'knitr', 'rmarkdown', 'asp20model', 'gamboostLSS','mboost', 'tidyverse'  
+  .packages(), 'R6', 'knitr', 'rmarkdown', 'asp20model', 'gamboostLSS','mboost', 'tidyverse', 'microbenchmark'   
 ), 'packages.bib')
 ```
 
@@ -360,7 +361,7 @@ After the definition *what definition?* `gradient_boost` will iterate over the m
 The function `update_parameter_componentwise` will instruct the model to use componentwise boosting if set to `TRUE`. 
 Depending on the sample data, a custom step size for $\bm{\beta}$ and $\bm{\gamma}$ might be useful, which can be set by means of the `stepsize` parameter imputing a vector *what dimensions should this vector have?* containing the desired step size for $\bm{\beta}$ and $\bm{\gamma}$ respectively.
 
-```{r cache=TRUE}
+```{r, cache=TRUE}
 set.seed(12345)
 n <- 500
 x <- runif(n)
@@ -376,7 +377,7 @@ gradient_boost(model,
 To evaluate the parameter changes throughout the iterations, plotting them can be enabled by setting `plot = TRUE`.
 See #1. 
 
-```{r pl parm, cache=TRUE}
+```{r pl parm, cache=TRUE, fig.cap = ""}
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
 gradient_boost(model,
                stepsize = c(0.01, 0.1), 
@@ -386,7 +387,7 @@ gradient_boost(model,
 The number of iterations can be limited by specifying the desired value in the `maxit` parameter.
 For example, for 100 iterations (see #2): 
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, fig.cap = ""}
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
 gradient_boost(model,
                stepsize = c(0.01, 0.1), 
@@ -418,7 +419,7 @@ model$gamma # 3.
 The verbose mode for further details on each iteration can be enabled by setting `verbose = TRUE`.
 See "#4".  
 
-```{r}
+```{r, cache=TRUE}
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
 gradient_boost(model, maxit = 3, verbose = TRUE) # 4. 
 ```
@@ -430,7 +431,7 @@ This was previously described  in section 2.2.2.
 
 *Didn't we state above that we didn't implement conventional boosting but just explained it for the sake of building an argument?*
 
-```{r}
+```{r, cache=TRUE, fig.cap = ""}
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
 gradient_boost(model,
                stepsize = c(0.01, 0.1), 
@@ -441,9 +442,304 @@ gradient_boost(model,
 
 # 4. Simulation Studies
 
+In this part we design and perform a simulation study in order to demonstrate functionality of the implemented boosting algorithm. 
+For this, we first employ models with two location and scale parameters each, and show basic functionality. 
+Second, validity of the variable selection features is demonstrated by using location and scale parameters with up to 50 components.
+Lastly, we compare our algorithm with the one implemented in the `gamboostLSS` package. *really?*
+
+```{r setting, cache=TRUE}
+rm(list=ls())
+options(scipen=999)
+source("../simulation_studies/helper_plot_model.R")
+source("../simulation_studies/helper_init_model.R")
+source("../simulation_studies/helper_calc_mse.R")
+source("../simulation_studies/helper_init_large_model.R")
+library(asp20boost)
+library(gamboostLSS)
+library(microbenchmark)
+```
+
+## Two-dimesional Case
+
+The goal in this first part is to demonstrate that the algorithm finds correct estimates for sensible choices of $\bm{\beta}$ and $\bm{\gamma}$.
+We use the following 4 different parameter configurations to explore location-scale regression model characteristics.
+
+```{r ,include=FALSE, echo=FALSE, cache=TRUE}
+# config 1 ----------------------
+beta_1 <- c(0,1)
+gamma_1 <- c(-3,2)
+
+# config 2 ----------------------
+beta_2 <- c(2,2)
+gamma_2 <- c(2,2)
+
+# config 3 ----------------------
+beta_3 <- c(0,1)
+gamma_3 <- c(-1,-0.3)
+
+# config 4 ----------------------
+beta_4 <- c(0,15)
+gamma_4 <- c(1,-1)
+```
+
+
+```{r, cache=TRUE}
+set.seed(1337)
+mod_1 <- init_model(beta_1, gamma_1, 1000)$model
+gradient_boost(mod_1)
+mod_2 <- init_model(beta_2, gamma_2, 1000)$model
+gradient_boost(mod_2)
+mod_3 <- init_model(beta_3, gamma_3, 1000)$model
+gradient_boost(mod_3)
+mod_4 <- init_model(beta_4, gamma_4, 1000)$model
+gradient_boost(mod_4)
+```
+
+
+```{r, cache=TRUE, fig.height = 8, fig.width = 11}
+par(mfrow = c(2,2))
+plot_model(beta_1, gamma_1, 1000, "Config 1")
+plot_model(beta_2, gamma_2, 1000, "Config 2")
+plot_model(beta_3, gamma_3, 1000, "Config 3")
+plot_model(beta_4, gamma_4, 1000, "Config 4")
+```
+
+```{r echo=FALSE, cache=TRUE}
+# We need output. IMPORTANT 
+
+result_df <- data.frame("Config" = c(1,1,2,2,3,3,4,4),
+                        "beta_true" = c(beta_1, beta_2, beta_3, beta_4),
+                        "beta est." = c(round(mod_1$beta, 3), round(mod_2$beta, 3), round(mod_3$beta, 3), round(mod_4$beta, 3)),
+                        "gamma_true" = c(gamma_1, gamma_2, gamma_3, gamma_4),
+                        "gamma est." = c(round(mod_1$gamma, 3), round(mod_2$gamma, 3), round(mod_3$gamma, 3), round(mod_4$gamma, 3))
+                        )
+result_df
+```
+
+
+### Evaluation Configuration 1
+
+Values: $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-3,2)'$
+
+This parameter configuration is equivalent to the base example case of the `asp20model` package. 
+As already mentioned, heteroskedasticity is present, as indicated visually by the funnel shape of the scatter plot.
+The solid black line represents the true response mean, while the dashed lines represent the true upwards and downwards standard deviations from this mean.
+The red arrow indicates the standard deviation at the point $x = 1$ i.e. the upper limit of covariate values, since covariates are designed to be on the unit interval.
+For cases with increasing scale, the red arrow hence indicates maximum standard deviation of the response.
+The blue arrow depicts the slope of the location parameter vector $\bm{\beta_1}$. 
+The ratio of those two quantities is essential for the estimability of the model. 
+Here, the blue arrow is dominant indicating that the model may be well estimated. 
+Estimates are displayed in the table above. 
+We see that both $\bm{\beta}hat$ and $\hat{\bm{\gamma}}$ estimates are close to the true parameter vectors $\bm{\beta}$ and $\bm{\gamma}$.
+
+### Evaluation Configuration 2
+
+Values: $\bm{\beta} = (2,2)'$ and $\bm{\gamma} = (2,2)'$
+
+
+Configuration 2 is a somewhat naive parameter configuration where all parameters are set to value $2$. 
+Estimating this model does not yield valid results.
+The `gradient_boost()` function runs into numerical problems.
+To understand why this happens, we need to understand the model characteristics resulting from parameter configuration `2-2-2-2`.
+Here, the red arrow shows a large size, while the blue arrow is hardly visible. 
+This happens because of the huge standard deviations present in response $y$ that concealing the changes in the mean $\bar{y}$. 
+In fact, the standard deviation at $x = 1$ is $exp(2+2) = 54.60$.
+In contrast, the true response mean values range from $0$ to $2$.
+The change in response location (the signal), indicated by the blue arrow, perishes *stirbt?* due to the high amount of noise caused by the high $\bm{\gamma}$ parameters. 
+Thus, a signal-noise ratio results that is impossible to estimate. 
+Values for parameters $\bm{\gamma}$ need to be chosen sensibly for simulating data. 
+Nevertheless, this is no straight-forward task, since the effect of $\bm{\gamma}$ on the response standard deviation is not linear but exponential. 
+To check this *check the exponentiality?* in the two-dimensional case, the arrows in the model plot may be of help.
+
+
+#### Evaluation Configuration 3
+
+Values: $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-1,-0.3)'$
+
+
+Configuration 3, in turn, yields reasonable estimates.
+It contains a negative $\bm{\gamma}$ slope leading to decreasing response standard deviations.
+This can be observed by the funnel shape of the plot pointing in the opposite direction as before.
+
+It may be of interest to check if estimates lie closer to the true parameters relative to  e.g. configuration 1.
+To do this, we measure the gap between true values and estimates by the mean squared error (MSE).
+This enables comparison of configurations 1 and 3.
+
+```{r, cache=TRUE}
+
+mse_1 <- calc_MSE(beta_1, gamma_1, mod_1$beta, mod_1$gamma)
+mse_3 <- calc_MSE(beta_3, gamma_3, mod_3$beta, mod_3$gamma)
+cbind("config 1" = mse_1,
+      "config_3" = mse_3)
+```
+
+Configuration 1 leads to smaller MSE *Don't we speak here of config 3? This conclusion is too lonely here*. 
+This indicates a better performance in this  configuration.
+
+#### Evaluation Configuration 4
+
+Values: $\bm{\beta} = (0,15)'$ and $\bm{\gamma} = (1,-1)'$
+
+In configuration 4, we again included both a negative slope for $\bm{\gamma}$  and a very high slope $\bm{\beta}$.
+The idea is to ensure a very good signal-noise ratio to guarantee a  good model fit measured by a low MSE.
+Contrary to our expectations, the algorithm performs poorly for this parameter configuration.
+
+```{r, cache=TRUE}
+mse_4 <- calc_MSE(beta_4, gamma_4, mod_4$beta, mod_4$gamma)
+cbind("config 1" = mse_1,
+      "config_3" = mse_3,
+      "config 4" = mse_4)
+```
+
+The bad model fit is due to the fact that the location slope is highly underestimated.
+
+
+### Conclusions
+
+The observed two-dimensional cases let us conclude that not every arbitrary parameter configuration is estimable by the implemented `gradient_boost()` algorithm. 
+A first insight is that signal-noise ratio needs to be sufficiently high in order to prevent that the location effect gets concealed by inflated standard deviations. 
+Regarding the finding of configuration 4, we offer several explanations:
+
+  * Further considerations to  simulating data sensibly need to be taken,  which we were not yet able to work out.
+  * Our algorithm does not reliably yield robust results if negative $\bm{\gamma}$ slopes are included.
+  * Our algorithm runs into problems if the signal is too strong compared to noise.
+
+
+## Large Model - Variable Selection in the multidimensional case
+
+In this part we demonstrate how the `gradient_boost()` function performs variable selection.
+We have a look at three large model configurations.
+Configuration 5 present 6-dimensional parameter setting.
+In configuration 6 $\bm{\beta}$ and $\bm{\gamma}$ are of length 11, while in configuration 7 they contain 51 components.
+The parameter vectors are created randomly. 
+Then some components are set to 0. 
+This results in the configurations displayed below.
+In order to ensure a good signal-noise ratio, to creation of random parameter is restricted, as explained below.
+
+```{r echo=FALSE, cache=TRUE}
+# Only output
+set.seed(1337)
+# initialize models --------------------------------------------------------------
+init_5 <- init_large_model(beta_range = c(5,10),
+                           gamma_range = c(0.5,1),
+                           dim_param = 5,
+                           int_gamma = -0.2,
+                           n = 100)
+init_6 <- init_large_model(beta_range = c(3,6),
+                           gamma_range = c(0.2,0.8),
+                           dim_param = 10,
+                           int_gamma = -0.2,
+                           n = 100)
+init_7 <- init_large_model(beta_range = c(5,10),
+                           gamma_range = c(0.01,0.08),
+                           dim_param = 50,
+                           int_gamma = 0,
+                           n = 100)
+mod_5 <- init_5$model
+mod_6 <- init_6$model
+mod_7 <- init_7$model
+
+# estimate models -----------------------------------------------------------------
+gradient_boost(mod_5, stepsize = c(0.1,0.001), maxit = 1000, componentwise = TRUE)
+gradient_boost(mod_6, stepsize = c(0.1,0.01), maxit = 1000, componentwise = TRUE)
+gradient_boost(mod_7, stepsize = c(0.1,0.01), maxit = 1000, componentwise = TRUE)
+
+```
+
+```{r echo=FALSE, cache=TRUE}
+# only output
+# Configuration 5
+cbind(beta_true = init_5$beta, 
+      beta_est = round(mod_5$beta, 3),
+      gamma_true = init_5$gamma,
+      gamma_est = round(mod_5$gamma, 3)
+)
+```
+
+```{r echo=FALSE, cache=TRUE}
+#only output
+# Configuration 6
+cbind(beta_true = init_6$beta, 
+      beta_est = round(mod_6$beta, 3),
+      gamma_true = init_6$gamma,
+      gamma_est = round(mod_6$gamma, 3)
+)
+```
+
+### Configuration 5
+
+As mentioned above, there are restrictions on parameter creation since not every possible parameter configuration leads to estimable models, as we have seen in the two-dimensional case.
+In the multidimensional case, the following  problem remains: if $\bm{\gamma}$ parameters add up to high values, the resulting simulated response has huge standard deviation. 
+This leads to the concealing of the location effects.
+Checking for well balanced signal-noise ratio remains to be done in the multidimensional case as well.
+Furthermore, plotting is hardly an option, as dimensions increase.
+Therefore we check using another method i.e. we look at the distributions of true response means and true response standard deviations.
+
+```{r, cache=TRUE}
+par(mfrow=c(2,1))
+hist(init_5$fitted_response, breaks = 25, main = "eta_mu")
+hist(init_5$fitted_sd, breaks = 25, main = "exp_eta_sigma")
+```
+
+Location predictors take values between 8 and 22 with a maximum of 15. 
+In contrast, the highest response- standard deviation is 4, while most values are at about 2.5 and lower. 
+The resulting response variation should be both small enough to not conceal the location effects and big enough to be estimated.
+
+In configuration 5, the algorithm correctly depicts which effects exists on the location response *location response oder response location?* i.e. it finds the non-zero elements of $\bm{\beta}$.
+For the scale estimate $\bm{\gamma}_hat$ too many parameters are chosen since two zero elements of the true parameter $\bm{\gamma}$ are assigned non-zero values by the estimate $\hat{\bm{\gamma}}$.
+The estimated effect sizes differ considerably higher from the true values relative the two-dimensional case already presented.  This results in a higher MSE. 
+
+```{r, cache=TRUE}
+mse_5 <- calc_MSE(init_5$beta, init_5$gamma, mod_5$beta, mod_5$gamma)
+cbind("config 1" = mse_1,
+      "config_3" = mse_3,
+      "config 4" = mse_4,
+      "config_5" = mse_5)
+```
 
 
 
+### Configuration 6
+
+In this case, we face a 10-dimensional configuration.
+We get the following distributions for the mean and the standard deviation respectively. 
+
+```{r, cache = TRUE, fig.cap = ""}
+par(mfrow=c(2,1))
+hist(init_6$fitted_response, breaks = 25, main = "eta_mu")
+hist(init_6$fitted_sd, breaks = 25, main = "exp_eta_sigma")
+```
+
+For $\bm{\beta}$ the algorithm chose 1 *what?* too few.
+For $\bm{\gamma}$ entries 1-3 are chosen correctly.
+Then the algorithm yields errors.
+Entry 4 is chosen, while in fact being zero.
+Entry 5 is not chosen even when an effect in the true model exists. 
+
+
+### Configuration 7
+
+When scaling the parameter dimension up to 51 variables, the algorithm runs into a critical problem: all slope estimates are zero.
+
+```{r, cache = TRUE}
+round(mod_7$beta, 3)
+round(mod_7$gamma, 3)
+```
+
+Histograms indicate a well-balanced signal-noise ratio. 
+The problem's cause lies thus somewhere else.
+
+```{r, cache = TRUE, fig.cap = ""}
+par(mfrow=c(2,1))
+hist(init_7$fitted_response, breaks = 25, main = "eta_mu")
+hist(init_7$fitted_sd, breaks = 25, main = "exp_eta_sigma")
+```
+
+One explanation for this problem is that the algorithm fits only intercepts in the first step resulting in very high values.
+The remaining iterations are used to lower intercepts *Um den intercepts to reducing? oder was meints du?*. 
+This may be checked by setting `verbose = TRUE`.
+For this reason, no other components of the parameter estimates are updated.
+Possibly, a sensible choice of initial parameter values may address this problem.
 # 5. Discussion. 
 
 
