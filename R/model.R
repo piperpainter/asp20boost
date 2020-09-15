@@ -35,6 +35,7 @@ LocationScaleRegressionBoost <- R6Class(
 
   private = list(
 
+    #helper variables to improve computation time
     X_HAT = numeric(),
     X_HAT_componentwise = numeric(),
     X_number_of_columns = numeric(),
@@ -45,41 +46,31 @@ LocationScaleRegressionBoost <- R6Class(
 
 
     # estimators (bj_hat) for location and scale,
-    # conventional <-> componentwise --------------------------------------------------------
-
+    # conventional boosting --------------------------------------------------------
     gradient_estimators_mu = function() {
       private$X_HAT %*% crossprod(private$X, self$gradients_loglik_mu())
     },
     gradient_estimators_sigma = function() {
       private$Z_HAT %*% crossprod(private$Z, self$gradients_loglik_sigma())
     },
-
+    # componentwise boosting --------------------------------------------------------
     gradient_estimators_mu_compwise = function() {
       number_of_cols <- ncol(private$X)
       result_list <- rep(NA, number_of_cols)
       for(i in 1:number_of_cols){
-        #result_list[i] <- chol2inv(chol(crossprod(private$X[, i], private$X[, i]))) %*% crossprod(private$X[, i], self$gradients_loglik_mu())
         result_list[i] <- private$X_HAT_componentwise[i] %*% crossprod(private$X[, i], self$gradients_loglik_mu())
-
        }
       return(result_list)
     },
-
     gradient_estimators_sigma_compwise = function() {
       number_of_cols <- ncol(private$Z)
       result_list <- rep(NA, number_of_cols)
       for(i in 1:number_of_cols){
-        #result_list[i] <- chol2inv(chol(crossprod(private$Z[, i], private$Z[, i]))) %*% crossprod(private$Z[, i], self$gradients_loglik_sigma())
         result_list[i] <- private$Z_HAT_componentwise[i] %*% crossprod(private$Z[, i], self$gradients_loglik_sigma())
-
       }
       return(result_list)
     }
-
-
-
-
-  ),
+),
 
   public = list(
 
@@ -126,7 +117,7 @@ LocationScaleRegressionBoost <- R6Class(
       private$Z %*% self$gamma
     },
 
-    # gradients of the log-likelihood wrt eta_mu / eta_sigma.
+    # gradients of the log-likelihood wrt eta_mu
     # these gradients are estimated and then stepwisely added
     #' @details Returns the unit-wise gradients of the loss function, which is the negative loglikelihood.
     #' @return a numeric vector nx1
@@ -134,12 +125,20 @@ LocationScaleRegressionBoost <- R6Class(
     #' y <- rnorm(30)
     #' model <- LocationScaleRegressionBoost$new(y ~ 1)
     #' model$gradients_loglik_mu()
-
     gradients_loglik_mu = function() {
       resid <- self$resid("response")
       scale <- self$fitted_scale
       return(resid / (scale^2) )
     },
+
+    # gradients of the log-likelihood eta_sigma.
+    # these gradients are estimated and then stepwisely added
+    #' @details Returns the unit-wise gradients of the loss function, which is the negative loglikelihood.
+    #' @return a numeric vector nx1
+    #' @examples
+    #' y <- rnorm(30)
+    #' model <- LocationScaleRegressionBoost$new(y ~ 1)
+    #' model$gradients_loglik_sigma()
     gradients_loglik_sigma = function() {
       resid <- self$resid("response")
       scale <- self$fitted_scale
@@ -155,7 +154,8 @@ LocationScaleRegressionBoost <- R6Class(
     update_parameters_conventional = function() {
       self$beta <- self$beta + self$stepsize_beta * private$gradient_estimators_mu()
       self$gamma <- self$gamma + self$stepsize_gamma * private$gradient_estimators_sigma()
-    }, #possible naming: update parameters conventional
+    },
+
     # a function using the gradient estimators to update parameters beta and gamma
     #' @return a numeric vector nx1
     update_parameters_compwise = function() {
@@ -187,11 +187,16 @@ LocationScaleRegressionBoost <- R6Class(
     },
 
 
-    # the following publics enable plotting -------------------------------------------------
+    # the following list enables plotting by logging all parameters at each iteration -------------------------------------------------
     #' enables plotting
     par_log = list(),
 
-    #' enables plotting
+    #' Plots the logged model parameters for each iteration
+    #' @examples
+    #' y <- rnorm(30)
+    #' model <- LocationScaleRegressionBoost$new(y ~ 1)
+    #' gradient_boost(model, plot=TRUE)
+    #' model$plot()
     plot = function() {
         df <- data.frame(matrix(unlist(model$par_log), nrow=length(model$par_log), byrow=T))
         plot(df$X1, type = "l",
