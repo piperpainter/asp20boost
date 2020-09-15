@@ -1,4 +1,4 @@
-#' Gradient Boosting for Location-Scale Regression Models HAI HAI
+#' Gradient Boosting for Location-Scale Regression Models
 #'
 #' The package provides an R6-class `LocationScaleRegressionBoost` for model
 #' specification, and a function `gradient_boost` for boosting the specified
