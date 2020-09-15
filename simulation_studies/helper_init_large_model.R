@@ -1,7 +1,8 @@
 init_large_model <- function(beta_range = c(10, 20),
                              gamma_range = c(0.1, 0.3),
                              dim_param = 10,
-                             int_gamma = -3
+                             int_gamma = -3,
+                             n = 100
 ){
 
 
@@ -19,21 +20,21 @@ init_large_model <- function(beta_range = c(10, 20),
 
   # sample covariates --------------------------------------------------------------
   # we sample 100 covariates. intercept is automatically added by model class
-  covariates_X <- runif(100 * (dim_param+1))
-  covariates_Z <- runif(100 * (dim_param+1))
+  covariates_X <- runif(n * (dim_param+1))
+  covariates_Z <- runif(n * (dim_param+1))
 
-  X <- matrix(covariates_X, nrow = 100, byrow = TRUE)
+  X <- matrix(covariates_X, nrow = n, byrow = TRUE)
   X[, 1] <- 1
-  Z <- matrix(covariates_Z, nrow = 100, byrow = TRUE)
+  Z <- matrix(covariates_Z, nrow = n, byrow = TRUE)
   Z[, 1] <- 1
 
 
   # sample response ----------------------------------------------------------------
-  y <- rep(NA, times = 100)
-  eta_mu <- rep(NA, 100)
-  eta_sigma <- rep(NA, 100)
+  y <- rep(NA, times = n)
+  eta_mu <- rep(NA, n)
+  eta_sigma <- rep(NA, n)
 
-  for(i in 1:100) {
+  for(i in 1:n) {
     x_i <- X[i, ]
     eta_mu[i] <- x_i %*% beta
     eta_sigma[i] <- x_i %*% gamma

@@ -16,7 +16,7 @@ source("helper_plot_model.R")
 source("helper_init_model.R")
 source("helper_calc_mse.R")
 source("helper_init_large_model.R")
-library(asp20boost)
+library(asp20boost)K
 library(gamboostLSS)
 library(microbenchmark)
 set.seed(1337)
@@ -84,11 +84,11 @@ mod_1 <- init_model(beta_1, gamma_1, 1000)$model
 plot_model(beta_1, gamma_1, 1000)
 ```
 
-As seen above the range of response values, as well as the mean increase as the single covariate x increases. The black dashed line here, however, does not represent the 95% confidence interval as is usually the case, but rather the standard deviation of the reponse at the respective covariate value. The lower dashed line represents one standard deviation departing from the expected response in negative direction. The upper dashed line, in turn, in positive direction. Hence the interval of the dashed lines span over two standard deviations.
+As seen above the range of response values, as well as the mean increase as the covariate x increases. The black dashed line here, however, does not represent the 95% confidence interval as is usually the case, but rather the standard deviation of the response at the respective covariate value. The lower dashed line represents one standard deviation departing from the expected response in negative direction - the upper dashed line, in turn, in positive direction. Hence the interval of the dashed lines span over two standard deviations.
 
-The red arrow indicates the standard deviation at the point x = 1 - that is the upper limit of covariate values. We designed covariate values to be on the unit interval for convenience. For cases with increasing scale, the red arrow hence indicates maximum standard deviation of the response.
+The red arrow indicates the standard deviation at the point x = 1,  that is the upper limit of covariate values. We designed covariate values to be on the unit interval for convenience. For cases with increasing scale, the red arrow hence indicates maximum standard deviation of the response.
 
-The blue arrow depicts the slope of the location parameter vector \beta1
+The blue arrow depicts the slope of the location parameter vector *beta_1.*
 
 The ratio of those two quantities is essential for estimability of the model. Here the blue arrow is dominant, hence the model may well be estimated. We will see the opposite case in the following subpart.
 
@@ -98,7 +98,7 @@ round(mod_1$beta, 3)
 round(mod_1$gamma, 3)
 ```
 
-We see that the estimates are close to the true model parameters - for \beta as well as for \gamma.
+We see that the estimates are close to the true model parameters - for *beta* as well as for *gamma.*
 
 
 #### Evaluation Configuration 2
@@ -192,7 +192,7 @@ Here SDs are considerably high for x = 0, namely exp(3) = 20.1, however decreasi
 
 [insert model configuration as formula]
 
-Changing the gamma parameters by factor 0.1 changes model characteristics considerably. Signal-noise ratio is well balanced in this case. The algorithm is able to detect the true parameters considerably close.
+Changing the gamma parameters by factor 0.1 changes model characteristics considerably. Signal-noise ratio is well balanced in this case. The algorithm is able to detect the true parameters considerably close, however not satisfactorily. 
 
 ```{r}
 mod_5 <- init_model(beta_5, gamma_5, 1000)$model
@@ -233,54 +233,145 @@ This poor behaviour remains without explanation for now.
 
 ### Conclusions
 
-The observed 4 parameter cases let us conclude that not every arbitrary parameter configuration is estimable by the implemented gradient_boost() algorithm. A first insight is that signal-noise ration needs to be substantially high in order to prevent that location effect gets concealed by inflated standard deviations. Second, we observe poor behaviour if negative scale slopes are involved. Since we have no explanation for this behaviour we exclude these in our further assessment.  
+The observed 4 parameter cases let us conclude that not every arbitrary parameter configuration is estimable by the implemented gradient_boost() algorithm. A first insight is that signal-noise ratio needs to be substantially high in order to prevent that location effect gets concealed by inflated standard deviations. Second, we observe poor behaviour if negative scale slopes are involved. Since we have no explanation for this behaviour we exclude these in our further assessment.  
 
 
 ## Large Model - Variable Selection
 
-For models with many regressors componentwise boosting allows to perform variable selection. Plotting such a model yields only limited overview, since each regressor needs to be plotted seperately. However, the behaviour of response location dependent on the first four components may be observed in the following.
+
+### Setup 1
+
+For models with many regressors componentwise boosting allows to perform variable selection.
 
 ```{r}
 # initialize model-----------------------------------------------
-init <- init_large_model(beta_range = c(20,50), gamma_range = c(2, 3))
-mod_1 <- init$model
-X <- init$design
-y <- init$response
+init_1 <- init_large_model(beta_range = c(5,10), 
+                           gamma_range = c(0.5,1), 
+                           dim_param = 5, 
+                           int_gamma = -0.2,
+                           n = 100)
+mod_1 <- init_1$model
+
 
 # check model via plotting --------------------------------------
-par(mfrow = c(2,2))
-for(i in 1:4) plot(X[,i], y, ylim = c(0,200))
+# par(mfrow = c(2,2))
+# for(i in 1:4) plot(X[,i], y, ylim = c(0,200))
 
 ```
 
-No effect is clearly visible, since each individually is too small to have a substantial effect on the response. However, a slight upwards slope may be observed.
-
-A more suitable method to check for signal-noise balance is to observe the linear location predictors, as well as the exponentiated scale predictors, determining the response standard deviation.
-
+Checking the constructed response is crucial: is the signal-noise ratio appropriate? Unfortunately, this can not be done easily by plotting - as in the 2-dimensional case. In the multidimensional case it helps to look at the n = 100 unit-wise location and scale predictors. Mean and sd of these 100 values help getting an overview.
 
 ```{r}
-# check model via linear predictors ---------------------------------------------------------
-par(mfrow = c(2,1))
-fitted_loc <- init$fitted_response
-fitted_scale <- init$fitted_sd
-hist(fitted_loc, breaks = 25)
-hist(fitted_scale, breaks = 25)
+mean(init_1$fitted_response)
+sd(init_1$fitted_response)
+mean(init_1$fitted_sd)
+sd(init_1$fitted_sd)
 ```
 
-A balanced signal-noise ratio  is assured, as expected response spread at about 60, while response SD spreads at 0.05. This yields an estimable model.
-
-
-However, lastly there occured errors in the functionality of componentwise boosting. The alogrithm happens to update only intercepts, leading to no variable being chosen. No components become updated.
+Histograms also may help.
 
 ```{r}
-gradient_boost(mod_1, maxit = 1000, componentwise = TRUE, verbose = F)
-
+par(mfrow=c(2,1))
+hist(init_1$fitted_response, breaks = 25)
+hist(init_1$fitted_sd, breaks = 25)
 ```
 
+
+A balanced signal-noise ratio  is assured, as expected response values span the range of 8 to 22 (varaiteion 14), while response SD cover values of 1 to 4. A variantion amount of 14 is towards a mixumu sd of 4, while way more sds are at about 2.5 and lower. This should result in estimable effect sizes. We have a look at the randomly drawn parameter values for beta and gamma:
 ```{r}
+init_1$beta
+init_1$gamma
+```
+
+And now boost and find the non-zeros.
+
+```{r}
+gradient_boost(mod_1, stepsize = c(0.1,0.01), maxit = 1000, componentwise = TRUE)
+
 mod_1$beta
 mod_1$gamma
 ```
+
+For location, the right parameters are chosen, however not at the proper values. For scale too many parameters become chosen. This may be improved by setting less maxit. However this may lead to move away from the yet quite optimal choice for *beta*. It could also be improved by lowering stepsize for gamma. This results in a pattern where the latter entries of gamma are chosen exactly wrong. We will observe this pattern also in the next examples and have no explanation.
+
+
+```{r}
+mod_1$beta <- rep(0,6)
+mod_1$gamma <- rep(0,6)
+gradient_boost(mod_1, stepsize = c(0.1,0.001), maxit = 1000, componentwise = TRUE)
+
+mod_1$beta
+mod_1$gamma
+```
+
+
+
+
+
+
+### Setup 2
+
+We scale dimension of the parameter vectors up to 10.
+
+```{r}
+init_2 <- init_large_model(c(3,6), c(0.2,0.8), 10, -0.2, n = 100)
+mod_2 <- init_2$model
+```
+
+
+```{r}
+par(mfrow=c(2,1))
+hist(init_2$fitted_response, breaks = 25)
+hist(init_2$fitted_sd, breaks = 25)
+```
+
+
+```{r}
+gradient_boost(mod_2, stepsize = c(0.1,0.01), maxit = 1000, componentwise = TRUE)
+
+cbind(true = init_2$beta, estimate = round(mod_2$beta,2))
+cbind(true = init_2$gamma, estimate = round(mod_2$gamma,2))
+```
+
+
+For beta the algo chose 1 too few.
+For gamma entirs 1-3 are chosen correctly. Then the algorithm yields errors. Entry 4 is chosen, while in fact it is zero. Entry 5 is not chosen, while in the true model an effect exists. 
+
+
+
+
+
+### Setup 2
+
+Scale dimensions further up
+
+```{r}
+# init_3 <- init_large_model(c(5,10), c(0.01,0.08), 50, 0, n = 100)
+# mod_3 <- init_3$model
+```
+
+
+```{r}
+par(mfrow=c(2,1))
+hist(init_3$fitted_response, breaks = 25)
+hist(init_3$fitted_sd, breaks = 25)
+```
+
+
+```{r}
+#gradient_boost(mod_3, stepsize = c(0.1,0.01), maxit = 1000, componentwise = TRUE)
+
+cbind(true_beta = init_3$beta, estimate_beta = round(mod_3$beta,2), 
+      true_gamma = init_3$gamma, estimate_gamma = round(mod_3$gamma,2))
+```
+
+
+This problem occurs if we scale parameter dimensions up: only intercepts become updated. No covariates are chosen to have an effect on the response. If algorithm progress is checked with verbose=TRUE, one sees that intercepts inflate in the very first step, and then the proceedsing iterations work on lowering the intercepts, which takes place very slowly due to stepsize parameters.
+
+Possibly a sensible choice of initial parameter values may help. However we did not try this.
+
+
+
 
 
 
