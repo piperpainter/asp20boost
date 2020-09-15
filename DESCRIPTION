@@ -1,13 +1,16 @@
 Package: asp20boost
 Title: An R6 Class for Location-Scale Regression Models using Gradient Boosting
 Version: 0.0.0.9000
-Authors@R: 
-    person(given = "First",
-           family = "Last",
-           role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Authors@R: c(
+    person(given = "Sebastian", family = "Aristizabal", role = c("aut"), email = "j.aristizabalortiz@stud.uni-goettingen.de"),
+    person(given = "Johannes", family = "Srauß", role = c("aut", "cre"), email = "first.last@example.com"),
+    person(given = "Levin", family = "Wiebelt", role = c("aut"), email = "first.last@example.com"))
+Description: This package resulted from a series of student projects in the context of the seminar 
+    Advanced Statistical Programming 2020 of the University of Göttingen. Thus, it is part of a bundle 
+    of the asp20__ packages. The main goal of these projects is implement a method to estimate 
+    location-scale regression models. Each project's package implements a different method. All packages,
+    including asp20boost, build upon the asp20model package. Specifically, an R6-class with inherited 
+    properties from asp20model is asp20model expanded in the asp20boost-package.
 License: MIT
 Imports: R6,
         asp20model
