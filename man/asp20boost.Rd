@@ -3,23 +3,26 @@
 \docType{package}
 \name{asp20boost}
 \alias{asp20boost}
-\title{Gradient Boosting for Location-Scale Regression Models}
+\title{Gradient Boosting for Location-Scale Regression Models ANO ANO}
 \usage{
 model <- LocationScaleRegressionBoost(formula, ...)
 gradient_boost(model, ...)
 }
 \description{
 The package provides an R6-class \code{LocationScaleRegressionBoost} for model
-specification, and a function \code{gradient_boost} for boosting the specified model object.
+specification, and a function \code{gradient_boost} for boosting the specified
+model object.
 }
 \details{
-This package resulted from a series of student projects. Thus, it is part of a
-bundle of packages all starting with \code{asp20...}. The overall goal of these packages
-is to estimate location-scale regression models, while each project/package employs
-different methods. All packages, including \code{asp20boost} build on the central
-package \code{asp20model}. Here, an R6-class is specified, which is inherited and expanded
-in the \code{asp20boost}-package.
+This package resulted from a series of student projects in the context of the
+seminar \emph{Advanced Statistical Programming 2020} of the University of
+Göttingen. Thus, it is part of a bundle of the \code{asp20__} packages. The main
+goal of these projects is implement a method to estimate location-scale
+regression models. Each project's package implements a different method. All
+packages, including \code{asp20boost}, build upon the \code{asp20model} package.
+Specifically, an R6-class with inherited properties from \code{asp20model} is
+\code{asp20model} expanded in the \code{asp20boost}-package.
 }
 \author{
-Johannes Strauß, Levin Wiebelt, Sebastiàn Aristizabal
+Johannes Strauß, Levin Wiebelt, Sebastián Aristizábal
 }

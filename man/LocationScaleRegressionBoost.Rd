@@ -7,7 +7,7 @@
 example_model <- LocationScaleRegressionBoost$new(formula, ...)
 }
 \description{
-Model obejcts created by this class may be estimated by the \code{gradient_boost} function.
+Model objects created by this class may be estimated by the \code{gradient_boost} function.
 This model class builds upon and thus inherits the basic structure
 from the \code{LocationScaleRegression} model class of the \code{asp20model} package.
 Consequently, it shares similar syntax and structure. (Please  see the help
