@@ -19,6 +19,7 @@ source("helper_init_large_model.R")
 library(asp20boost)
 library(gamboostLSS)
 library(microbenchmark)
+set.seed(1337)
 ```
 
 
@@ -184,14 +185,14 @@ Configuration 4, again, is not estimable by the gradient_boost() function. A loo
 plot_model(beta_4, gamma_4, 1000)
 ```
 
-Here SDs are considerably high for x = 0, namely exp(3) = 20.1 however decreasing fast until reaching a value of exp(3 - 3) = 1 at x = 1. With a \beta slope of 1, the algorithm runs into numerical problems yielding NaNs as results.
+Here SDs are considerably high for x = 0, namely exp(3) = 20.1, however decreasing fast until reaching a value of exp(3 - 3) = 1 at x = 1. With a beta slope of 1, the algorithm runs into numerical problems yielding NaNs as results.
 
 
 #### Evaluation Configuration 5
 
 [insert model configuration as formula]
 
-Changing the gamma parameters by factor 0.1 changes model characteristics considerably. Signal-noise ratio is well balanced in this case. The algorithm is able to detect the true parameter configuration.
+Changing the gamma parameters by factor 0.1 changes model characteristics considerably. Signal-noise ratio is well balanced in this case. The algorithm is able to detect the true parameters considerably close.
 
 ```{r}
 mod_5 <- init_model(beta_5, gamma_5, 1000)$model
@@ -205,14 +206,10 @@ round(mod_5$beta, 3)
 round(mod_5$gamma, 3)
 ```
 
-Estimation errors are present, especially for slope estimates \gamma.
-This time, the algorithm behaves poorly. The estimates are rather far from the true parameters. This, in turn, leads to high MSE.
-
-```{r}
-calc_MSE(beta_5, gamma_5, mod_5$beta, mod_5$gamma)
-```
 
 ### Evaluation Configuration 6
+
+For robustness, we check a configuration with high location slope and comparably low gamma parameters, resulting in a very good signal-noise ratio. This induces the expectation of good estimates, as seen in configuration 3.
 
 ```{r}
 mod_6 <- init_model(beta_6, gamma_6, 1000)$model
@@ -225,58 +222,65 @@ round(mod_6$beta, 3)
 round(mod_6$gamma, 3)
 ```
 
-For very high signal-noise ratios, the algorithm performs poorly if negative scale slopes a involved in the model.
+It turns out that the algorithm performs very poorly. Is does not run into numerical problems, but it yields estimate far away from the true parameter values, leading to high MSE.
 
+```{r}
+calc_MSE(beta_6, gamma_6, mod_6$beta, mod_6$gamma)
+```
+
+This poor behaviour remains without explanation for now.
 
 
 ### Conclusions
 
-* The specified model must have a signal-noise ratio, that permits estimation.
-* Gamma-slopes need to be chosen sensibly, especially if multiple slopes are used.
-* Negative gamma slopes lead to poorly behaving algortihm.
+The observed 4 parameter cases let us conclude that not every arbitrary parameter configuration is estimable by the implemented gradient_boost() algorithm. A first insight is that signal-noise ration needs to be substantially high in order to prevent that location effect gets concealed by inflated standard deviations. Second, we observe poor behaviour if negative scale slopes are involved. Since we have no explanation for this behaviour we exclude these in our further assessment.  
+
 
 ## Large Model - Variable Selection
 
-[...]
+For models with many regressors componentwise boosting allows to perform variable selection. Plotting such a model yields only limited overview, since each regressor needs to be plotted seperately. However, the behaviour of response location dependent on the first four components may be observed in the following.
 
 ```{r}
 # initialize model-----------------------------------------------
-init <- init_large_model()
+init <- init_large_model(beta_range = c(20,50), gamma_range = c(2, 3))
 mod_1 <- init$model
 X <- init$design
 y <- init$response
-fitted_loc <- init$fitted_response
-fitted_scale <- init$fitted_sd
 
 # check model via plotting --------------------------------------
-par(mfrow = c(4,3))
-for(i in 1:11) plot(X[,i], y, ylim = c(0,200))
+par(mfrow = c(2,2))
+for(i in 1:4) plot(X[,i], y, ylim = c(0,200))
 
 ```
 
-No effect becomes clearly visible, since each individually is too small to have a substantial effect on the response.
+No effect is clearly visible, since each individually is too small to have a substantial effect on the response. However, a slight upwards slope may be observed.
+
+A more suitable method to check for signal-noise balance is to observe the linear location predictors, as well as the exponentiated scale predictors, determining the response standard deviation.
+
 
 ```{r}
 # check model via linear predictors ---------------------------------------------------------
 par(mfrow = c(2,1))
+fitted_loc <- init$fitted_response
+fitted_scale <- init$fitted_sd
 hist(fitted_loc, breaks = 25)
 hist(fitted_scale, breaks = 25)
 ```
 
-Model estimation currently does not work.
+A balanced signal-noise ratio  is assured, as expected response spread at about 60, while response SD spreads at 0.05. This yields an estimable model.
+
+
+However, lastly there occured errors in the functionality of componentwise boosting. The alogrithm happens to update only intercepts, leading to no variable being chosen. No components become updated.
 
 ```{r}
-#gradient_boost(mod_1, maxit = 1000, componentwise = TRUE, verbose = F)
+gradient_boost(mod_1, maxit = 1000, componentwise = TRUE, verbose = F)
 
 ```
-Resulting parameter estimates are wrong. Almost no component become updated.
+
 ```{r}
 mod_1$beta
 mod_1$gamma
 ```
-
-
-[...]
 
 
 
