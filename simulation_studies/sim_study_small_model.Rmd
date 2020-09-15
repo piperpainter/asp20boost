@@ -4,7 +4,9 @@ output: html_notebook
 ---
 
 ```{r}
-# setting the stage
+# run all code chunks in this document
+# do not display output of this codechunk
+# DO display code
 rm(list=ls())
 options(scipen=999)
 source("helper_plot_model.R")
@@ -26,6 +28,8 @@ library(microbenchmark)
 The goal in this first part is to demonstrate, that the algorithm finds correct estimates for sensible choices of *beta* and *gamma.* We use the following 4 different parameter configurations to explore location-scale regression model characteristics.
 
 ```{r}
+# dont display code
+# dont display output
 # config 1 ----------------------
 beta_1 <- c(0,1)
 gamma_1 <- c(-3,2)
@@ -45,6 +49,8 @@ gamma_4 <- c(1,-1)
 
 
 ```{r}
+# display code
+# dont display output
 set.seed(1337)
 mod_1 <- init_model(beta_1, gamma_1, 1000)$model
 gradient_boost(mod_1)
@@ -58,6 +64,8 @@ gradient_boost(mod_4)
 
 
 ```{r, cache=TRUE, fig.height = 8, fig.width = 11}
+# display code
+# display output
 par(mfrow = c(2,2))
 plot_model(beta_1, gamma_1, 1000, "Config 1")
 plot_model(beta_2, gamma_2, 1000, "Config 2")
@@ -65,6 +73,8 @@ plot_model(beta_3, gamma_3, 1000, "Config 3")
 plot_model(beta_4, gamma_4, 1000, "Config 4")
 ```
 ```{r}
+# dont display code
+# display output
 result_df <- data.frame("Config" = c(1,1,2,2,3,3,4,4),
                         "beta_true" = c(beta_1, beta_2, beta_3, beta_4),
                         "beta est." = c(round(mod_1$beta, 3), round(mod_2$beta, 3), round(mod_3$beta, 3), round(mod_4$beta, 3)),
@@ -100,11 +110,7 @@ The gradient_boost() function runs into numerical problems.
 To understand why this happens we need to understand the model characteristics resulting from parameter configuration 2-2-2-2.
 Here, the red arrow is of large size, while the blue arrow is hardly visible. 
 This is due to the presence of huge standard deviations in response *y*, concealing changes in mean of *y.* 
-In fact, the standard deviation at x = 1 is:
-
-```{r}
-exp(gamma_2[1] + gamma_2[2] * 1)
-```
+In fact, the standard deviation at x = 1 is exp(2+2) = 54.60.
 In contrast the true response mean values range from 0 to 2.
 The change in response location (the signal), indicated by the blue arrow, perishes due to the high amount of noise caused by the high gamma-parameters. 
 Resulting is a signal-noise ratio, that is impossible to estimate. 
@@ -126,6 +132,8 @@ To do this we measure the gap between true values and estimates by the mean squa
 This enables comparison of configurations 1 and 3.
 
 ```{r}
+# display code
+# display output
 mse_1 <- calc_MSE(beta_1, gamma_1, mod_1$beta, mod_1$gamma)
 mse_3 <- calc_MSE(beta_3, gamma_3, mod_3$beta, mod_3$gamma)
 cbind("config 1" = mse_1,
@@ -143,6 +151,8 @@ The idea is to ensure a very good signal noise ratio, in order to ensure good mo
 Contrary to our expectations, the algorithm performs poorly for this parameter configuration.
 
 ```{r}
+# display code
+# display output
 mse_4 <- calc_MSE(beta_4, gamma_4, mod_4$beta, mod_4$gamma)
 cbind("config 1" = mse_1,
       "config_3" = mse_3,

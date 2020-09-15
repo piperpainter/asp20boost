@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R: c(
     person(given = "Sebastian", family = "Aristizabal", role = c("aut"), email = "j.aristizabalortiz@stud.uni-goettingen.de"),
     person(given = "Johannes", family = "Srauß", role = c("aut", "cre"), email = "first.last@example.com"),
-    person(given = "Levin", family = "Wiebelt", role = c("aut"), email = "first.last@example.com"))
+    person(given = "Levin", family = "Wiebelt", role = c("aut"), email = "levin.wiebelt@stud.uni-goettingen.de"))
 Description: This package resulted from a series of student projects in the context of the seminar 
     Advanced Statistical Programming 2020 of the University of Göttingen. Thus, it is part of a bundle 
     of the asp20__ packages. The main goal of these projects is implement a method to estimate 
