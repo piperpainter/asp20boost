@@ -1,5 +1,5 @@
 # set up main plotting function ----------------------------------
-plot_model <- function(beta, gamma, n) {
+plot_model <- function(beta, gamma, n, plot_title) {
 
   # set up linear predictor functions -------------------------------
   eta_mu <- function(x) beta[1] + beta[2] * x
@@ -10,7 +10,7 @@ plot_model <- function(beta, gamma, n) {
   y <- eta_mu(x) + rnorm(n, sd = exp(eta_sigma(x)))
 
   # configure plot --------------------------------------------------
-  plot(x, y, col = "grey", cex = 0.5, pch = 16)
+  plot(x, y, col = "grey", cex = 0.5, pch = 16, main = plot_title)
   abline(beta[1], beta[2], lwd = 2, col = 1)
   curve(eta_mu(x) + 1 * exp(eta_sigma(x)), -0.1, 1.1, add = TRUE, col = 1, lty = 3, lwd = 2)
   curve(eta_mu(x) - 1 * exp(eta_sigma(x)), -0.1, 1.1, add = TRUE, col = 1, lty = 3, lwd = 2)
@@ -25,7 +25,7 @@ plot_model <- function(beta, gamma, n) {
          y1 = beta[1],
          length = 0.05, code = 3, col = 4, lty = 1, lwd = 2)
 
-  legend("topleft", legend=c("location slope", "standard deviation at x=1"),
-         col=c(4, 2), lty=c(1,1), cex=0.8)
+  #legend("topleft", legend=c("location slope", "standard deviation at x=1"),
+  #       col=c(4, 2), lty=c(1,1), cex=0.8)
 
 }
