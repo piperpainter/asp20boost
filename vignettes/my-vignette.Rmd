@@ -13,8 +13,6 @@ output:
     template: null
     toc: no
     toc_depth: 2
-    lof: no
-    lot: no
   html_document:
     df_print: paged
     toc: no
@@ -44,13 +42,13 @@ knitr::write_bib(c(
 ```
 
 # Abstract
-This vignette documents the exentions of the `asp20model` package of the `asp20` repository [@R-asp20model] provided to us in the context of the course "Advanced Statistical Programming with R". 
+This vignette documents the extensions of the `asp20model` package of the `asp20` repository [@R-asp20model] provided to us in the context of the course "Advanced Statistical Programming with R". 
 
-The present package extension allows for estimation of location-scale regression models considering location ($\beta$) and scale ($\gamma$) parameters. 
+The present package extension allows for estimation of location-scale regression models considering location ($\bm{\beta}$) and scale ($\bm{\gamma}$) parameters. 
 For this purpose, we utilized a gradient boosting algorithm, which aims to improve a certain loss function. 
 Boosting seems to be rather cumbersome for estimating location parameters alone, as it yields no advantage over OLS. However, for models with varying scale, OLS is no reliable estimation method. This is where gradient boosting plays its role. 
  
-This algorithm optimizes the model parameter vectors ($\beta$ and $\gamma$) by fitting loss gradients. The goodness of fit of the gradient boosting algorithm was evaluated using simulated data. 
+This algorithm optimizes the model parameter vectors ($\bm{\beta}$ and $\bm{\gamma}$) by fitting loss gradients. The goodness of fit of the gradient boosting algorithm was evaluated using simulated data. 
 Results showed that for two-dimensional location-scale regression model, the `asp20boost` performed well, in multidimensional cases the estimates lack accuracy in two ways
 * Effect magnitudes are not estimated correctly.
 * Variable selection for scale parameters does not work well.
@@ -63,16 +61,15 @@ Keywords: component-wise boosting,  gradient descent, location and scale.
 
 # 1. Introduction:
 
-The R package asp20boost provides a boosting algorithm for estimation of location-scale regression models with gaussian response.
+The R package `asp20boost` provides a boosting algorithm for estimation of location-scale regression models with gaussian response.
 It arose in the context of the course "Advanced Statistical Programming with R". 
-It consists of a series of student projects that aim to estimate a location-scale regression model by implementing different methods each building upon an R6 class [@R-R6] given to us as part of the `asp20model` repository [@R-asp20model].
+It consists of a series of student projects that aim to estimate a location-scale regression model by implementing different methods each building upon a R6 class [@R-R6] given to us as part of the `asp20model` repository [@R-asp20model].
 
 In the following part 2  *model and methods* we first describe the nature of location-scale regression models as well as the concept of boosting.
 This offers context and understanding of how gradient boosting approaches location-scale regression problems.
-Next in part 3  *software implementation*, we explain how we implemented model and boosting algorithm in the `asp20boost` package and we offer a walkthrough regarding the basic usage of both the class and the function provided by the package. 
-*Function or functions?*
-Furthermore in part 4 *simulation studies*, we present the results of  our simulation studies and assess the performance and the limitations of our package.
-Finally, in section 5 *discussion*, we discuss the results and limitation of this implementations and offer an outlook for future directions for further development. 
+Next, in part 3  *software implementation* we explain how we implemented model and boosting algorithm in the `asp20boost` package and we offer a walkthrough regarding the basic usage of both the class and the function provided by it. 
+Furthermore in part 4 *simulation studies* we present the results of  our simulation studies and assess the performance and the limitations of our package.
+Finally, in section 5 *discussion* we discuss the results and limitation of this implementations and offer an outlook for future directions and development. 
 
 # 2. Model and Methods
 
@@ -81,8 +78,8 @@ Finally, in section 5 *discussion*, we discuss the results and limitation of thi
 Location-scale regression models are linear models, where the expectation (location), as well as the standard deviation (scale) of the response are dependent on some regressor(s).
 Modeling only the relationship influencing the location while dismissing the influence upon the scale would lead to heteroskedasticity problems.
 Figure 1 below depicts the scatterplot of the sample model configuration of the asp20model [@R-asp20model].
-The heteroskedastic response $y$ is plotted against the covariate $x$. In this case $x$ is used to model both location and scale, which allows nice plotting.
-In a more general case scale may be modeled by a different set of predictors $z$.
+The heteroskedastic response $y$ is plotted against the covariate $x$. In this case $x$ is used to model both location and scale, which allows for nice plotting.
+In a more general case, scale may be modeled by a different set of predictors $z$.
 
 ```{r data, echo=FALSE, cache=TRUE, fig.cap = "A visual example of Heteroskedasticity. Source: asp20model"}
 n <- 500
@@ -96,7 +93,7 @@ curve(x - 1.96 * exp(-3 + 2 * x), -0.1, 1.1, add = TRUE)
 
 In Figure 1 above, heteroskedasticity is clearly indicated by the funnel shape of the point cloud.
 Estimating such a model naively by means of OLS would lead to false variance estimates and hence invalid hypotheses tests and confidence intervals.
-Modeling the location part is done by a conventional linear model. 
+Modeling the location is done by a conventional linear model. 
 The expectation of an observation $y_i$ is modeled as a linear combination of a vector of predictors $\bm{x_i}$:
 
 \begin{equation}
@@ -112,14 +109,14 @@ sd(y_i) = \exp(\bm{z_i}'\bm{\gamma})
 \end{equation}
 
 This means that the unit-specific standard deviations $sd(y_i)$ are not modeled linearly.
-Transforming them using the link function $g(\sigma_i) = \log(\sigma_i)$, which is the inverse of the response function, allows for linearly regressing on the scale predictor
+Transforming them using the link function $g(\sigma_i) = \log(\sigma_i)$, which is the inverse of the response function, allows for linearly regressing them on the scale predictor.
 
 \begin{equation}
 \log sd(y_i) = \eta_{\sigma_i} = \bm{z_i}' \bm{\gamma}
 \end{equation}
 
 The goal of estimating a location-scale regression model is to attain estimates for $\bm{\beta}$ and $\bm{\gamma}$.
-Gradient boosting is able to address this heteroskedasticity yielding correct variance estimates i.e. unbiased $\bm{\gamma}$ estimates.
+Gradient boosting is able to address this heteroskedasticity setting yielding correct variance estimates i.e. unbiased $\bm{\gamma}$ estimates.
 
 ## Boosting
 
@@ -127,7 +124,7 @@ We explain the concept of boosting in two steps. To get a good grasp of the idea
 It is an intuitive and comprehensible algorithm, but only applicable to location estimation. Second, we explain *gradient boosting* which is a broader concept that allows for the estimation of the scale as well. 
 Because the latter case is the problem we attempt to address, the `asp20boost` package  implements exclusively gradient boosting as we describe it. 
 Lastly, we describe *componentwise boosting*, an additional functionality of the asp20boost package.
-It is an extension of the boosting concept, which enables variable selection.
+It is an extension of the boosting concept, which enables for variable selection.
 
 
 ### Residual Boosting
@@ -164,7 +161,7 @@ $\hat{\bm{b}}$ is added to the location-estimate $\bm{\hat{\beta}}$, adjusted by
 
 This yields an updated parameter estimate and the procedure is repeated thereafter.
 With each update, the fit of the model improves leading to smaller residuals and hence smaller base-learners $\hat{\bm{b}}$.
-This means that with each iteration the overall change in parameter $\bm{\hat{\beta}}$ decreases thus allowing the boosting algorithm to converge towards the OLS estimate which is, in fact, the true value of $\bm{\beta}$.
+This means that with each iteration the overall change in parameter $\bm{\hat{\beta}}$ decreases, thus allowing the boosting algorithm to converge towards the OLS estimate which is, in fact, the true value of $\bm{\beta}$.
 
 Boosting seems to be rather cumbersome for estimating location parameters alone, as it yields no advantage over OLS.
 However, for models with varying scale, OLS is no reliable estimation method. This is where gradient boosting plays its role.
@@ -173,14 +170,13 @@ It is able to address location-scale regression settings extending the idea of b
 
 ### Gradient Boosting
 
-*Include Links to Apendix*
 
 Gradient boosting is no fundamentally different concept, but rather another view on the boosting algorithm.
 In this case the goal is to improve a certain loss function instead of estimating residuals. 
 We will see that for location the gradients turn out to be (variance adjusted) residuals. 
-Possible choice for loss functions involves e.g. the sum of least squares, penalized terms or non-linear ones.
+Possible choice for loss functions are, for example, the sum of least squares, penalized terms or non-linear ones.
 This makes gradient boosting a very flexible method.
-For location-scale regression, the negative log likelihood of the observed response is convenient as loss function.  
+For location-scale regression, the negative log likelihood of the observed response is convenient as the loss function.  
 
 \begin{equation}
  \begin{gathered} 
@@ -188,8 +184,9 @@ For location-scale regression, the negative log likelihood of the observed respo
  \end{gathered}
 \end{equation}
 
-For a derivation of the loss, see the appendix. The unit-wise gradients of this loss function play a key role. These are different from the gradients supplied in the `asp20model` package. 
-The relevant gradients for boosting are attained by partially deriving the loss function by the unit-specific linear predictors $\eta_{\mu_i}$ and by $\eta_{\sigma_i}$ as in *insert the number of the equations* respectively:
+For a derivation of the loss, see the appendix. 
+The unit-wise gradients of this loss function play a key role. These are different from the gradients supplied in the `asp20model` package. 
+The relevant gradients for boosting are attained by partially deriving the loss function by the unit-specific linear predictors $\eta_{\mu_i}$ and by $\eta_{\sigma_i}$.
 
 \begin{equation}
  \begin{gathered}
@@ -207,7 +204,7 @@ The relevant gradients for boosting are attained by partially deriving the loss 
 For a derivation of the gradients, see the appendix as well.
 Here we see, as mentioned above, that location gradients are equivalent to the variance adjusted residuals.
 We obtain n $\mu$ gradients, as well as n $\sigma$ gradients.
-*It is better to re-state the role specifically* The gradients play the role residuals did in the last part:
+The gradients play the role residuals did in the last part:
 They are estimated by regressing them on the model covariates. 
 
 \begin{equation}
@@ -226,7 +223,7 @@ The gradient estimates $\hat{\bm{b}}$ and $\hat{\bm{g}}$ are used to update the 
 
 \begin{equation}
  \begin{gathered}
-\hat{\bm{\beta}}^{(t)} = \hat{\bm{\beta}}^{(0)} + \nu \hat{\bm{b}} \\
+\hat{\bm{\beta}}^{(t)} = \hat{\bm{\beta}}^{(t-1)} + \nu \hat{\bm{b}} \\
 \hat{\bm{\gamma}}^{(t)} = \hat{\bm{\gamma}}^{(t-1)} + \nu \hat{\bm{g}} \\
 \text{parameter updating step}
  \end{gathered}
@@ -239,7 +236,7 @@ Parameter estimates in the gradient boosting algorithm also converge towards the
 
 Here we need to mention, that the implemented algorithm did not work using the gradients described above in the gradient calculation step.
 With a small adjustment we implemented a functioning algorithm.
-However, this is a major issue, which we will come back to in part *Hier part*.
+However, this is a major issue, which we will discuss it later.
 
 
 
@@ -268,7 +265,6 @@ The gradients are regressed on each covariate  or component  respectively, resul
 
 Then, the best loss improvement $j^*$ is determined by a least squares criterion:
 
-*Adjust Formula here!!! Too much boldnes*
 
 \begin{equation}
  \begin{gathered}
@@ -280,8 +276,6 @@ k^{*} = \text{argmin} \sum(\bm{u}_{\sigma}- z_{ij} \hat{\bm{g}}_j)^2
 The parameter vectors are then updated as well in a componentwise manner.
 This means that only one component of each parameter vector $\hat{\bm{\beta}}$ and $\hat{\bm{\gamma}}$ changes, while $p-1$ components remain unaffected by the updating step:
 
-*Adjust Formula here!!! Too much boldnes*
-
 \begin{equation} 
 \begin{aligned}
 \hat{\bm{\beta}}_{j^*}^{(t)}  = \hat{\bm{\beta}}_{j^*}^{(t-1)}+ \nu\hat{b}_{j^*} \\
@@ -292,24 +286,25 @@ This means that only one component of each parameter vector $\hat{\bm{\beta}}$ a
 \end{equation}
 
 
-With this update restriction some components may become updated quite late in the progression of the algorithm.
-This is the case when the particular component does not yield high improvements of model fit, which in turn reflects that this component, or the predictive variable,  has a rather small effect on the response.
-The algorithm is not executed until convergence of all parameter components, but stopped after a predefined number of iterations `maxit`.
-Hence it could be the case, that covariates with small effect sizes do not become updated at all and remain zero after the componentwise gradient-boost algorithm runs completely.
+With this update restriction some components may become updated quite late in the progression of the algorithm execution.
+This is the case when a particular component does not yield high improvements of model fit, which in turn reflects that this component, or predictive variable,  has a rather small effect on the response.
+The algorithm is not executed until convergence of all parameter components, but stopped after a predefined number of iterations indicated by `maxit`.
+Hence it could be the case that covariates with small effect sizes do not become updated at all and remain zero after the componentwise gradient-boost algorithm runs completely.
 If this is the case, such variables will be dropped out of the model.
 In this way i.e. by having parameter update restrictions combined with early stopping  implicit variable selection is achieved.
 
 
 
-# 3. Software Implementation: the `asp20boost` package
+# 3. Software Implementation
 
+## The `asp20boost` package
 
 The code of the `asp20boost` package consists of two major parts.
-The first is the R6 class `LocationScaleRegressionBoost`, which represents the location-scale regression model and includes some quantities (e.g. gradients) necessary for executing the boosting algorithm.
+The first is the R6 `LocationScaleRegressionBoost` class, which represents the location-scale regression model and includes some quantities (e.g. gradients) necessary for executing the boosting algorithm.
 The second part is `gradient_boost()`, a function specifically conceived  to execute the gradient boost algorithm upon a `LocationScaleRegressionBoost` object.
 
-It is important to emphasize that this package allows for the practical application of the concepts described in the „gradient boosting“and „componentwise boosting“ sections presented above. 
-The concept of "residual boosting“ fulfilled an explanatory purpose and is not implemented in the package.
+It is important to emphasize that this package allows for the practical application of the concepts described in the *gradient boosting* and *componentwise boosting* sections presented above. 
+The concept of *residual boosting* fulfilled an explanatory purpose and is not implemented in the package.
 
 ## `gradient_boost()` function
 
@@ -322,7 +317,7 @@ Steps one and two, i.e.  gradient calculation and estimation, are performed by t
 This function performs a prespecified number of 1000 iterations unless another quantity was specified by means of the `maxit`  argument in the `gradient_boost()` function. 
 After iterating, a  modified model object is returned instead of mere parameter values. 
 This includes, for example, the model formula, the log likelihood value and the desired parameter configuration after the execution of the algorithm.
-In each iteration $\hat{\bm{\beta}}$ gets updated first followed by $\hat{\bm{\gamma}}$.
+In each iteration, $\hat{\bm{\beta}}$ gets updated first followed by $\hat{\bm{\gamma}}$.
 If `componentwise` is set to `TRUE`, the algorithm employs the public method `update_parameters_compwise()`, which performs additional calculations that `update_parameters_conventional()` does not.
 The functioning of these methods is explained in the following subsection where the `LocationScaleRegressionBoost` class is described.
 
@@ -344,11 +339,11 @@ We accomplish this by adding  a total of eight additional methods:
   * `update_parameters_compwise`
 
 Two of the public methods are easy to comprehend: `gradients_loglik_mu()` and `gradients_loglik_sigma()` perform simply the first gradient-calculation step of each iteration by employing the gradient formulas derived theoretically in the last part. 
-As mentioned, gradient formulas are modified in order to make the algorithm working.
-We will come back to this point in part *Hier part einfügen*.
+As already mentioned, gradient formulas are modified in order to make the algorithm working.
+We will come back to this point in section 5.
 The two methods `gradients_loglik_*()`  use residuals obtained from the `resid()` method and the estimates of the standard deviation obtained from  the  public field `fitted_scale`. 
 Both of these fields are inherited from the parental class `LocationScaleRegression`.
-As the calculated gradients may be possibly of interest, we allowed for external access by setting `gradients_loglik_mu()` and `gradients_loglik_sigma()`as a public methods.
+As the calculated gradients may be possibly of interest, we allowed for external access by setting `gradients_loglik_mu()` and `gradients_loglik_sigma()`as public methods.
 
 The methods performing the second algorithm step `gradient_estimators_*()`, in contrast, are private and can not be accessed via class-external functions, such as `gradient_boost()`.
 However, they are used in the calculations performed by two public methods `update_parameters_*()`.
@@ -356,7 +351,7 @@ The gradient estimator methods with the suffix  *conventional* simply regress th
 The functions suffixed with *componentwise* return a list of gradient estimators  obtained by regressing the gradients on one particular component $\bm{x_j}$ or $\bm{z_k}$ of the respective design matrix $\bm{X}$ or $\bm{Z}$.
 
 The centerpiece of the boosting implementation are the update methods `update_parameters_*()`.
-The *conventional* version merely adds the gradients estimators to the active fields `beta` and `gamma`  multiplied by the defined stepsize. The `stepsize` argument is set by default to 0.01 for `beta`, and 0.1 for `gamma`.
+The *conventional* version merely adds the gradients estimators to the active fields `beta` and `gamma`  multiplied by the defined step size. The `stepsize` argument is set by default to 0.01 for `beta`, and 0.1 for `gamma`.
 Additionally to this, the componentwise version further performs first the loss improvement calculation and then builds an update vector  consisting of zeros with exception of the best fitting component.
 Finally,  `update_parameters_compwise` performs the update.
 In both of its versions, the update method finally assigns new values to `beta` and `gamma`. 
@@ -367,13 +362,13 @@ Hence, various fields become assigned new values.
 Among them are the fields `.resid`, `fitted_location` and `fitted_scale`, which are used to calculate residuals and gradients.
 This enables proceeding to the next iteration.
 
-## User Interface by example
+## User Interface by Example
 
-First, we define the model by generating sample data and defining explanatory variables for the standard deviation of the response variable.
-After model definition `gradient_boost` will iterate over the model and update the parameters at each step, depending on the selected method.
+First, we set the model by generating sample data and defining explanatory variables for the standard deviation of the response variable.
+After setting the model `gradient_boost` will iterate over it and update the parameters at each step, depending on the selected method.
 The function `update_parameter_componentwise()` will instruct the model to use componentwise boosting if set to `TRUE`. 
 Depending on the sample data, a custom step size for `beta` and `gamma` might be useful, which can be set by means of the `stepsize` argument
-`stepsize` is a vector of two entries, the first being the stepsize for beta updates, the second for gamma updates.
+`stepsize` is a vector of two entries, the first being the step size for beta updates, the second for gamma updates.
 
 ```{r, cache=TRUE}
 set.seed(12345)
@@ -438,7 +433,7 @@ model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
 gradient_boost(model, maxit = 3, verbose = TRUE) # 4. 
 ```
 
-To execute the conventional boosting algorithm on the model, the user sets the `componentwise = FALSE`, which will result in an update of all parameters at once.
+To execute the conventional boosting algorithm on the model, the user can set the `componentwise = FALSE`, which will result in an update of all parameters at once.
 See #5. 
 
 This was previously described in section 2.2.2.
@@ -454,7 +449,7 @@ gradient_boost(model,
 
 # 4. Simulation Studies
 
-In this part we design and perform a simulation study in order to demonstrate functionality of the implemented boosting algorithm. 
+In this part, we design and perform a simulation study in order to demonstrate functionality of the implemented boosting algorithm. 
 For this, we first employ models with two location and scale parameters each, and show basic functionality. 
 Second, validity of the variable selection features is demonstrated by using location and scale parameters with up to 50 components.
 
@@ -493,10 +488,10 @@ beta_4 <- c(0,15)
 gamma_4 <- c(1,-1)
 ```
 
-Configuration 1: $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-3,2)'$
-Configuration 2: $\bm{\beta} = (2,2)'$ and $\bm{\gamma} = (2,2)'$
-Configuration 3: $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-1,-0.3)'$
-Configuration 4: $\bm{\beta} = (0,15)'$ and $\bm{\gamma} = (1,-1)'$
+   * Configuration 1: $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-3,2)'$
+   * Configuration 2: $\bm{\beta} = (2,2)'$ and $\bm{\gamma} = (2,2)'$
+   * Configuration 3: $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-1,-0.3)'$
+   * Configuration 4: $\bm{\beta} = (0,15)'$ and $\bm{\gamma} = (1,-1)'$
 
 
 ```{r, cache=TRUE}
@@ -556,7 +551,7 @@ Estimating this model does not yield valid results.
 The `gradient_boost()` function runs into numerical problems, resulting in `NaN` values, as depicted in the table above.
 To understand why this happens, we need to understand the model characteristics resulting from parameter configuration `2-2-2-2`.
 Here, the red arrow shows a large size, while the blue arrow is hardly visible. 
-This happens because of the huge standard deviations present in response $y$ that concealing the changes in the mean $\bar{y}$. 
+This happens because of the huge standard deviations present in response $y$ that conceal the changes in the mean $\bar{y}$. 
 In fact, the standard deviation at $x = 1$ is $exp(2+2) = 54.60$.
 In contrast, the true response mean values range from $0$ to $2$.
 The change in response location (the signal), indicated by the blue arrow, perishes due to the high amount of noise caused by the high $\bm{\gamma}$ parameters. 
@@ -576,7 +571,7 @@ It contains a negative $\bm{\gamma}$ slope leading to decreasing response standa
 This can be observed by the funnel shape of the plot pointing in the opposite direction as before.
 
 It may be of interest to check if estimates lie closer to the true parameters relative to  e.g. configuration 1.
-To do this, we measure the gap between true values and estimates by the mean squared error (MSE).
+To do this, we measure the gap between true values and estimates by means of the mean squared error (MSE).
 This enables comparison of configurations 1 and 3.
 
 ```{r, cache=TRUE}
@@ -587,7 +582,7 @@ cbind("config 1" = mse_1,
       "config_3" = mse_3)
 ```
 
-In configuration 3, the gradient_boost() function leads to higher MSE, than in configuration 1. 
+In configuration 3, the `gradient_boost()` function leads to a higher MSE, than in configuration 1. 
 Hence the algorithm performs slightly worse in the current parameter configuration 3 $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-1,-0.3)'$, than in the base example case $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-3,2)'$.
 
 #### Evaluation Configuration 4
@@ -619,7 +614,7 @@ Regarding the finding of configuration 4, we offer several explanations:
   * Our algorithm runs into problems if the signal is too strong compared to noise.
 
 
-## Large Model - Variable Selection in the multidimensional case
+## Large Model - Variable Selection in the Multidimensional case
 
 In this part we demonstrate how the `gradient_boost()` function performs variable selection.
 We have a look at three large model configurations.
@@ -757,23 +752,27 @@ Possibly, a sensible choice of initial parameter values may address this problem
 
 # 5. Discussion.
 
-While for two-dimensional location-scale regression model, the `asp20boost` performed well, in multidimensional cases the estimates lack accuracy in two ways
-* Effect magnitudes are not estimated correctly.
-* Variable selection for scale parameters does not work well.
+While for two-dimensional location-scale regression settings, the `asp20boost` performed well, in multidimensional cases the estimates lacked accuracy in two ways:
+   
+   * Effect magnitudes were not estimated correctly.
+   * Variable selection for scale parameters did not work well.
+
 This problem might be addressed by testing varying the arguments `maxit` and `stepsize` given to the `gradient_boost()` function.
 
-Another problem is the finding that for 51-dimensional parameter vectors, the algorithm does not work.
-No variable becomes selected, the algortihm only updates intercepts.
+Another problem is the finding that for 51-dimensional parameter vectors, the algorithm did not work.
+No variable becomes selected.
+The algorithm only updates intercepts.
 A thinkable solution might be to take different starting values for the parameter estimates $\bm{\hat{\beta}}$ and $\bm{\hat{\gamma}}$.
 
 We also mentioned problems in the two-dimensional case, where one model with good signal-noise ratio was fit poorly.
-Regarding this finding we offered several explanations:
-* Further considerations to simulating data sensibly need to be taken, which we were not yet able to work out.
-* Our algorithm does not reliably yield robust results if negative $\bm{\gamma}$ slopes are included.
-* Our algorithm runs into problems if the signal is too strong compared to noise.
+Regarding this finding, we offered several explanations:
+  
+   * Further considerations to simulating data sensibly need to be taken, which we were not yet able to work out.
+   * Our algorithm does not reliably yield robust results if negative $\bm{\gamma}$ slopes are included.
+   * Our algorithm runs into problems if the signal is too strong compared to noise.
 
 We mentioned that gradients calculated theoretically, and gradients implemented in the package do not match.
-While the theoretically derived ones are the following
+The theoretically derived ones are the following:
 
 \begin{equation}
  \begin{gathered}
@@ -801,17 +800,18 @@ The practically implemented gradients are these:
  \end{gathered}
 \end{equation}
 
-Since the algorithm works with the gradients we implemented, we conclude that these gradients probably are the correct ones.
+Since, the algorithm works with the gradients we implemented, we conclude that these gradients are probably the correct ones.
 Given this, our theoretical considerations on gradients and the loss function contain an error at some place.
-The difference between theoretical and pratical gradients is simply the factor -1.
-For this reason we consider this a minor problem.
+The difference between theoretical and practical gradients is simply the factor $-1$.
+For this reason, we consider this a minor problem.
 
 What may be further developed if variable selection is ensured to work is the optimization of the number of iterations `maxit`.
 This may be done by implementing cross validation.
 
-To sum up, the asp20boost algorithm performs well on two-dimensional cases, while lacking performance for multi-dimensional cases. Especially variable selection needs to be developed further, for example by initializing parameter estimates before starting the `gradient_boost()` function, or by further testing different combinations of stepsizes and maximum iterations.
+To sum up, the `asp20boost` algorithm implementation performs well on two-dimensional cases, while lacking performance for multi-dimensional ones.
+Specially, variable selection needs to be developed further, for example, by initializing parameter estimates before starting the `gradient_boost()` function or by further testing different combinations of step sizes and maximum iterations.
 
-The simulation studies demonstrated clearly that gradient boosting is able to estimate location-scale regression and outperforms the calculations in the asp20model package.
+The simulation studies demonstrated clearly that gradient boosting is able to estimate location-scale regression and outperforms the calculations in the `asp20model` package.
 
 
 
