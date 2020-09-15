@@ -1,0 +1,151 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+# run all code chunks in this document
+# do not display output of this codechunk
+# DO display code
+rm(list=ls())
+options(scipen=999)
+source("helper_plot_model.R")
+source("helper_init_model.R")
+source("helper_calc_mse.R")
+source("helper_init_large_model.R")
+library(asp20boost)
+library(gamboostLSS)
+library(microbenchmark)
+```
+
+## Benchmark gamboostLSS
+
+In order to assess performance of our algorithm further we compare it to the existing package *gamboostLSS.* 
+Therefore we use configurations 1 and 4 the two-dimensional cases.
+In the former case our algorithm performed well, in the latter rather bad.
+
+### gamboostLSS- package
+
+In the *gamboostLSS* package boosting a location-scale regression model works as follows.
+First we need to define the vector of controls.
+As the package contains more functionalities than ours, we have to specify a control variable, that matches stepsize, and mstop to our package to allow for comparison.
+
+```{r}
+ctrl <- boost_control(trace = FALSE,
+                      mstop = c(mu = 1000, sigma = 1000),
+                      nu = c(mu = 0.01, sigma = 0.001)
+)
+```
+
+
+
+
+
+
+### Recap Configuration 1
+
+```{r}
+set.seed(1337)
+init_1 <- init_model(beta_1, gamma_1, 1000)$model
+mod_1 <- init_1$model
+response_1 <- init_1$response
+covariate_1 <- init_1$covariate
+gamboostLSS(formula = response_1 ~ covariate_1,
+                      control = ctrl)
+```
+
+What we get as result are not yet parameter estimates, but linear predictors.
+These must be regressed on the parameters to arrive at the desired estimates.
+In this package we do not first create a model and then boost it. Creation and boosting is performed in one call, already yielding estimates. 
+These estimates are, however not beta and gamma, but rather eta_mu and eta_gamma. 
+So these unit-wise linear predictors need to be regressed on the covariate in order to arrive at the estimates of interest.
+
+```{r}
+eta_mu <- fitted(est_1)$mu
+eta_sigma <- fitted(est_1)$sigma
+
+est_beta <- lm(eta_mu ~ covariate_1)
+est_gamma <- lm(eta_sigma ~ covariate_1)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Recap Configuration 3
+
+```{r}
+init <- init_model(beta_3, gamma_3, 1000)
+mod_3 <- init$model
+response_3 <- init$response
+covariate_3 <- init$covariate
+plot_model(beta_3, gamma_3, 1000)
+```
+[...]
+
+```{r}
+# estimate with external package --------
+
+mod_33 <- gamboostLSS(formula = response_3 ~ covariate_3,
+                      control = ctrl)
+eta_mu <- fitted(mod_33)$mu
+eta_sigma <- fitted(mod_33)$sigma
+
+lm(eta_mu ~ covariate_3)
+lm(eta_sigma ~ covariate_3)
+
+```
+
+[...]
+```{r}
+gradient_boost(mod_3)
+round(mod_3$beta, 3)
+round(mod_3$gamma, 3)
+```
+
+
+
+
+
+```{r}
+microbenchmark(
+  gradient_boost(mod_3)
+)
+```
+
+```{r}
+microbenchmark(
+  mod_33 <- gamboostLSS(formula = response_3 ~ covariate_3, control = ctrl),
+  eta_mu <- fitted(mod_33)$mu,
+  eta_sigma <- fitted(mod_33)$sigma,
+  lm(eta_mu ~ covariate_3),
+  lm(eta_sigma ~ covariate_3)
+)
+```
+
+
+
+Ensuring comparability is a difficult task, since the two packages are implemented in rather different ways. Running gradient_boost takes about 657000 microseconds (0.66 seconds). In contrasts, running the external algorithm gamboostLSS takes 2.829.493 microseconds (2.8 seconds), which is a multiple of our algorithm. Additionally, beta and gamma parameters are not yielded directly, but need to be determined by regression as well. In contrats, this happens directly in our algorithm.
+
+To be fair we evaluate construction of the model object as well.
+
+
+```{r}
+microbenchmark(
+  mod_1 <- LocationScaleRegressionBoost$new(response_3 ~ covariate_3, ~ covariate_3)
+)
+```
+
+This changes the situation only marginally, as this is a quite fast step.
+
+
+
