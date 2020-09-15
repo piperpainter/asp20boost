@@ -7,7 +7,25 @@
 #' thus sharing a similar syntax and structure.
 #'
 #' @usage
-#' example_model <- LocationScaleRegressionBoost$new(formula, ...)
+#' model <- LocationScaleRegressionBoost$new(formula, ...)
+#'
+#' @param location A two-sided formula with the response variable on the
+#'                 LHS and the predictor for the location (i.e. the mean)
+#'                 on the RHS.
+#' @param scale A one-sided formula with the predictor for the scale
+#'              (i.e. the standard deviation) on the RHS.
+#' @param data A data frame (or list or environment) in which to evaluate
+#'             the `location` and `scale` formulas.
+#' @param ... Passed on to [stats::model.matrix()].
+#'
+#' @return
+#' A `LocationScaleRegressionBoost` object.
+#' @examples
+#' n <- 500
+#' x <- runif(n)
+#' y <- x + rnorm(n, sd = exp(-3 + 2 * x))
+#' model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+#'
 #'
 #' @details
 #' It assumes a normally distributed response variable with
@@ -19,10 +37,10 @@
 #' which is the negative loglikelihood.
 #' @field gradients_loglik_sigma Caclulates the unit-wise gradients of the loss-functions,
 #' which is the negative loglikelihood.
- #' @field update_parameters_conventional ccc
-#' @field update_parameters_compwise ddd
-#' @field par_log eee
-#' @field plot fff
+#' @field update_parameters_conventional Adds the gradients estimators to the active fields $\bm{\beta}$ and $\bm{\gamma}$ multiplied by the defined stepsize for $\bm{\beta} $and $\bm{\gamma}$.
+#' @field update_parameters_compwise Adds update vector to the active fields $\bm{\beta}$ and $\bm{\gamma by first performing the loss improvement calculation and then building an update vector  consisting of zeros with exception of the best fitting component gradient multiplied by the defined stepsize.
+#' @field par_log Stores parameter values for each iteration to use it in the plotting function
+#' @field plot Plots the stored parameter values of each iteration by accessing the par_log public field
 #'
 # #' @inheritSection asp20model::LocationScaleRegression Section description
 #'
