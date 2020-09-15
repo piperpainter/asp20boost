@@ -1,0 +1,14 @@
+---
+title: "Abstract"
+output: html_document
+---
+
+This vignette documents the exentions of the `asp20model` package of the `asp20` repository [@R-asp20model] provided to us in the context of the course "Advanced Statistical Programming with R". 
+
+The present package extention allows for estimation of location-scale regression models considering location ($\beta$) and scale ($\gamma$) parameters. For this purpose, we utilized a gradient boosting algorythm, which aims to imporve a certain loss function. This algorythm optimizes the model parameter vectors ($\beta$ and $\gamma$) at each iteration by regressing the gradients. The goodness of fit of the gradient boosting algorythm was evaluated using simulated data. Results showed that ...
+
+This extenstion is usefull as it provides a solution for estimation of heteroskedastic data, which has not been implemented in the `asp20model` package so far. What you can else do (future perspects?).....
+
+
+
+
