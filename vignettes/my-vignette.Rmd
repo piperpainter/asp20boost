@@ -13,6 +13,8 @@ output:
     template: null
     toc: no
     toc_depth: 2
+    lof: no
+    lot: no
   html_document:
     df_print: paged
     toc: no
@@ -21,8 +23,6 @@ output:
     toc: no
     toc_depth: '2'
 geometry: left=4cm, right=3cm, top=2.5cm, bottom=2.5cm
-lof: no
-lot: no
 documentclass: report
 biblio-style: apalike
 vignette: >
@@ -49,7 +49,7 @@ This vignette documents the exentions of the `asp20model` package of the `asp20`
 The present package extension allows for estimation of location-scale regression models considering location ($\beta$) and scale ($\gamma$) parameters. 
 For this purpose, we utilized a gradient boosting algorithm, which aims to improve a certain loss function. 
 Boosting seems to be rather cumbersome for estimating location parameters alone, as it yields no advantage over OLS. However, for models with varying scale, OLS is no reliable estimation method. This is where gradient boosting plays its role. 
-
+ 
 This algorithm optimizes the model parameter vectors ($\beta$ and $\gamma$) by fitting loss gradients. The goodness of fit of the gradient boosting algorithm was evaluated using simulated data. 
 Results showed that for two-dimensional location-scale regression model, the `asp20boost` performed well, in multidimensional cases the estimates lack accuracy in two ways
 * Effect magnitudes are not estimated correctly.
