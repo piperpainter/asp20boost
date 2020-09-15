@@ -1,11 +1,10 @@
 #' R6 Class for Specifying Location-Scale Regression Models
 #'
 #' @description
-#' Model obejcts created by this class may be estimated by the `gradient_boost` function.
+#' Model objects created by this class may be estimated using the `gradient_boost` function.
 #' This model class builds upon and thus inherits the basic structure
-#' from the `LocationScaleRegression` model class of the `asp20model` package.
-#' Consequently, it shares similar syntax and structure. (Please  see the help
-#' page of that class *Note: It would be nice to just link the vignette*)
+#' from the `LocationScaleRegression` model class of the \pkg{asp20model} package
+#' thus sharing a similar syntax and structure.
 #'
 #' @usage
 #' example_model <- LocationScaleRegressionBoost$new(formula, ...)

@@ -5,10 +5,6 @@ bibliography:
 - packages.bib
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
-  html_document:
-    df_print: paged
-    toc: no
-    toc_depth: '2'
   pdf_document:
     includes:
       before_body: frontpage.tex
@@ -17,6 +13,10 @@ output:
     template: null
     toc: no
     toc_depth: 2
+  html_document:
+    df_print: paged
+    toc: no
+    toc_depth: '2'
   word_document:
     toc: no
     toc_depth: '2'
@@ -350,7 +350,7 @@ This enables proceeding to the next iteration.
 
 First we define the model by generating sample data and defining explanatory variables for the standard deviation of the response variable. After the definition `gradient_boost` will iterate over the model and update the parameters at each step, depending on the selected method. The function parameter componentwise will instruct the model to use componentwise boosting if set to TRUE. Depending on the sample data a custom `stepsize` for beta and gamma might be useful, which can be set using the `stepsize` parameter by using a vector containing the `stepsize` for $\bm{\beta}$ and $\bm{\gamma}$.
 
-```{r, cache = TRUE}
+```{r cache=TRUE}
 set.seed(12345)
 n <- 500
 x <- runif(n)
@@ -362,9 +362,10 @@ gradient_boost(model,
                componentwise = TRUE)
 
 ```
-To evaluate the parameter changes throughout the iterations, plotting of the parameter changes can be enabled by setting the parameter `plot` on TRUE.
 
-```{r, cache = TRUE}
+To evaluate the parameter changes throughout the iterations, plotting of the parameter changes can be enabled by setting `plot = TRUE`.
+
+```{r pl parm, cache=TRUE}
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
 gradient_boost(model,
                stepsize = c(0.01, 0.1), 
@@ -412,6 +413,9 @@ gradient_boost(model,
                stepsize = c(0.01, 0.1), 
                componentwise = FALSE, maxit = 100, plot = TRUE)
 ```
+
+
+# 4. Simulation Studies
 
 
 
