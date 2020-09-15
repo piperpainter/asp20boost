@@ -94,7 +94,7 @@ E(y_i) = \eta_{\mu_i} = \bm{x_i}'\bm{\beta}
 
 Modeling the scale involves an additional concern: the modeled standard deviations $sd(y_i)$ should be non-negative.
 This is ensured by the response function $h(\eta) = \exp(\eta)$.
-Hence the standard deviations depend on transformed linear predictors:
+Hence the standard deviations depend on transformed linear predictors $\bm{z_i}$:
 
 \begin{equation}
 sd(y_i) = \exp(\bm{z_i}'\bm{\gamma})
@@ -131,7 +131,7 @@ In residual boosting, the focus lies on the residuals. Initial parameter estimat
  \end{gathered}
 \end{equation}
 
-The effect of the location regressors on these residuals, summarized in the design matrix $\bm{X}$, is estimated using least squares resulting in the residual-estimate, or base-learner, $\hat{\bm{\beta}}$
+The effect of the location regressors on these residuals, summarized in the design matrix $\bm{X}$, is estimated using least squares resulting in the residual-estimate, or base-learner, $\hat{\bm{b}}$
 
 
 \begin{equation}
@@ -146,14 +146,14 @@ $\hat{\bm{b}}$ is added to the location-estimate $\bm{\hat{\beta}}$, adjusted by
 \begin{equation}
  \begin{gathered}
 \bm{\hat{\beta}}^{(t)} = \bm{\hat{\beta}}^{(t-1)} + \nu \hat{\bm{b}} \\
-\text{parameter Updating Step}
+\text{parameter updating step}
  \end{gathered}
 \end{equation}
 
 
 This yields an updated parameter estimate and the procedure is repeated thereafter.
 With each update, the fit of the model improves leading to smaller residuals and hence smaller base-learners $\hat{\bm{b}}$.
-This means than with each iteration the overall change in parameter $\bm{\hat{\beta}}$ decreases thus allowing the boosting algorithm to converge towards the OLS estimate which is, in fact, the true value of $\bm{\hat{\beta}}$.
+This means that with each iteration the overall change in parameter $\bm{\hat{\beta}}$ decreases thus allowing the boosting algorithm to converge towards the OLS estimate which is, in fact, the true value of $\bm{\beta}$.
 
 Boosting seems to be rather cumbersome for estimating location parameters alone, as it yields no advantage over OLS.
 However, for models with varying scale, OLS is no reliable estimation method. This is where gradient boosting plays its role.
@@ -162,39 +162,41 @@ It is able to address location-scale regression settings extending the idea of b
 
 ### Gradient Boosting
 
+*Include Links to Apendix*
+
 Gradient boosting is no fundamentally different concept, but rather another view on the boosting algorithm.
 In this case the goal is to improve a certain loss function instead of estimating residuals. 
 We will see that for location the gradients turn out to be (variance adjusted) residuals. 
-A high degree of flexibility characterizes the choice of the loss function, as it allows even non-linearity.
-This enables gradient boosting to address various kinds of situations.
-For location-scale regression, the negative log likelihood of the observed response is convenient.  
+Possible choice for loss functions involves e.g. the sum of least squares, penalized terms or non-linear ones.
+This makes gradient boosting a very flexible method.
+For location-scale regression, the negative log likelihood of the observed response is convenient as loss function.  
 
 \begin{equation}
  \begin{gathered} 
-  = \sum\log\sigma_i + \frac{1}{2} \sum \log 2\pi + \frac{1}{2}\sum\frac{y_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{\mu_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{-2y_i\mu_i}{\sigma_i^2} \\
+  \text{loss}(\bm{y}) = \sum\log\sigma_i + \frac{1}{2} \sum \log 2\pi + \frac{1}{2}\sum\frac{y_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{\mu_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{-2y_i\mu_i}{\sigma_i^2} \\
  \end{gathered}
 \end{equation}
 
-The unit-wise gradients of this loss function play a key role. These are different from the gradients supplied in the `asp20model package`. 
+The unit-wise gradients of this loss function play a key role. These are different from the gradients supplied in the `asp20model` package. 
 The relevant gradients for boosting are attained by partially deriving the loss function by the unit-specific linear predictors $\eta_{\mu_i}$ and by $\eta_{\sigma_i}$ as in *insert the number of the equations* respectively:
 
 \begin{equation}
  \begin{gathered}
-\eta_{\mu_i} = \bm{x_i}'\bm{\hat{\beta}} = E(y_i) \\
-\eta_{\sigma_i} = \bm{z_i}'\bm{\hat{\gamma}} = \log sd(y_i) \\
+ \bm{u}_{\mu} = \frac{\partial \text{loss}(\bm{y})}{\partial \eta_{\mu_i}} = \mu_i \times \frac{1}{\sigma_i^2} - y_i \times \frac{1}{\sigma_i^2} = - \frac{y_i - \mu_i}{\sigma_i^2}
+  \end{gathered}
+\end{equation}
+
+\begin{equation}
+ \begin{gathered}
+  \bm{u}_{\sigma} = \frac{\partial \text{loss}(\bm{y})}{\partial \eta_{\sigma_i}} =  - \frac{(y_i - \mu_i)^2}{\sigma_i^2} + 1
+  \text{gradient calculation step}
  \end{gathered}
 \end{equation}
 
-
-Deriving the negative log likelihood of the gaussian distribution by $\eta_{\mu_i}$ and $\eta_{\sigma_i}$ respectively yields the following gradients:
-
-
 Here we see, as mentioned above, that location gradients are equivalent to the variance adjusted residuals.
-In location regression with constant variance it (*it is what?*) would be equivalent to residuals up to a multiplicative constant.
-*This sentence isn't clear* In this sense, gradient boosting is the broader concept, while residual boosting as described above is a special case (*of what?*). 
 We obtain n $\mu$ gradients, as well as n $\sigma$ gradients.
-*It is better to re-state the role specifically* The gradients play the role residuals did in the last part.
-They are estimated by regressing them on the model covariates $x_i$ and $z_i$ respectively. 
+*It is better to re-state the role specifically* The gradients play the role residuals did in the last part:
+They are estimated by regressing them on the model covariates. 
 
 \begin{equation}
  \begin{gathered}
@@ -205,9 +207,9 @@ They are estimated by regressing them on the model covariates $x_i$ and $z_i$ re
 \end{equation}
 
 This results in two separate gradient estimates or base-learners. 
-The base learning procedure in our case is again the least squares estimate. 
+The base learning procedure in our case is the least squares estimate above. 
 Another possible way of generalizing gradient boosting even further is to chose different kinds of base learning procedures, such as splines or regression trees.
-The gradient estimates $\hat{\bm{b}}$ and $\hat{\bm{g}}$ are used to update the overall parameter estimates $\bm{\beta}$ and $\gamma$, again adjusted by some learning rate $\nu$.
+The gradient estimates $\hat{\bm{b}}$ and $\hat{\bm{g}}$ are used to update the overall parameter estimates $\hat{\bm{\beta}}$ and $\hat{\bm{\gamma}}$, again adjusted by some learning rate $\nu$.
 
 
 \begin{equation}
@@ -219,8 +221,14 @@ The gradient estimates $\hat{\bm{b}}$ and $\hat{\bm{g}}$ are used to update the 
 \end{equation}
 
 Updating the parameters leads to an improved fit i.e. a smaller loss function, which in turn leads to changed gradients.
-The next iteration may be performed *(for what/to achieve what / until what is achieved?)*.
+Now the next iteration may be performed, by calculating and estimating these gradients.
+The algorithm stops if a prespecified number of iterations is reached.
 Parameter estimates in the gradient boosting algorithm also converge towards the true parameter values of the location-scale regression model. 
+
+Here we need to mention, that the implemented algorithm did not work using the gradients described above in the gradient calculation step.
+With a small adjustment we implemented a functioning algorithm.
+However, this is a major issue, which we will come back to in part *Hier part*.
+
 
 
 ### Componentwise boosting 
@@ -246,7 +254,9 @@ The gradients are regressed on each covariate  or component  respectively, resul
 \end{equation}
 
 
-*Is it really called minimum SSC?*Then, the best loss improvement $j^*$ is determined by a minimum sum of squares criterion:
+Then, the best loss improvement $j^*$ is determined by a least squares criterion:
+
+*Adjust Formula here!!! Too much boldnes*
 
 \begin{equation}
  \begin{gathered}
@@ -256,7 +266,9 @@ k^{*} = \text{argmin} \sum(\bm{u}_{\sigma}- z_{ij} \hat{\bm{g}}_j)^2
 \end{equation}
 
 The parameter vectors are then updated as well in a componentwise manner.
-This means that only one component of each parameter vector $\bm{\beta}$ and $\bm{\gamma}$ changes, while $p-1$ components remain unaffected by the updating step:
+This means that only one component of each parameter vector $\hat{\bm{\beta}}$ and $\hat{\bm{\gamma}}$ changes, while $p-1$ components remain unaffected by the updating step:
+
+*Adjust Formula here!!! Too much boldnes*
 
 \begin{equation} 
 \begin{aligned}
@@ -284,20 +296,21 @@ The code of the `asp20boost` package consists of two major parts.
 The first is the R6 class `LocationScaleRegressionBoost`, which represents the location-scale regression model and includes some quantities (e.g. gradients) necessary for executing the boosting algorithm.
 The second part is `gradient_boost()`, a function specifically conceived  to execute the gradient boost algorithm upon a `LocationScaleRegressionBoost` object.
 
-It is important to emphasize that this package allows for the practical application of the concepts described in the „gradient boosting“and „componentwise boosting“ sections presented above. The concept of "residual boosting“ fulfilled an explanatory purpose and is not implemented in the package.
+It is important to emphasize that this package allows for the practical application of the concepts described in the „gradient boosting“and „componentwise boosting“ sections presented above. 
+The concept of "residual boosting“ fulfilled an explanatory purpose and is not implemented in the package.
 
 ## `gradient_boost()` function
 
-It is easier to comprehend our code by considering first the  `gradient_boost()` function.
+It is easiest to comprehend our code by considering first the  `gradient_boost()` function.
 It uses the quantities of the model class in order to perform the boosting algorithm.
-The principal argument is the `model` `LocationScaleRegressionBoost` object followed by several optional specifiers.
-In each iteration of the algorithm, the function directly applies the third step of parameter updating by calling the public method update_parameters_*() of the model class. 
+The principal argument is the `LocationScaleRegressionBoost` object followed by several optional specifiers.
+In each iteration of the algorithm, the function directly applies the third step of parameter updating by calling the public method `update_parameters_*()` of the model class. 
 Steps one and two, i.e.  gradient calculation and estimation, are performed by the model class object and explained in the next subsection.
 
 This function performs a prespecified number of 1000 iterations unless another quantity was specified by means of the `maxit`  argument in the `gradient_boost()` function. 
 After iterating, a  modified model object is returned instead of mere parameter values. 
 This includes, for example, the model formula, the log likelihood value and the desired parameter configuration after the execution of the algorithm.
-In each iteration $\bm{\beta}$ gets updated first followed by $\bm{\gamma}$.
+In each iteration $\hat{\bm{\beta}}$ gets updated first followed by $\hat{\bm{\gamma}}$.
 If `componentwise` is set to `TRUE`, the algorithm employs the public method `update_parameters_compwise()`, which performs additional calculations that `update_parameters_conventional()` does not.
 The functioning of these methods is explained in the following subsection where the `LocationScaleRegressionBoost` class is described.
 
@@ -319,47 +332,36 @@ We accomplish this by adding  a total of eight additional methods:
   * `update_parameters_compwise`
 
 Two of the public methods are easy to comprehend: `gradients_loglik_mu()` and `gradients_loglik_sigma()` perform simply the first gradient-calculation step of each iteration by employing the gradient formulas derived theoretically in the last part. 
-
-*LEVIN: Confess our mistakes!*
-
-These two functions use residuals obtained from the `resid()` method and the estimates of the standard deviation obtained from  the  public field `fitted_scale`. 
+As mentioned, gradient formulas are modified in order to make the algorithm working.
+We will come back to this point in part *Hier part einfügen*.
+The two methods `gradients_loglik_*()`  use residuals obtained from the `resid()` method and the estimates of the standard deviation obtained from  the  public field `fitted_scale`. 
 Both of these fields are inherited from the parental class `LocationScaleRegression`.
 As the calculated gradients may be possibly of interest, we allowed for external access by setting `gradients_loglik_mu()` and `gradients_loglik_sigma()`as a public methods.
 
-The four gradient estimator functions `gradient_estimators_*()`, in contrast, are private and can not be accessed via class-external functions, such as `gradient_boost()`.
+The methods performing the second algorithm step `gradient_estimators_*()`, in contrast, are private and can not be accessed via class-external functions, such as `gradient_boost()`.
 However, they are used in the calculations performed by two public methods `update_parameters_*()`.
-
-*LEVIN: update!*
-
-The private functions are called `gradient_estimators_*()` and perform the second step of gradient estimation.
-The functions with the suffix  *conventional* simply regress the location gradients on  location covariates and the scale gradients on scale covariates respectively. 
+The gradient estimator methods with the suffix  *conventional* simply regress the location gradients on  location covariates and the scale gradients on scale covariates respectively. 
 The functions suffixed with *componentwise* return a list of gradient estimators  obtained by regressing the gradients on one particular component $\bm{x_j}$ or $\bm{z_k}$ of the respective design matrix $\bm{X}$ or $\bm{Z}$.
 
-The centerpiece of the boosting implementation are the update methods
-
-  *`update_parameters_conventional`and
-  *`update_parameters_compwise`.
-
-The *conventional* version merely adds the gradients estimators to the active fields $\bm{\beta}$ and $\bm{\gamma}$  multiplied by the defined stepsize for $\bm{\beta}$, and for $\bm{\gamma}$. The `stepsize` parameter is set by default to 0.01 for $\bm{\beta}$, and 0.1 for $\bm{\gamma}$.
+The centerpiece of the boosting implementation are the update methods `update_parameters_*()`.
+The *conventional* version merely adds the gradients estimators to the active fields `beta` and `gamma`  multiplied by the defined stepsize. The `stepsize` parameter is set by default to 0.01 for `beta`, and 0.1 for `gamma`.
 Additionally to this, the componentwise version further performs first the loss improvement calculation and then builds an update vector  consisting of zeros with exception of the best fitting component.
 Finally,  `update_parameters_compwise` performs the update.
-In both of its versions, the update method finally assigns new values to $\bm{\beta}$ and $\bm{\gamma}$. 
+In both of its versions, the update method finally assigns new values to `beta` and `gamma`. 
 
 These active fields are inherited from the `LocationScaleRegression` class of the `asp20model` package.
 Changing them induces a new model state of the `LocationScaleRegressionBoost` object.
-Hence, various fields become new values assigned.
-Among them are the fields `.resid`, `fitted_location` and `fitted_scale`, which are used to calculate residuals and finally gradients. 
-
-*This was added by Johannes. Does it make sense Levin?*
-As a consequence, the public methods `gradients_loglik_mu` and `gradient_estimators_mu` of our `LocationScaleRegressionBoost` class also yield different values if called *Begining from here this sentence does not make sense*as well as their counterparts for $\bm{\sigma}$ and componentwise estimation.
+Hence, various fields become assigned new values.
+Among them are the fields `.resid`, `fitted_location` and `fitted_scale`, which are used to calculate residuals and gradients.
 This enables proceeding to the next iteration.
 
 ## User Interface by example
 
 First, we define the model by generating sample data and defining explanatory variables for the standard deviation of the response variable.
-After the definition *what definition?* `gradient_boost` will iterate over the model and update the parameters at each step, depending on the selected method.
-The function `update_parameter_componentwise` will instruct the model to use componentwise boosting if set to `TRUE`. 
-Depending on the sample data, a custom step size for $\bm{\beta}$ and $\bm{\gamma}$ might be useful, which can be set by means of the `stepsize` parameter imputing a vector *what dimensions should this vector have?* containing the desired step size for $\bm{\beta}$ and $\bm{\gamma}$ respectively.
+After model definition `gradient_boost` will iterate over the model and update the parameters at each step, depending on the selected method.
+The function `update_parameter_componentwise()` will instruct the model to use componentwise boosting if set to `TRUE`. 
+Depending on the sample data, a custom step size for `beta` and `gamma` might be useful, which can be set by means of the `stepsize` parameter.
+`stepsize` is a vector of two entries, the first being the stepsize for beta updates, the second for gamma updates.
 
 ```{r, cache=TRUE}
 set.seed(12345)
@@ -397,7 +399,7 @@ gradient_boost(model,
 ```
 
 
-Parameter vectors of $\bm{\beta}$ and $\bm{\gamma}$ can be obtained by accessing the their corresponding fields via `model$beta` and `model$gamma`as follows (see "#3").
+Parameter vectors of $\bm{\beta}$ and $\bm{\gamma}$ can be obtained by accessing their corresponding fields via `model$beta` and `model$gamma`as follows (see "#3").
 
 
 ```{r, cache = TRUE}
@@ -429,8 +431,6 @@ See #5.
 
 This was previously described  in section 2.2.2.
 
-*Didn't we state above that we didn't implement conventional boosting but just explained it for the sake of building an argument?*
-
 ```{r, cache=TRUE, fig.cap = ""}
 model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
 gradient_boost(model,
@@ -445,7 +445,6 @@ gradient_boost(model,
 In this part we design and perform a simulation study in order to demonstrate functionality of the implemented boosting algorithm. 
 For this, we first employ models with two location and scale parameters each, and show basic functionality. 
 Second, validity of the variable selection features is demonstrated by using location and scale parameters with up to 50 components.
-Lastly, we compare our algorithm with the one implemented in the `gamboostLSS` package. *really?*
 
 ```{r setting, cache=TRUE}
 rm(list=ls())
@@ -482,6 +481,11 @@ beta_4 <- c(0,15)
 gamma_4 <- c(1,-1)
 ```
 
+Configuration 1: $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-3,2)'$
+Configuration 2: $\bm{\beta} = (2,2)'$ and $\bm{\gamma} = (2,2)'$
+Configuration 3: $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-1,-0.3)'$
+Configuration 4: $\bm{\beta} = (0,15)'$ and $\bm{\gamma} = (1,-1)'$
+
 
 ```{r, cache=TRUE}
 set.seed(1337)
@@ -505,8 +509,6 @@ plot_model(beta_4, gamma_4, 1000, "Config 4")
 ```
 
 ```{r echo=FALSE, cache=TRUE}
-# We need output. IMPORTANT 
-
 result_df <- data.frame("Config" = c(1,1,2,2,3,3,4,4),
                         "beta_true" = c(beta_1, beta_2, beta_3, beta_4),
                         "beta est." = c(round(mod_1$beta, 3), round(mod_2$beta, 3), round(mod_3$beta, 3), round(mod_4$beta, 3)),
@@ -523,14 +525,14 @@ Values: $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-3,2)'$
 
 This parameter configuration is equivalent to the base example case of the `asp20model` package. 
 As already mentioned, heteroskedasticity is present, as indicated visually by the funnel shape of the scatter plot.
-The solid black line represents the true response mean, while the dashed lines represent the true upwards and downwards standard deviations from this mean.
+The solid black line in the plots above represents the true response mean, while the dashed lines represent the true upwards and downwards standard deviations from this mean.
 The red arrow indicates the standard deviation at the point $x = 1$ i.e. the upper limit of covariate values, since covariates are designed to be on the unit interval.
 For cases with increasing scale, the red arrow hence indicates maximum standard deviation of the response.
-The blue arrow depicts the slope of the location parameter vector $\bm{\beta_1}$. 
+The blue arrow depicts the slope of the location parameter vector $\beta_1$. 
 The ratio of those two quantities is essential for the estimability of the model. 
 Here, the blue arrow is dominant indicating that the model may be well estimated. 
 Estimates are displayed in the table above. 
-We see that both $\bm{\beta}hat$ and $\hat{\bm{\gamma}}$ estimates are close to the true parameter vectors $\bm{\beta}$ and $\bm{\gamma}$.
+We see that both $\hat{\bm{\beta}}$ and $\hat{\bm{\gamma}}$ estimates are close to the true parameter vectors $\bm{\beta}$ and $\bm{\gamma}$.
 
 ### Evaluation Configuration 2
 
@@ -539,17 +541,17 @@ Values: $\bm{\beta} = (2,2)'$ and $\bm{\gamma} = (2,2)'$
 
 Configuration 2 is a somewhat naive parameter configuration where all parameters are set to value $2$. 
 Estimating this model does not yield valid results.
-The `gradient_boost()` function runs into numerical problems.
+The `gradient_boost()` function runs into numerical problems, resulting in `NaN` values, as depicted in the table above.
 To understand why this happens, we need to understand the model characteristics resulting from parameter configuration `2-2-2-2`.
 Here, the red arrow shows a large size, while the blue arrow is hardly visible. 
 This happens because of the huge standard deviations present in response $y$ that concealing the changes in the mean $\bar{y}$. 
 In fact, the standard deviation at $x = 1$ is $exp(2+2) = 54.60$.
 In contrast, the true response mean values range from $0$ to $2$.
-The change in response location (the signal), indicated by the blue arrow, perishes *stirbt?* due to the high amount of noise caused by the high $\bm{\gamma}$ parameters. 
+The change in response location (the signal), indicated by the blue arrow, perishes due to the high amount of noise caused by the high $\bm{\gamma}$ parameters. 
 Thus, a signal-noise ratio results that is impossible to estimate. 
 Values for parameters $\bm{\gamma}$ need to be chosen sensibly for simulating data. 
 Nevertheless, this is no straight-forward task, since the effect of $\bm{\gamma}$ on the response standard deviation is not linear but exponential. 
-To check this *check the exponentiality?* in the two-dimensional case, the arrows in the model plot may be of help.
+To check for signal-noise ratio in the two-dimensional case, the arrows in the model plot may be of help.
 
 
 #### Evaluation Configuration 3
@@ -573,14 +575,14 @@ cbind("config 1" = mse_1,
       "config_3" = mse_3)
 ```
 
-Configuration 1 leads to smaller MSE *Don't we speak here of config 3? This conclusion is too lonely here*. 
-This indicates a better performance in this  configuration.
+In configuration 3, the gradient_boost() function leads to higher MSE, than in configuration 1. 
+Hence the algorithm performs slightly worse in the current parameter configuration 3 $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-1,-0.3)'$, than in the base example case $\bm{\beta} = (0,1)'$ and $\bm{\gamma} = (-3,2)'$.
 
 #### Evaluation Configuration 4
 
 Values: $\bm{\beta} = (0,15)'$ and $\bm{\gamma} = (1,-1)'$
 
-In configuration 4, we again included both a negative slope for $\bm{\gamma}$  and a very high slope $\bm{\beta}$.
+In configuration 4, we again included both a negative slope for $\bm{\gamma}$  and a very high  $\bm{\beta}$ slope.
 The idea is to ensure a very good signal-noise ratio to guarantee a  good model fit measured by a low MSE.
 Contrary to our expectations, the algorithm performs poorly for this parameter configuration.
 
@@ -591,7 +593,7 @@ cbind("config 1" = mse_1,
       "config 4" = mse_4)
 ```
 
-The bad model fit is due to the fact that the location slope is highly underestimated.
+The bad model fit is due to the fact that the location slope is highly underestimated at -0.25 as depicted in the table above.
 
 
 ### Conclusions
@@ -609,15 +611,14 @@ Regarding the finding of configuration 4, we offer several explanations:
 
 In this part we demonstrate how the `gradient_boost()` function performs variable selection.
 We have a look at three large model configurations.
-Configuration 5 present 6-dimensional parameter setting.
+Configuration 5 presents a 6-dimensional parameter setting.
 In configuration 6 $\bm{\beta}$ and $\bm{\gamma}$ are of length 11, while in configuration 7 they contain 51 components.
 The parameter vectors are created randomly. 
 Then some components are set to 0. 
 This results in the configurations displayed below.
-In order to ensure a good signal-noise ratio, to creation of random parameter is restricted, as explained below.
+In order to ensure a good signal-noise ratio, there are restrictions the the random creation of  parameters, as explained below.
 
 ```{r echo=FALSE, cache=TRUE}
-# Only output
 set.seed(1337)
 # initialize models --------------------------------------------------------------
 init_5 <- init_large_model(beta_range = c(5,10),
@@ -646,8 +647,9 @@ gradient_boost(mod_7, stepsize = c(0.1,0.01), maxit = 1000, componentwise = TRUE
 
 ```
 
+Configuration 5
+
 ```{r echo=FALSE, cache=TRUE}
-# only output
 # Configuration 5
 cbind(beta_true = init_5$beta, 
       beta_est = round(mod_5$beta, 3),
@@ -655,6 +657,8 @@ cbind(beta_true = init_5$beta,
       gamma_est = round(mod_5$gamma, 3)
 )
 ```
+
+Configuration 6
 
 ```{r echo=FALSE, cache=TRUE}
 #only output
@@ -666,10 +670,10 @@ cbind(beta_true = init_6$beta,
 )
 ```
 
-### Configuration 5
+### Evaluation Configuration 5
 
 As mentioned above, there are restrictions on parameter creation since not every possible parameter configuration leads to estimable models, as we have seen in the two-dimensional case.
-In the multidimensional case, the following  problem remains: if $\bm{\gamma}$ parameters add up to high values, the resulting simulated response has huge standard deviation. 
+In the multidimensional case, the following  problem remains: if $\bm{\gamma}$ parameters add up to high values, the resulting simulated response has huge standard deviations. 
 This leads to the concealing of the location effects.
 Checking for well balanced signal-noise ratio remains to be done in the multidimensional case as well.
 Furthermore, plotting is hardly an option, as dimensions increase.
@@ -681,13 +685,15 @@ hist(init_5$fitted_response, breaks = 25, main = "eta_mu")
 hist(init_5$fitted_sd, breaks = 25, main = "exp_eta_sigma")
 ```
 
-Location predictors take values between 8 and 22 with a maximum of 15. 
-In contrast, the highest response- standard deviation is 4, while most values are at about 2.5 and lower. 
+Location predictors take values between 8 and 22 with the most frequent being around 15. 
+In contrast, the highest response standard deviation is 4, while most values are at about 2.5 and lower. 
 The resulting response variation should be both small enough to not conceal the location effects and big enough to be estimated.
 
-In configuration 5, the algorithm correctly depicts which effects exists on the location response *location response oder response location?* i.e. it finds the non-zero elements of $\bm{\beta}$.
-For the scale estimate $\bm{\gamma}_hat$ too many parameters are chosen since two zero elements of the true parameter $\bm{\gamma}$ are assigned non-zero values by the estimate $\hat{\bm{\gamma}}$.
-The estimated effect sizes differ considerably higher from the true values relative the two-dimensional case already presented.  This results in a higher MSE. 
+In configuration 5, the algorithm correctly depicts which effects exists on the response location  i.e. it finds the non-zero elements of $\bm{\beta}$.
+For the scale estimate $\hat{\bm{\gamma}}$ too many parameters are chosen since two zero elements of the true parameter $\bm{\gamma}$ are assigned non-zero values by the estimate $\hat{\bm{\gamma}}$.
+The estimated effect sizes differ considerably higher from the true values relative the two-dimensional case already presented.  
+This results in a higher MSE compared to the good model fit of last section.
+Compared to the poor fit of configuration 4, the multidimensional fit still performs satifactorily.
 
 ```{r, cache=TRUE}
 mse_5 <- calc_MSE(init_5$beta, init_5$gamma, mod_5$beta, mod_5$gamma)
@@ -699,9 +705,9 @@ cbind("config 1" = mse_1,
 
 
 
-### Configuration 6
+### Evaluation Configuration 6
 
-In this case, we face a 10-dimensional configuration.
+In this case, we face a 11-dimensional configuration.
 We get the following distributions for the mean and the standard deviation respectively. 
 
 ```{r, cache = TRUE, fig.cap = ""}
@@ -710,14 +716,10 @@ hist(init_6$fitted_response, breaks = 25, main = "eta_mu")
 hist(init_6$fitted_sd, breaks = 25, main = "exp_eta_sigma")
 ```
 
-For $\bm{\beta}$ the algorithm chose 1 *what?* too few.
-For $\bm{\gamma}$ entries 1-3 are chosen correctly.
-Then the algorithm yields errors.
-Entry 4 is chosen, while in fact being zero.
-Entry 5 is not chosen even when an effect in the true model exists. 
+For $\bm{\beta}$ the algorithm missed one component.
+For $\bm{\gamma}$ some effects are chosen correctly, but many zeros as well are designated as existing effects.
 
-
-### Configuration 7
+### Evaluation Configuration 7
 
 When scaling the parameter dimension up to 51 variables, the algorithm runs into a critical problem: all slope estimates are zero.
 
@@ -735,12 +737,22 @@ hist(init_7$fitted_response, breaks = 25, main = "eta_mu")
 hist(init_7$fitted_sd, breaks = 25, main = "exp_eta_sigma")
 ```
 
-One explanation for this problem is that the algorithm fits only intercepts in the first step resulting in very high values.
-The remaining iterations are used to lower intercepts *Um den intercepts to reducing? oder was meints du?*. 
-This may be checked by setting `verbose = TRUE`.
+The problem in detail is that the algorithm fits only intercepts in the first step resulting in very high values.
+The remaining iterations are used to reduce estimated intercepts of this first step.
 For this reason, no other components of the parameter estimates are updated.
+This may be checked by setting `verbose = TRUE`.
 Possibly, a sensible choice of initial parameter values may address this problem.
-# 5. Discussion. 
+
+# 5. Discussion.
+
+ Gamma effects are badly selected if parameters (dimensions) increase
+Elaborate on differing gradients theory - implementation.
+
+Regarding the finding of configuration 4, we offer several explanations:
+
+  * Further considerations to  simulating data sensibly need to be taken,  which we were not yet able to work out.
+  * Our algorithm does not reliably yield robust results if negative $\bm{\gamma}$ slopes are included.
+  * Our algorithm runs into problems if the signal is too strong compared to noise.
 
 
 # 6. References
@@ -749,17 +761,27 @@ Possibly, a sensible choice of initial parameter values may address this problem
 
 # 7. Appendix
 
+The conditional porbability density function of a gaussian response is
+
 \begin{equation}
  \begin{gathered}
- \text{loss}(\bm{y}) = -LL(\bm{y}) \\
+  f\left( y_i|\bm{x_i} \right) = \frac{1}{\sigma_i \sqrt{2\pi}} \exp \Bigg\{ { -\frac{1}{2} \left(\frac{y_i - \mu_i}{\sigma_i} \right)^2} \Bigg\} \\
+ \end{gathered}
+\end{equation}
+
+The loss function is the negative log-likelihood of the gaussian response.
+
+\begin{equation}
+ \begin{gathered}
+ \text{loss}(\bm{y}) = -ll(\bm{y}) \\
  = -\log \left (\prod_{i = 1}^{n} f\left( y_i|\bm{x_i} \right) \right) \\
-  \text{with  } f\left( y_i|\bm{x_i} \right) = \frac{1}{\sigma_i \sqrt{2\pi}} \exp \Bigg\{ { -\frac{1}{2} \left( \frac{y_i - \mu_i}{\sigma_i} \right)^2} \Bigg\} \\
   = - \sum \log  f\left( y_i|\bm{x_i} \right) \\
   = - \sum \left( \log \frac{1}{\sigma_i \sqrt{2\pi}} + \log \exp \Bigg\{ { -\frac{1}{2} \left( \frac{y_i - \mu_i}{\sigma_i} \right)^2} \Bigg\}   \right) \\
   \end{gathered}
 \end{equation}
 
-This is the loss function: 
+Resulting in 
+
  \begin{equation}
  \begin{gathered} 
   = \sum\log\sigma_i + \frac{1}{2} \sum \log 2\pi + \frac{1}{2}\sum\frac{y_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{\mu_i^2}{\sigma_i^2} + \frac{1}{2}\sum \frac{-2y_i\mu_i}{\sigma_i^2} \\
@@ -767,15 +789,32 @@ This is the loss function:
 \end{equation}
 
 For deriving the loss function we transform it to the following 
+
 \begin{equation}
  \begin{gathered} 
 \sum \eta_{\sigma_i} + \frac{n}{2}\log 2\pi + \frac{1}{2} \sum y_i^2 \exp(\eta_{\sigma_i})^{-2} + \frac{1}{2} \sum \eta_{\mu_i}^2 \exp(\eta_{\sigma_i})^{-2} + \frac{1}{2} \sum -2 \times y_i \times \eta_{\mu_i} \times \exp(\eta_{\sigma_i})^{-2}
   \end{gathered}
 \end{equation}
 
+This function is partially derived by each linear predictor.
+Therefore, we need the following calculation multiple times.
 
-Then, we derive $\text{loss}(\bm{y})$ towards $\eta_{\mu_i}$
+\begin{equation}
+ \begin{gathered}
+\frac{\partial \exp(\eta_{\sigma_i})^{-2}}{\partial \eta_{\sigma_i}} = -2 \exp(\eta_{\sigma_i})^{-3} \times \exp(\eta_{\sigma_i}) = -2 \exp \eta_{\sigma_i}^{-2}
+ \end{gathered}
+\end{equation}
 
+We quickly recap on the linear predictors.
+
+\begin{equation}
+ \begin{gathered}
+\eta_{\mu_i} = \bm{x_i}'\bm{\hat{\beta}} = E(y_i) \\
+\eta_{\sigma_i} = \bm{z_i}'\bm{\hat{\gamma}} = \log sd(y_i) \\
+ \end{gathered}
+\end{equation}
+
+First, we derive $\text{loss}(\bm{y})$ by a location predictor $\eta_{\mu_i}$
 
 \begin{equation}
  \begin{gathered}
@@ -784,21 +823,13 @@ Then, we derive $\text{loss}(\bm{y})$ towards $\eta_{\mu_i}$
   \end{gathered}
 \end{equation}
  
-And then the derivative of the  $\text{loss}(\bm{y})$ towards $\eta_{\sigma_i}$
+Second, $\text{loss}(\bm{y})$ is derived by a scale predictor $\eta_{\sigma_i}$
 
-\begin{equation}
- \begin{gathered}
-\frac{\partial \exp(\eta_{\sigma_i})^{-2}}{\partial \eta_{\sigma_i}} = -2 \exp(\eta_{\sigma_i})^{-3} \times \exp(\eta_{\sigma_i}) = -2 \exp \eta_{\sigma_i}^{-2}
- \end{gathered}
-\end{equation}
- 
 \begin{equation}
  \begin{gathered}
   \frac{\partial \text{loss}(\bm{y})}{\partial \eta_{\sigma_i}} = 1+0 + \frac{1}{2}y_i^2 (-2) \exp(\eta_{\sigma_i})^{-2} + \frac{1}{2}\eta_{\mu_i}^2 (-2) +  \frac{1}{2}(-2) y_i \eta_{\mu_i}(-2) \exp(\eta_{\sigma_i})^{-2}\\
 =  1 - \frac{y_i^2}{\sigma_i^2} - \frac{\mu_i^2}{\sigma_i^2} + \frac{2y_i\mu_i}{\sigma_i^2} \\
-=  - \frac{(y_i - \mu_i)^2}{\sigma_i^1} + 1 \\
+=  - \frac{(y_i - \mu_i)^2}{\sigma_i^2} + 1 \\
 =  - \frac{\epsilon_i^2}{\sigma_i^2} +1
  \end{gathered}
 \end{equation}
-
-
