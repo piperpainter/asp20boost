@@ -5,9 +5,16 @@ output: html_document
 
 This vignette documents the exentions of the `asp20model` package of the `asp20` repository [@R-asp20model] provided to us in the context of the course "Advanced Statistical Programming with R". 
 
-The present package extention allows for estimation of location-scale regression models considering location ($\beta$) and scale ($\gamma$) parameters. For this purpose, we utilized a gradient boosting algorythm, which aims to imporve a certain loss function. This algorythm optimizes the model parameter vectors ($\beta$ and $\gamma$) at each iteration by regressing the gradients. The goodness of fit of the gradient boosting algorythm was evaluated using simulated data. Results showed that ...
+The present package extension allows for estimation of location-scale regression models considering location ($\beta$) and scale ($\gamma$) parameters. For this purpose, we utilized a gradient boosting algorithm, which aims to improve a certain loss function. Boosting seems to be rather cumbersome for estimating location parameters alone, as it yields no advantage over OLS. However, for models with varying scale, OLS is no reliable estimation method. This is where gradient boosting plays its role. It is able to address location-scale regression settings extending the idea of boosting by shifting the focus from residuals to gradients.
 
-This extenstion is usefull as it provides a solution for estimation of heteroskedastic data, which has not been implemented in the `asp20model` package so far. What you can else do (future perspects?).....
+This algorithm optimizes the model parameter vectors ($\beta$ and $\gamma$) at each iteration by regressing the gradients. The goodness of fit of the gradient boosting algorithm was evaluated using simulated data. Results showed that for two-dimensional location-scale regression model, the `asp20boost` performed well, in multidimensional cases the estimates lack accuracy in two ways
+* Effect magnitudes are not estimated correctly.
+* Variable selection for scale parameters does not work well.
+
+This problem might be addressed by testing varying the arguments `maxit` and `stepsize` given to the `gradient_boost()` function.
+
+Nevertheless the simulation studies demonstrated clearly that gradient boosting is able to estimate location-scale regression and outperforms the calculations in the asp20model package.
+
 
 
 
