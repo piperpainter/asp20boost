@@ -1,0 +1,160 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+# setting the stage
+rm(list=ls())
+options(scipen=999)
+source("helper_plot_model.R")
+source("helper_init_model.R")
+source("helper_calc_mse.R")
+source("helper_init_large_model.R")
+library(asp20boost)
+library(gamboostLSS)
+library(microbenchmark)
+```
+
+### ToDo Sebastián
+* Formula in front of every 'Configuration' paragraph
+* Make Data Frame look like a nice table
+
+
+## Small Model - Two-dimnesional Case
+
+The goal in this first part is to demonstrate, that the algorithm finds correct estimates for sensible choices of *beta* and *gamma.* We use the following 4 different parameter configurations to explore location-scale regression model characteristics.
+
+```{r}
+# config 1 ----------------------
+beta_1 <- c(0,1)
+gamma_1 <- c(-3,2)
+
+# config 2 ----------------------
+beta_2 <- c(2,2)
+gamma_2 <- c(2,2)
+
+# config 3 ----------------------
+beta_3 <- c(0,1)
+gamma_3 <- c(-1,-0.3)
+
+# config 4 ----------------------
+beta_4 <- c(0,15)
+gamma_4 <- c(1,-1)
+```
+
+
+```{r}
+set.seed(1337)
+mod_1 <- init_model(beta_1, gamma_1, 1000)$model
+gradient_boost(mod_1)
+mod_2 <- init_model(beta_2, gamma_2, 1000)$model
+gradient_boost(mod_2)
+mod_3 <- init_model(beta_3, gamma_3, 1000)$model
+gradient_boost(mod_3)
+mod_4 <- init_model(beta_4, gamma_4, 1000)$model
+gradient_boost(mod_4)
+```
+
+
+```{r, cache=TRUE, fig.height = 8, fig.width = 11}
+par(mfrow = c(2,2))
+plot_model(beta_1, gamma_1, 1000, "Config 1")
+plot_model(beta_2, gamma_2, 1000, "Config 2")
+plot_model(beta_3, gamma_3, 1000, "Config 3")
+plot_model(beta_4, gamma_4, 1000, "Config 4")
+```
+```{r}
+result_df <- data.frame("Config" = c(1,1,2,2,3,3,4,4),
+                        "beta_true" = c(beta_1, beta_2, beta_3, beta_4),
+                        "beta est." = c(round(mod_1$beta, 3), round(mod_2$beta, 3), round(mod_3$beta, 3), round(mod_4$beta, 3)),
+                        "gamma_true" = c(gamma_1, gamma_2, gamma_3, gamma_4),
+                        "gamma est." = c(round(mod_1$gamma, 3), round(mod_2$gamma, 3), round(mod_3$gamma, 3), round(mod_4$gamma, 3))
+                        )
+result_df
+```
+
+
+
+### Evaluation Configuration 1
+
+[insert model config by formula]
+
+This parameter configuration is equivalent to the example case of the *asp20model* package. 
+As already mentioned, heteroskedasticity is present and indicated by the funnel shape of the point cloud.
+The solid black line represents the true response mean, while the dashed lines represent the true upwards and downwards standard deviations from this mean.
+The red arrow indicates the standard deviation at the point x = 1,  that is the upper limit of covariate values, since covariates are design to be on the unit interval.
+For cases with increasing scale, the red arrow hence indicates maximum standard deviation of the response.
+The blue arrow depicts the slope of the location parameter vector *beta_1.*
+The ratio of those two quantities is essential for estimability of the model. 
+Here the blue arrow is dominant, hence the model may well be estimated. 
+Estimates are displayed in the table above. 
+We see that both *betahat* and *gammahat* estimates are close to the true parameter vectors *beta* and *gamma.*
+
+
+#### Evaluation Configuration 2
+
+Configuration 2 is a somewhat naive parameter configuration, where all parameters are set to value 2. 
+Estimating this model does not yield valid results.
+The gradient_boost() function runs into numerical problems.
+To understand why this happens we need to understand the model characteristics resulting from parameter configuration 2-2-2-2.
+Here, the red arrow is of large size, while the blue arrow is hardly visible. 
+This is due to the presence of huge standard deviations in response *y*, concealing changes in mean of *y.* 
+In fact, the standard deviation at x = 1 is:
+
+```{r}
+exp(gamma_2[1] + gamma_2[2] * 1)
+```
+In contrast the true response mean values range from 0 to 2.
+The change in response location (the signal), indicated by the blue arrow, perishes due to the high amount of noise caused by the high gamma-parameters. 
+Resulting is a signal-noise ratio, that is impossible to estimate. 
+Values for parameters gamma need to be chosen sensibly for simulating data. 
+This is no straight-forward task, since the effect of *gamma* on the response standard deviation is not linear, but exponential. 
+To check this in the two-dimensional case, the arrows in the model plot are of help.
+
+
+#### Evaluation Configuration 3
+
+[insert parameter configuration as formula]
+
+Configuration 3, in turn, yields reasonable estimates.
+It contains a negative gamma slope, leading to decreasing response standard deviations.
+This can be observed by the funnel shape pointing in the opposite direction as before.
+
+It may be of interest to check if estimates lie closer to the true parameters than e.g. in configuration 1.
+To do this we measure the gap between true values and estimates by the mean squared error.
+This enables comparison of configurations 1 and 3.
+
+```{r}
+mse_1 <- calc_MSE(beta_1, gamma_1, mod_1$beta, mod_1$gamma)
+mse_3 <- calc_MSE(beta_3, gamma_3, mod_3$beta, mod_3$gamma)
+cbind("config 1" = mse_1,
+      "config_3" = mse_3)
+```
+
+Configuration 1 leads to smaller MSE, hance our algorithm performs better in configuration 1.
+
+#### Evaluation Configuration 4
+
+[include configuration as formulas]
+
+In configuration 4, we again included a negative gamma slope, as well as a very high beta slope.
+The idea is to ensure a very good signal noise ratio, in order to ensure good model fit, indicated by low MSE.
+Contrary to our expectations, the algorithm performs poorly for this parameter configuration.
+
+```{r}
+mse_4 <- calc_MSE(beta_4, gamma_4, mod_4$beta, mod_4$gamma)
+cbind("config 1" = mse_1,
+      "config_3" = mse_3,
+      "config 4" = mse_4)
+```
+
+The bad model fit is due to the fact, that the location slope is highly underestimated.
+
+
+### Conclusions
+
+The observed two-dimensional cases let us conclude that not every arbitrary parameter configuration is estimable by the implemented gradient_boost() algorithm. A first insight is that signal-noise ratio needs to be sufficiently high in order to prevent that location effect gets concealed by inflated standard deviations. For the finding of configuration 4 we have several explanation approaches:
+* There are further constraints on simulating data meaningfully which we were not yet able to work out.
+* Our algorithm does not reliably yield robust results if negative gamma slopes are included.
+* Our algortihm runs into problems if the signal is too strong compared to noise.
