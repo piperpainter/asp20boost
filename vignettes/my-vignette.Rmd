@@ -299,14 +299,15 @@ The class builds upon the `LocationScaleRegression` class of the `asp20model` pa
 As already mentioned, this is the case due to the fact that `asp20boost` arose as a series of student projects aiming to solve a common problem building an implementation upon the `asp20model` package, specifically its `LocationScaleRegression` class. 
 
 We accomplish this by adding  a total of eight additional methods:
-    * `gradients_loglik_mu`
-    * `gradients_loglik_sigma`
-    * `gradient_estimators_mu`
-    * `gradient_estimators_sigma`
-    * `gradient_estimators_mu_compwise`
-    * `gradient_estimators_sigma_compwise`
-    * `update_parameters_conventional`
-    * `update_parameters_compwise`
+
+  * `gradients_loglik_mu`
+  * `gradients_loglik_sigma`
+  * `gradient_estimators_mu`
+  * `gradient_estimators_sigma`
+  * `gradient_estimators_mu_compwise`
+  * `gradient_estimators_sigma_compwise`
+  * `update_parameters_conventional`
+  * `update_parameters_compwise`
 
 Two of the public methods are easy to comprehend: `gradients_loglik_mu()` and `gradients_loglik_sigma()` perform simply the first gradient-calculation step of each iteration by employing the gradient formulas derived theoretically in the last part. 
 
@@ -339,7 +340,71 @@ As a consequence, the public methods `gradients_loglik_mu` and `gradient_estimat
 This enables proceeding to the next iteration.
 
 
-# 4. Simulation Studies
+
+*Does this relates to the last paragraph?*
+This leads to the final implementation which consists of three main functions: `gradient_boost`, `update_parameters_compwise`, `update_parameters_conventional`.
+
+  * `gradient_boost` - provides the boosting functionality for the model by doing `stepwise` calculations of the update parameters. Depending on the selected boosting method, the `update_parameters_compwise` or `update_parameters_conventional` function is called.
+  
+  * `update_parameters_compwise` - updates the beta and gamma parameter which yields to the highest improvements of the model fit, reference to ´Componentwise boosting ´ section for more information
+  
+  * `update_parameters_conventional` - updates the beta and gamma parameters by the gradient estimators with respect to the predefined `stepsize`
+
+
+## User Interface by example
+
+First define the model by generating sample data and defining explanatory variables for the standard deviation of the response variable. After the definition `gradient_boost` will iterate over the model and update the parameters at each step depending on the selected method. The function parameter componentwise will instruct the model to use componentwise boosting if set to TRUE. Depending on the sample data a custom `stepsize` for beta and gamma might be useful, which can be set using the `stepsize` parameter by using a vector containing the `stepsize` ($\bm{beta}$, $\bm{\gamma}$).
+
+```{r, cache = TRUE}
+set.seed(12345)
+n <- 500
+x <- runif(n)
+y <- x + rnorm(n, sd = exp(-3 + 2 * x))
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model,
+               stepsize = c(0.01, 0.1), 
+               maxit = 1000, 
+               componentwise = TRUE)
+
+```
+To evaluate the parameter changes throughout the iterations, enable plotting by setting the parameter `plot=TRUE`.
+
+```{r, cache = TRUE}
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model,
+               stepsize = c(0.01, 0.1), 
+               componentwise = TRUE, plot = TRUE)
+```
+
+The number of iterations can be limited by specifying the `maxit` parameter:
+
+```{r, cache = TRUE}
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+gradient_boost(model,
+               stepsize = c(0.01, 0.1), 
+               componentwise = TRUE, maxit = 100, plot = TRUE)
+```
+
+
+Parameter vectors of $\gamma$ and $\beta$ can be obtained by accessing the $\bm{\beta}$ and $\bm{\gamma}$ fields:
+
+```{r, cache = TRUE}
+model <- LocationScaleRegressionBoost$new(y ~ x, ~ x)
+message("Initial Beta parameters:")
+model$beta
+message("Initial Gamma parameters:")
+model$gamma
+gradient_boost(model,
+               stepsize = c(0.01, 0.1), 
+               maxit = 1000, 
+               componentwise = TRUE, plot = FALSE)
+message("Beta parameters:")
+model$beta
+message("Gamma parameters:")
+model$gamma
+```
+
+
 
 
 
