@@ -3,7 +3,7 @@
 \docType{package}
 \name{asp20boost}
 \alias{asp20boost}
-\title{Gradient Boosting for Location-Scale Regression Models ANO ANO}
+\title{Gradient Boosting for Location-Scale Regression Models HAI HAI}
 \usage{
 model <- LocationScaleRegressionBoost(formula, ...)
 gradient_boost(model, ...)

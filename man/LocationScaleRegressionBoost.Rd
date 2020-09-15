@@ -7,7 +7,7 @@
 example_model <- LocationScaleRegressionBoost$new(formula, ...)
 }
 \description{
-Model objects created by this class may be estimated by the \code{gradient_boost} function.
+Model obejcts created by this class may be estimated by the \code{gradient_boost} function.
 This model class builds upon and thus inherits the basic structure
 from the \code{LocationScaleRegression} model class of the \code{asp20model} package.
 Consequently, it shares similar syntax and structure. (Please  see the help
@@ -27,6 +27,23 @@ eta_sigma for scale (i.e. the standard deviation). Scale is modeled by a log-lin
 y <- rnorm(30)
 model <- LocationScaleRegressionBoost$new(y ~ 1)
 model$gradients_loglik_mu()
+
+## ------------------------------------------------
+## Method `LocationScaleRegressionBoost$gradients_loglik_sigma`
+## ------------------------------------------------
+
+y <- rnorm(30)
+model <- LocationScaleRegressionBoost$new(y ~ 1)
+model$gradients_loglik_sigma()
+
+## ------------------------------------------------
+## Method `LocationScaleRegressionBoost$plot`
+## ------------------------------------------------
+
+y <- rnorm(30)
+model <- LocationScaleRegressionBoost$new(y ~ 1)
+gradient_boost(model, plot=TRUE)
+model$plot()
 }
 \section{Super class}{
 \code{\link[asp20model:LocationScaleRegression]{asp20model::LocationScaleRegression}} -> \code{LocationScaleRegressionBoost}
@@ -157,6 +174,23 @@ model$gradients_loglik_mu()
 \if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$gradients_loglik_sigma()}\if{html}{\out{</div>}}
 }
 
+\subsection{Details}{
+Returns the unit-wise gradients of the loss function, which is the negative loglikelihood.
+}
+
+\subsection{Returns}{
+a numeric vector nx1
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{y <- rnorm(30)
+model <- LocationScaleRegressionBoost$new(y ~ 1)
+model$gradients_loglik_sigma()
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_parameters_conventional"></a>}}
@@ -181,7 +215,7 @@ a numeric vector nx1
 \subsection{Returns}{
 a numeric vector nx1
 enables plotting
-enables plotting
+Plots the logged model parameters for each iteration
 }
 }
 \if{html}{\out{<hr>}}
@@ -190,6 +224,17 @@ enables plotting
 \subsection{Method \code{plot()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{LocationScaleRegressionBoost$plot()}\if{html}{\out{</div>}}
+}
+
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{y <- rnorm(30)
+model <- LocationScaleRegressionBoost$new(y ~ 1)
+gradient_boost(model, plot=TRUE)
+model$plot()
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
